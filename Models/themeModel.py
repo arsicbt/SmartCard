@@ -13,10 +13,15 @@ class Theme(BaseModel):
         keywords: List[str],
         user_id: str,
         description: Optional[str] = None
-    );
+    ):
     
         super().__init__()
     
+    
+        # ********************************************************************
+        # DATA VALIDATION
+        # ********************************************************************
+        
         if not name or len(name.strip()) == 0:
             raise ValueError("Le theme a besoin d'un nom")
         
