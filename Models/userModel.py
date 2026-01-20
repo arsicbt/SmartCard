@@ -14,6 +14,8 @@ class User(BaseModel):
     
     def __init__(
         self,
+        first_name: str,
+        last_name: str,
         email: str,
         password_hash: str,  # Déjà hashé avec bcrypt
         name: Optional[str] = None,
@@ -25,6 +27,8 @@ class User(BaseModel):
         if not self.validate_email(email):
             raise ValueError(f"Email invalide: {email}")
         
+        self.first_name = first_name
+        self.last_name = last_name
         self.email = email.lower().strip()
         self.password_hash = password_hash
         self.name = name.strip() if name else None
