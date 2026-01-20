@@ -1,45 +1,84 @@
-from Models.CoreModel import CoreModel
-from Models.tablesSchema import User as UserDB
-from Utils.passwordSecurity import PasswordManager
-from Utils.tokenSecurity import TokenManager
-from Utils.inputSecurity import InputValidator
+from .baseModel import BaseModel
+import uuid
+from datetime import datetime, timezone
+from typing import Optional, Dict, Any, List
+import re
+import json
 
-class User(BaseModel, UserDB):
+class User(BaseModel):
     
-    def set_password(self, password: str):
-        """
-        Définit le mot de passe (hash automatique)
+    # Regex pour validation email (RFC 5322 simplifié)
+    EMAIL_REGEX = re.compile(
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    )
+    
+    def __init__(
+        self,
+        email: str,
+        password_hash: str,  # Déjà hashé avec bcrypt
+        name: Optional[str] = None,
+        is_verified: bool = False
+    ):
+        super().__init__()
         
-        SÉCURITÉ : Validation + hash bcrypt
-        """
-        is_valid, error = InputValidator.validate_password(password)
-        if not is_valid:
-            raise ValueError(error)
+        # Validation email
+        if not self.validate_email(email):
+            raise ValueError(f"Email invalide: {email}")
         
-        self.password = PasswordManager.hash_password(password)
+        self.email = email.lower().strip()
+        self.password_hash = password_hash
+        self.name = name.strip() if name else None
+        self.is_verified = is_verified
+
+
     
-    def check_password(self, password: str) -> bool:
-        """Vérifie le mot de passe"""
-        return PasswordManager.verify_password(password, self.password)
+    # ********************************************************************
+    # DATA VALIDATION
+    # ********************************************************************
+    @staticmethod
+    def validate_email(email: str) -> bool:
+        """Valide le format de l'email"""
+        if not email or len(email) > 255:
+            return False
+        return bool(User.EMAIL_REGEX.match(email))
     
-    def generate_token(self) -> str:
-        """Génère un JWT pour l'utilisateur"""
-        return TokenManager.create_access_token(self.id, self.email)
-    
-    def to_dict(self, include_private=False):
+    @staticmethod
+    def validate_password(password: str) -> tuple[bool, Optional[str]]:
         """
-        Export sécurisé
+        Valide la sécurité du mdp
+        """
+        if len(password) < 8:
+            return False, "Le mot de passe doit contenir au moins 8 caractères"
         
-        Args:
-            include_private: Inclure données sensibles (email verification token)
+        if len(password) > 128:
+            return False, "Le mot de passe ne peut pas dépasser 128 caractères"
+        
+        # Vérifier la complexité
+        has_upper = any(c.isupper() for c in password)
+        has_lower = any(c.islower() for c in password)
+        has_digit = any(c.isdigit() for c in password)
+        
+        if not (has_upper and has_lower and has_digit):
+            return False, "Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre"
+        
+        return True, None
+
+
+
+    # ********************************************************************
+    # SERIALIZATION
+    # ********************************************************************
+    
+    def to_dict(self, include_password: bool = False) -> Dict[str, Any]:
+        """
+        Sérialise l'utilisateur, SANS le mdp par défaut
         """
         data = super().to_dict()
         
-        # Toujours supprimer le password
-        data.pop('password', None)
-        
-        if not include_private:
-            # Supprime tokens de vérification
-            data.pop('verification_token', None)
+        if not include_password:
+            data.pop('password_hash', None)
         
         return data
+    
+    def __repr__(self) -> str:
+        return f"<User(id={self.id[:8]}, email={self.email})>"
