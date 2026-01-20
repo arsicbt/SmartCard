@@ -1,50 +1,45 @@
-import re
-from .coreModel import CoreModel
+from Models.CoreModel import CoreModel
+from Models.tablesSchema import User as UserDB
+from Utils.passwordSecurity import PasswordManager
+from Utils.tokenSecurity import TokenManager
+from Utils.inputSecurity import InputValidator
 
-
-class User(CoreModel):
-
-    __allowed_fields__ = ["first_name", "last_name", "email", "password"]
+class User(BaseModel, UserDB):
     
-    # --- A T T R I B U T S ---------------------------------
-    def __init__(self, first_name, last_name, email, password, is_admin=False):
-        super().__init__()
-        self.first_name = first_name
-        self.last_name = last_name
-        self.email = email
-        self.password = password
-        self.is_admin = is_admin
-
-        self.validate()
-
-    # --- H E L P E R ----------------------------------------
-    def validate(self):
-        """Validate user data"""
-        errors = {}
-
-        if not self.first_name or not self.first_name.strip():
-            errors["first_name"] = "First name is required"
-
-        if not self.last_name or not self.last_name.strip():
-            errors["last_name"] = "Last name is required"
-
-        if not self.email or not re.match(r"[^@]+@[^@]+\.[^@]+", self.email):
-            errors["email"] = "Invalid email"
-
-        if not self.password or len(self.password) < 8:
-            errors["password"] = "Password too short"
-
-        if errors:
-            raise ValueError(errors)
-
+    def set_password(self, password: str):
+        """
+        Définit le mot de passe (hash automatique)
+        
+        SÉCURITÉ : Validation + hash bcrypt
+        """
+        is_valid, error = InputValidator.validate_password(password)
+        if not is_valid:
+            raise ValueError(error)
+        
+        self.password = PasswordManager.hash_password(password)
     
-    def to_dict(self):
-        """Hide sensitive data to secure the update"""
+    def check_password(self, password: str) -> bool:
+        """Vérifie le mot de passe"""
+        return PasswordManager.verify_password(password, self.password)
+    
+    def generate_token(self) -> str:
+        """Génère un JWT pour l'utilisateur"""
+        return TokenManager.create_access_token(self.id, self.email)
+    
+    def to_dict(self, include_private=False):
+        """
+        Export sécurisé
+        
+        Args:
+            include_private: Inclure données sensibles (email verification token)
+        """
         data = super().to_dict()
-        data.update({
-            "first_name": self.first_name,
-            "last_name": self.last_name,
-            "email": self.email,
-            "is_admin": self.is_admin
-        })
+        
+        # Toujours supprimer le password
+        data.pop('password', None)
+        
+        if not include_private:
+            # Supprime tokens de vérification
+            data.pop('verification_token', None)
+        
         return data
