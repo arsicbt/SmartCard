@@ -1,9 +1,9 @@
 from .baseModel import BaseModel
-import uuid
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
 import re
-import json
+
+
 
 class Question(BaseModel):
     """
@@ -21,7 +21,7 @@ class Question(BaseModel):
         theme_id: str,
         question_type: str = 'quiz',
         difficulty: str = 'medium'
-    ):
+    );
         super()__init__()
         
         # ********************************************************
@@ -75,5 +75,6 @@ class Question(BaseModel):
         data = super().to_dict()
         return data
     
-    def __repr(self) -> str:
+    
+    def __repr__(self) -> str:
         return f"<Question(id={self.id[:8]}, type={self.type}, difficulty={self.difficulty})"

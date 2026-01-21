@@ -1,9 +1,7 @@
 from .baseModel import BaseModel
-import uuid
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
 import re
-import json
 
 class User(BaseModel):
     
