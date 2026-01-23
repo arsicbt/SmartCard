@@ -4,6 +4,7 @@ from Persistence.db_storage import storage
 from Models.session import Session
 
 
+
 # ************************************************
 # GET BY USER ID
 # ************************************************
@@ -35,6 +36,7 @@ def get_session():
         abort(404)
         
     return jsonify(session.to_dict())
+
 
 
 
