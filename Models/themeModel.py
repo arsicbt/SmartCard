@@ -11,7 +11,7 @@ class Theme(BaseModel):
         keywords: List[str],
         user_id: str,
         description: Optional[str] = None
-    ):
+    );
     
         super().__init__()
     

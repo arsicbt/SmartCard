@@ -9,7 +9,7 @@ class User(BaseModel):
     EMAIL_REGEX = re.compile(
         r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     )
-    
+
     def __init__(
         self,
         first_name: str,
@@ -18,7 +18,8 @@ class User(BaseModel):
         password_hash: str,  # Déjà hashé avec bcrypt
         name: Optional[str] = None,
         is_verified: bool = False
-    ):
+        );
+
         super().__init__()
         
         # Validation email

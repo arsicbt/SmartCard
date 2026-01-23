@@ -11,10 +11,10 @@ class Question(BaseModel):
     - type: 'quiz' ou 'flashcard'
     - Relation avec Theme et Answers
     """
-    
+
     VALID_TYPES = {'quiz', 'flashcard'}
     VALID_DIFFICULTIES = {'easy', 'medium', 'hard'}
-    
+
     def __init__(
         self,
         question_text: str,
@@ -65,8 +65,8 @@ class Question(BaseModel):
         Verifie si c'est une question de flashcard
         """
         return self.type == 'flashcard'
-    
-    
+
+
     # ********************************************************
     # SERIALIZATION
     # ********************************************************
@@ -74,7 +74,6 @@ class Question(BaseModel):
     def to_dict(self) -> Dict[str, Any]:
         data = super().to_dict()
         return data
-    
-    
+
     def __repr__(self) -> str:
         return f"<Question(id={self.id[:8]}, type={self.type}, difficulty={self.difficulty})"
