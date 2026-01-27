@@ -3,7 +3,7 @@ from typing import Optional
 
 class PasswordManager:
     """Gestion sécurisée des mots de passe"""
-    
+
     @staticmethod
     def hash_password(password: str) -> str:
         """
@@ -24,7 +24,7 @@ class PasswordManager:
         salt = bcrypt.gensalt(rounds=12)  # 12 rounds = bon équilibre sécurité/performance
         hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
         return hashed.decode('utf-8')
-    
+
     @staticmethod
     def verify_password(password: str, hashed: str) -> bool:
         """

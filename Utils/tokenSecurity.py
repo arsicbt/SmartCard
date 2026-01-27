@@ -5,12 +5,12 @@ import os
 
 class TokenManager:
     """Gestion des tokens JWT"""
-    
+
     # SÉCURITÉ : Cette clé doit être en variable d'environnement
     SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'dev-secret-CHANGE-ME')
     ALGORITHM = 'HS256'
     ACCESS_TOKEN_EXPIRE_MINUTES = 60  # 1 heure
-    
+
     @classmethod
     def create_access_token(cls, user_id: str, email: str) -> str:
         """
