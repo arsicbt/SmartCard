@@ -11,7 +11,7 @@ class Theme(BaseModel):
         keywords: List[str],
         user_id: str,
         description: Optional[str] = None
-    );
+    ):
     
         super().__init__()
     
@@ -27,7 +27,7 @@ class Theme(BaseModel):
             raise ValueError("Le theme a besoin d'au moins 1 mot clé")
         
         self.name = name.strip()
-        self.keywords = [k.lower().strip() for k in keywords id k.strip()]
+        self.keywords = [k.lower().strip() for k in keywords if k.strip()]
         self.user_id = user_id
         self.description = description.strip() if description else None
         

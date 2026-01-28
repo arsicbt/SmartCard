@@ -15,10 +15,10 @@ class User(BaseModel):
         first_name: str,
         last_name: str,
         email: str,
-        password_hash: str,  # Déjà hashé avec bcrypt
-        name: Optional[str] = None,
-        is_verified: bool = False
-        );
+        password: str,  # Déjà hashé avec bcrypt
+        name: str,
+        is_verified: bool
+        ):
 
         super().__init__()
         

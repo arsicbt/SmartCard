@@ -125,8 +125,7 @@ class Theme(Base):
     __table_args__ = (
         # Un user ne peut pas avoir 2 thèmes avec même nom
         UniqueConstraint('user_id', 'name', name='uq_user_theme_name'),
-        Index('idx_themes_user', 'user_id'),
-        Index('idx_themes_public', 'is_public'),
+        Index('idx_themes_user', 'user_id')
     )
     
     def __repr__(self):

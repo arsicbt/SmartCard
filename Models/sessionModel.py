@@ -23,7 +23,7 @@ class Session(BaseModel):
         score: Optional[int] = None,
         total_questions: Optional[int] = None,
         duration_seconde: Optional[int] = None
-    );
+    ):
     
         super().__init__()
         

@@ -21,8 +21,8 @@ class Question(BaseModel):
         theme_id: str,
         question_type: str = 'quiz',
         difficulty: str = 'medium'
-    );
-        super()__init__()
+    ):
+        super().__init__()
         
         # ********************************************************
         # DATA VALIDATION
@@ -37,7 +37,7 @@ class Question(BaseModel):
         if question_type not in self.VALID_TYPES:
             raise ValueError(f"LE type doit etre : {self.VALID_TYPES}")
         
-        id diffcilculty not in self.VALID_DIFFICULTIES:
+        if difficulty not in self.VALID_DIFFICULTIES:
             raise VelueError(f"La difficulté doit etre: {self.VALID_DIFFICULTIES}")
         
         self.question_text = question_text
@@ -49,7 +49,7 @@ class Question(BaseModel):
         self.answer_ids: List[str] = []
     
     
-    des add_answer_id(self, answer_id: str) -> None:
+    def add_answer_id(self, answer_id: str) -> None:
         if answer_id not in self.answer_ids:
             self.answer_ids.append(answer_id)
             self.update_timestamp()

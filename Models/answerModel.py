@@ -16,7 +16,7 @@ class Answer(BaseModel):
         answer_text: str,
         question_id: str,
         is_correct: bool=False
-    );
+    ):
         
         super().__init__()
         
