@@ -7,19 +7,19 @@ import re
 
 class Question(BaseModel):
     """
-    Model Question = Quiz + FlashCard
-    - type: 'quiz' ou 'flashcard'
+    Model Question = quizz + FlashCard
+    - type: 'quizz' ou 'flashcard'
     - Relation avec Theme et Answers
     """
 
-    VALID_TYPES = {'quiz', 'flashcard'}
+    VALID_TYPES = {'quizz', 'flashcard'}
     VALID_DIFFICULTIES = {'easy', 'medium', 'hard'}
 
     def __init__(
         self,
         question_text: str,
         theme_id: str,
-        question_type: str = 'quiz',
+        question_type: str = 'quizz',
         difficulty: str = 'medium'
     ):
         super().__init__()
@@ -54,11 +54,11 @@ class Question(BaseModel):
             self.answer_ids.append(answer_id)
             self.update_timestamp()
             
-    def is_quiz(self) -> bool:
+    def is_quizz(self) -> bool:
         """
-        Verifie si c'est une question de quizz
+        Verifie si c'est une question de quizzz
         """
-        return self.type == 'quiz'
+        return self.type == 'quizz'
     
     def is_flashcard(self) -> bool:
         """

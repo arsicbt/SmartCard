@@ -34,7 +34,7 @@ Base = declarative_base()
 
 class QuestionType(enum.Enum):
     """Type de question"""
-    QUIZ = 'quiz'           # QCM avec 4 choix
+    QUIZZ = 'quizz'           # QCM avec 4 choix
     FLASHCARD = 'flashcard' # Recto/verso
 
 class Difficulty(enum.Enum):
@@ -140,7 +140,7 @@ class Question(Base):
     """
     Question unifiée (quiz OU flashcard)
     
-    TYPE QUIZ:
+    TYPE QUIZZ:
     - question_text = "Ici c'est une question"
     - 4 answers (1 correcte, 3 fausses)
     

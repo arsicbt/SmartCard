@@ -29,7 +29,7 @@ class User(BaseModel):
         self.first_name = first_name
         self.last_name = last_name
         self.email = email.lower().strip()
-        self.password_hash = password_hash
+        self.password = password
         self.name = name.strip() if name else None
         self.is_verified = is_verified
 
