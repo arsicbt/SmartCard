@@ -3,6 +3,8 @@ from Persistence.db_storage import storage
 from Models.session import Session
 
 
+session_bp = Blueprint("users", __name__, url_prefix="/session")
+
 
 # ************************************************
 # GET BY USER ID

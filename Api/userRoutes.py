@@ -5,6 +5,9 @@ from Models.user import User
 import bcrypt
 
 
+users_bp = Blueprint("users", __name__, url_prefix="/users")
+
+
 # ************************************************
 # GET ALl
 # ************************************************

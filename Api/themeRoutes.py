@@ -5,6 +5,8 @@ from Models.user import User
 import bcrypt
 
 
+theme_bp = Blueprint("users", __name__, url_prefix="/theme")
+
 
 # ************************************************
 # GET ALl

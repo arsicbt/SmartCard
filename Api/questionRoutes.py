@@ -3,6 +3,8 @@ from Persistence.db_storage import storage
 from Models.question import Question
 
 
+question_bp = Blueprint("users", __name__, url_prefix="/question")
+
 
 # ************************************************
 # GET BY QUESTION BY ID
