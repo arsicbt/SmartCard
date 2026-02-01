@@ -1,8 +1,9 @@
 from flask import jsonify, request, abort
-from API.v1.views import app_views
 from Persistence.db_storage import storage
 from Models.question import Question
 
+
+question_bp = Blueprint("users", __name__, url_prefix="/question")
 
 
 # ************************************************

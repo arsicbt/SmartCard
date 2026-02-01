@@ -1,15 +1,17 @@
 from flask import jsonify, request, abort
-from API.v1.views import app_views
 from .Utils import hash_password
 from Persistence.db_storage import storage
 from Models.user import User
 import bcrypt
 
 
+users_bp = Blueprint("users", __name__, url_prefix="/users")
+
+
 # ************************************************
 # GET ALl
 # ************************************************
-@app_views.rout('/user', methods=[GET])
+@app_views.route('/user', methods=[GET])
 def get_users():
     """REcupere tous les utilisateur"""
     users = storage.all('Users')

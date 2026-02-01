@@ -16,14 +16,13 @@ from typing import Optional, List, Dict, Type, Any
 from datetime import datetime
 import os
 
-# Import des modèles
-from Models.base_model import Base
-from Models.user import User
-from Models.document import Document
-from Models.theme import Theme
-from Models.flashcard import Flashcard
-from Models.answer import Answer
-from Models.quiz import Quiz
+# Import des modèles (Architecture HBNB)
+from Models.tablesSchema import Base
+from Models.userModel import User
+from Models.themeModel import Theme
+from Models.questionModel import Question
+from Models.answerModel import Answer
+from Models.sessionModel import Session
 
 
 class DBStorage:
@@ -31,6 +30,7 @@ class DBStorage:
     Gestionnaire de stockage base de données
     
     Pattern Repository : interface unifiée pour toutes les opérations DB
+    Architecture HBNB (Holberton School)
     """
     
     __engine = None
@@ -39,11 +39,10 @@ class DBStorage:
     # Classes disponibles
     classes = {
         'User': User,
-        'Document': Document,
         'Theme': Theme,
-        'Flashcard': Flashcard,
+        'Question': Question,
         'Answer': Answer,
-        'Quiz': Quiz
+        'Session': Session
     }
     
     def __init__(self):

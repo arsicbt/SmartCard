@@ -4,10 +4,12 @@ from Persistence.db_storage import storage
 from Models.answer import Answer
 
 
+answer_bp = Blueprint("users", __name__, url_prefix="/answer")
+
 
 # ************************************************
 # GET ANSWER BY ID
-# ************************************************
+# ************************************************\\wsl.localhost\Ubuntu\home\arsi\SmartCard\venv
 @app_views.route('/answers/<answer_id>', methods=['GET'], strict_slashes=False)
 def get_answer(answer_id):
     """Récupère une réponse par ID"""

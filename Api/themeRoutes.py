@@ -1,10 +1,11 @@
 from flask import jsonify, request, abort
-from API.v1.views import app_views
 from .Utils import hash_password
 from Persistence.db_storage import storage
 from Models.user import User
 import bcrypt
 
+
+theme_bp = Blueprint("users", __name__, url_prefix="/theme")
 
 
 # ************************************************
@@ -79,10 +80,19 @@ def create_theme():
             name=data['name'],
             keywords=data['keywords'],
             user_id=data['user_id'],
-            description=data.get('description'),
-            is_public=data.get('is_public', False)
+            description=data.get('description')
         )
         
+        temp_user = User(...)
+        session.add(temp_user)
+        session.commit()
+
+        theme = Theme(
+            user_id=temp_user.id,  # FK requise, lien avec l'user
+            name="Mathématiques - Algèbre",
+            keywords=["algèbre", "équations", "mathématiques"],
+            description="Questions sur l'algèbre de base"
+        )
         storage.new(theme)
         storage.save()
         

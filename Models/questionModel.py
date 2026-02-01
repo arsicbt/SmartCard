@@ -1,79 +1,122 @@
-from .baseModel import BaseModel
-from datetime import datetime, timezone
-from typing import Optional, Dict, Any, List
-import re
+"""
+Question Model - Modèle question
 
+Hérite de BaseModel et ajoute :
+- Colonnes spécifiques (question_text, type, difficulty)
+- Logique métier (is_quiz, is_flashcard)
+- Relations SQLAlchemy
+"""
+
+from sqlalchemy import Column, String, Text, Integer, ForeignKey, Enum as SQLEnum, Index
+from sqlalchemy.orm import relationship
+from Models.baseModel import BaseModel
+from Models.tablesSchema import QuestionType, Difficulty
 
 
 class Question(BaseModel):
     """
-    Model Question = Quiz + FlashCard
-    - type: 'quiz' ou 'flashcard'
-    - Relation avec Theme et Answers
+    Modèle Question
+    
+    Une question peut être un quiz (QCM) ou une flashcard (recto/verso).
+    
+    Colonnes :
+        - theme_id : ID du thème (FK)
+        - type : QUIZ ou FLASHCARD (Enum)
+        - question_text : Texte de la question
+        - difficulty : EASY, MEDIUM ou HARD (Enum)
+        - explanation : Explication de la réponse
+        - source : Origine (ai_generated ou user_created)
+        - times_used : Nombre d'utilisations
+        - times_correct : Nombre de fois répondu correctement
+    
+    Relations :
+        - theme : Thème parent
+        - answers : Liste des réponses possibles
     """
-
-    VALID_TYPES = {'quiz', 'flashcard'}
-    VALID_DIFFICULTIES = {'easy', 'medium', 'hard'}
-
-    def __init__(
-        self,
-        question_text: str,
-        theme_id: str,
-        question_type: str = 'quiz',
-        difficulty: str = 'medium'
-    ):
-        super().__init__()
-        
-        # ********************************************************
-        # DATA VALIDATION
-        # ********************************************************
-        
-        if not question_text or len(question_text.strip()) == 0:
-            raise ValueError("Le texte de la question ne peut pas etre vide")
-        
-        if len(question_text) > 50:
-            raise ValueError("La question est trop longue")
-        
-        if question_type not in self.VALID_TYPES:
-            raise ValueError(f"LE type doit etre : {self.VALID_TYPES}")
-        
-        if difficulty not in self.VALID_DIFFICULTIES:
-            raise VelueError(f"La difficulté doit etre: {self.VALID_DIFFICULTIES}")
-        
-        self.question_text = question_text
-        self.theme_id = theme_id
-        self.type = question_type
-        self.difficulty = difficulty
-        
-        # Liste des IDs des reponses
-        self.answer_ids: List[str] = []
     
+    __tablename__ = 'questions'
     
-    def add_answer_id(self, answer_id: str) -> None:
-        if answer_id not in self.answer_ids:
-            self.answer_ids.append(answer_id)
-            self.update_timestamp()
-            
+    # ********************************************************
+    # COLONNES SPÉCIFIQUES
+    # ********************************************************
+    
+    theme_id = Column(String(60), ForeignKey('themes.id', ondelete='CASCADE'), nullable=False)
+    type = Column(SQLEnum(QuestionType), nullable=False)
+    question_text = Column(Text, nullable=False)
+    difficulty = Column(SQLEnum(Difficulty), default=Difficulty.MEDIUM, nullable=False)
+    explanation = Column(Text, nullable=True)
+    source = Column(String(50), default='ai_generated')  # 'ai_generated' ou 'user_created'
+    
+    # Statistiques
+    times_used = Column(Integer, default=0)
+    times_correct = Column(Integer, default=0)
+    
+    # ********************************************************
+    # RELATIONS SQLALCHEMY
+    # ********************************************************
+    
+    theme = relationship('Theme', back_populates='questions')
+    answers = relationship('Answer', back_populates='question', cascade='all, delete-orphan')
+    
+    # ********************************************************
+    # INDEX
+    # ********************************************************
+    
+    __table_args__ = (
+        Index('idx_questions_theme', 'theme_id'),
+        Index('idx_questions_type', 'type'),
+        Index('idx_questions_difficulty', 'difficulty'),
+    )
+    
+    # ********************************************************
+    # LOGIQUE MÉTIER - TYPE CHECKING
+    # ********************************************************
+    
     def is_quiz(self) -> bool:
         """
-        Verifie si c'est une question de quizz
+        Vérifie si c'est une question de quiz
+        
+        Returns:
+            True si type == QUIZ
         """
-        return self.type == 'quiz'
+        return self.type == QuestionType.QUIZ
     
     def is_flashcard(self) -> bool:
         """
-        Verifie si c'est une question de flashcard
+        Vérifie si c'est une flashcard
+        
+        Returns:
+            True si type == FLASHCARD
         """
-        return self.type == 'flashcard'
-
-
+        return self.type == QuestionType.FLASHCARD
+    
+    def get_success_rate(self) -> float:
+        """
+        Calcule le taux de réussite de cette question
+        
+        Returns:
+            Taux de réussite en pourcentage (0-100)
+        """
+        if self.times_used == 0:
+            return 0.0
+        return (self.times_correct / self.times_used) * 100
+    
+    def increment_usage(self, is_correct: bool = False) -> None:
+        """
+        Incrémente les statistiques d'utilisation
+        
+        Args:
+            is_correct: La réponse était-elle correcte ?
+        """
+        self.times_used += 1
+        if is_correct:
+            self.times_correct += 1
+        self.update_timestamp()
+    
     # ********************************************************
-    # SERIALIZATION
+    # REPRÉSENTATION
     # ********************************************************
     
-    def to_dict(self) -> Dict[str, Any]:
-        data = super().to_dict()
-        return data
-
     def __repr__(self) -> str:
-        return f"<Question(id={self.id[:8]}, type={self.type}, difficulty={self.difficulty})"
+        text_preview = self.question_text[:50] + '...' if len(self.question_text) > 50 else self.question_text
+        return f"<Question(id={self.id[:8] if self.id else 'None'}, type={self.type.value if self.type else 'None'}, text='{text_preview}')>"
