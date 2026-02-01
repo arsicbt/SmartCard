@@ -1,5 +1,4 @@
 from flask import jsonify, request, abort
-from API.v1.views import app_views
 from .Utils import hash_password
 from Persistence.db_storage import storage
 from Models.user import User
@@ -82,7 +81,7 @@ def create_theme():
             description=data.get('description')
         )
         
-        temp_user = User(...)  # Créer user temporaire
+        temp_user = User(...)
         session.add(temp_user)
         session.commit()
 
