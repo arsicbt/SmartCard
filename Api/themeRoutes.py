@@ -1,152 +1,102 @@
-from flask import jsonify, request, abort
-from .Utils import hash_password
-from Persistence.db_storage import storage
-from Models.user import User
-import bcrypt
+from flask import Blueprint, jsonify, request, abort
+from Persistence.DBStorage import storage
+from Models.themeModel import Theme
+from Models.userModel import User
 
 
-theme_bp = Blueprint("users", __name__, url_prefix="/theme")
+theme_bp = Blueprint("themes", __name__, url_prefix="/api/themes")
 
 
 # ************************************************
-# GET ALl
+# GET ALL THEMES
 # ************************************************
-@app_views.route('/themes', methods=['GET'])
+@admin_required
+@theme_bp.route("/", methods=["GET"])
 def get_themes():
-    """
-    Récupère tous les thèmes
-    """
-    themes = storage.all("Theme")
-    return jsonify([theme.to_dict() for theme in themes.values()])
-
+    themes = storage.all(Theme)
+    return jsonify([t.to_dict() for t in themes.values()]), 200
 
 
 # ************************************************
-# GET BY ID 
+# GET THEME BY ID
 # ************************************************
-@app_views.route('/themes/<theme_id>', methods=['GET'])
+@admin_required
+@theme_bp.route("/<theme_id>", methods=["GET"])
 def get_theme(theme_id):
-    """
-    Récupère un thème par ID
-    """
-    theme = storage.get("Theme", theme_id)
-    
+    theme = storage.get(Theme, theme_id)
     if not theme:
-        abort(404)
-    
-    return jsonify(theme.to_dict())
-
-
-
-# ************************************************
-# GET ALL
-# ************************************************
-@app_views.route('/themes', methods=['GET'], strict_slashes=False)
-def get_themes():
-    """
-    Récupère tous les thèmes
-    """
-    themes = storage.all("Theme")
-    return jsonify([theme.to_dict() for theme in themes.values()])
-
+        abort(404, description="Theme not found")
+    return jsonify(theme.to_dict()), 200
 
 
 # ************************************************
-# POST 
+# CREATE THEME
 # ************************************************
-@app_views.route('/themes', methods=['POST'], strict_slashes=False)
+@auth_required
+@theme_bp.route("/", methods=["POST"])
 def create_theme():
-    """
-    Crée un nouveau thème
-    """
-    
-    if not request.json:
+    if not request.is_json:
         abort(400, description="Not a JSON")
-    
-    required_fields = ['name', 'keywords', 'user_id']
-    for field in required_fields:
-        if field not in request.json:
+
+    data = request.get_json()
+    required = ["name", "keywords", "user_id"]
+
+    for field in required:
+        if field not in data:
             abort(400, description=f"Missing {field}")
-    
-    data = request.json
-    
-    # Vérifier que l'utilisateur existe
-    user = storage.get("User", data['user_id'])
+
+    user = storage.get(User, data["user_id"])
     if not user:
         abort(404, description="User not found")
-    
-    try:
-        theme = Theme(
-            name=data['name'],
-            keywords=data['keywords'],
-            user_id=data['user_id'],
-            description=data.get('description')
-        )
-        
-        temp_user = User(...)
-        session.add(temp_user)
-        session.commit()
 
-        theme = Theme(
-            user_id=temp_user.id,  # FK requise, lien avec l'user
-            name="Mathématiques - Algèbre",
-            keywords=["algèbre", "équations", "mathématiques"],
-            description="Questions sur l'algèbre de base"
-        )
-        storage.new(theme)
-        storage.save()
-        
-        return jsonify(theme.to_dict()), 201
-        
-    except Exception as e:
-        abort(400, description=str(e))
-        
-    
+    theme = Theme(
+        name=data["name"],
+        keywords=data["keywords"],
+        description=data.get("description"),
+        user_id=data["user_id"]
+    )
+
+    storage.new(theme)
+    storage.save()
+
+    return jsonify(theme.to_dict()), 201
+
 
 # ************************************************
-# PUT
+# UPDATE THEME
 # ************************************************
-@app_views.route('/themes/<theme_id>', methods=['PUT'], strict_slashes=False)
+@auth_required
+@theme_bp.route("/<theme_id>", methods=["PUT"])
 def update_theme(theme_id):
-    """
-    Met à jour un thème
-    """
-    
-    theme = storage.get("Theme", theme_id)
+    theme = storage.get(Theme, theme_id)
     if not theme:
         abort(404)
-    
-    if not request.json:
+
+    if not request.is_json:
         abort(400, description="Not a JSON")
-    
-    data = request.json
-    ignore_keys = ['id', 'user_id', 'created_at', 'updated_at', 'deleted_at']
-    
-    for key, value in data.items():
-        if key not in ignore_keys and hasattr(theme, key):
+
+    ignore = ["id", "user_id", "created_at", "updated_at", "deleted_at"]
+
+    for key, value in request.json.items():
+        if key not in ignore and hasattr(theme, key):
             setattr(theme, key, value)
-    
+
     theme.update_timestamp()
     storage.save()
-    
-    return jsonify(theme.to_dict())
 
+    return jsonify(theme.to_dict()), 200
 
 
 # ************************************************
-# DELETE
+# DELETE THEME
 # ************************************************
-@app_views.route('/themes/<theme_id>', methods=['DELETE'], strict_slashes=False)
+@admin_required
+@theme_bp.route("/<theme_id>", methods=["DELETE"])
 def delete_theme(theme_id):
-    """
-    Supprime un thème
-    """
-    
-    theme = storage.get("Theme", theme_id)
+    theme = storage.get(Theme, theme_id)
     if not theme:
         abort(404)
-    
+
     storage.delete(theme)
     storage.save()
-    
     return jsonify({}), 200

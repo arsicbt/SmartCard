@@ -1,138 +1,166 @@
-from flask import jsonify, request, abort
-from Persistence.db_storage import storage
-from Models.session import Session
+"""
+sessionRoutes.py — Routes HTTP pour les sessions
+"""
+
+from flask import Blueprint, jsonify, request, abort
+from Models.sessionModel import Session
+from Models.tablesSchema import SessionType
+from Models.userModel import User
+from Models.themeModel import Theme
+from Persistence.DBStorage import storage
 
 
-session_bp = Blueprint("users", __name__, url_prefix="/session")
-
-
-# ************************************************
-# GET BY USER ID
-# ************************************************
-@app_views.route('/users/<user_id>/sessions', methods=['GET'])
-def get_user_session():
-    """
-    Recupere les sessions d'un utilisateur
-    """
-    user = storage.get("Users", user_id)
-    if not user:
-        abort(404)
-        
-    sessions = storage.filter_by("Session", user_id=user_id)
-    return jsonify([s.to_dict() for s in sessions])
-
+session_bp = Blueprint("sessions", __name__, url_prefix="/api/sessions")
 
 
 # ************************************************
-# GET BY SESSION ID
+# GET SESSIONS BY USER ID
 # ************************************************
-@app_views.route('/sessions/<session_id>', methods=['GET'])
-def get_session():
+@admin_required
+@session_bp.route('/user/<user_id>', methods=['GET'])
+def get_user_sessions(user_id):
     """
-    Recupere une session en passant par son ID
+    Récupère les sessions d'un utilisateur
     """
-    session = storage.get("Session", session_id)
-    
-    if not session:
-        abort(404)
-        
-    return jsonify(session.to_dict())
-
-
-
-
-# ************************************************
-# POST
-# ************************************************
-@app_views.route('/sessions', methods=['POST']  )
-def create_session():
-    """
-    Créer une noouvelle session
-    """
-    if not request.json:
-        abort(400, description="Not a JSON")
-        
-    required_fiels = ['user_id', 'theme_id', 'type', 'questions_ids']
-    
-    for field in required_fiels:
-        if field in request.json:
-            abort(400, description=f"Missing {field}")
-        
-    data = request.json
-    
-    user = storage.get("User", data["user_id"])
+    user = storage.get(User, user_id)
     if not user:
         abort(404, description="User not found")
         
-    theme = storage.get("Theme", data['theme_id'])
-    if not theme:
-        abort(404, description="Theme not found")
-        
+    sessions = storage.filter_by(Session, user_id=user_id)
+    return jsonify([s.to_dict() for s in sessions]), 200
+
+
+
+# ************************************************
+# GET SESSION BY ID
+# ************************************************
+@admin_required
+@session_bp.route('/<session_id>', methods=['GET'])
+def get_session(session_id):
+    """
+    Récupère une session en passant par son ID
+    """
+    session = storage.get(Session, session_id)
     
+    if not session:
+        abort(404, description="Session not found")
+        
+    return jsonify(session.to_dict()), 200
+
+
+
+
+# ************************************************
+# POST - CREATE SESSION
+# ************************************************
+@auth_required
+@session_bp.route('/', methods=['POST'])
+def create_session():
+    """
+    Crée une nouvelle session
+    """
+    if not request.is_json:
+        abort(400, description="Not a JSON")
+
+    data = request.json
+
+    # Champs obligatoires
+    required_fields = ['user_id', 'type', 'questions_ids']
+    for field in required_fields:
+        if field not in data:
+            abort(400, description=f"Missing {field}")
+
+    # Vérifier que l'utilisateur existe
+    user = storage.get(User, data["user_id"])
+    if not user:
+        abort(404, description="User not found")
+
+    # Vérifier que le thème existe (optionnel)
+    theme_id = data.get("theme_id")
+    if theme_id:
+        theme = storage.get(Theme, theme_id)
+        if not theme:
+            abort(404, description="Theme not found")
+
+    # Vérifier que le type est valide
+    allowed_types = ["QUIZ", "FLASHCARD"]
+    session_type = data["type"].upper()
+    if session_type not in allowed_types:
+        abort(400, description=f"Invalid session type: {data['type']}")
+
+    # Vérifier que questions_ids est une liste non vide
+    questions_ids = data["questions_ids"]
+    if not isinstance(questions_ids, list) or not questions_ids:
+        abort(400, description="questions_ids must be a non-empty list")
+
     try:
+        # Création de la session
         session = Session(
-            user_id=data['user_id'],
-            theme_id=data['theme_id'],
-            session_type=data['type'],
-            questions_ids=data['questions_ids'],
-            score=data.get('score'),
-            total_questions=data.get('total_questions'),
-            duration_seconds=data.get('duration_seconds')
+            user_id=data["user_id"],
+            theme_id=theme_id,
+            type=session_type,
+            questions_ids=questions_ids,
+            questions_count=len(questions_ids),
+            score=data.get("score"),
+            max_score=data.get("max_score")
         )
-        
-        storage.new(Session)
+
+        storage.new(session)
         storage.save()
-    
+
         return jsonify(session.to_dict()), 201
-    
+
     except Exception as e:
-        abort(400, description=str(e))
-        
+        # Rollback propre en cas d'erreur
+        storage.rollback()
+        abort(400, description=f"Error creating session: {str(e)}")
+     
      
      
 # ************************************************
-# PUT
-# ************************************************    
-@app_views.route('/sessions/<session_id>', methods=['PUT'], strict_slashes=False)
+# PUT - UPDATE SESSION
+# ************************************************
+@auth_required    
+@session_bp.route('/<session_id>', methods=['PUT'])
 def update_session(session_id):
     """Met à jour une session (ex: compléter avec score)"""
     
-    session = storage.get("Session", session_id)
+    session = storage.get(Session, session_id)
     if not session:
-        abort(404)
+        abort(404, description="Session not found")
     
-    if not request.json:
+    if not request.is_json:
         abort(400, description="Not a JSON")
     
     data = request.json
     
     # Si on veut marquer la session comme complétée
-    if 'score' in data and 'duration_seconds' in data:
+    if 'score' in data and 'max_score' in data:
         session.complete_session(
             score=data['score'],
-            duration_seconds=data['duration_seconds']
+            max_score=data['max_score']
         )
     
     storage.save()
     
-    return jsonify(session.to_dict())
+    return jsonify(session.to_dict()), 200
 
 
 
 # ************************************************
-# DELETE
+# DELETE - DELETE SESSION
 # ************************************************
-@app_views.route('/answers/<answer_id>', methods=['DELETE'])
-def delete_session():
+@admin_required
+@session_bp.route('/<session_id>', methods=['DELETE'])  
+def delete_session(session_id):
     """
     Supprime une session
     """
-    session = storage.get("Session", session_id)
+    session = storage.get(Session, session_id)
     if not session:
-        abort(404)
+        abort(404, description="Session not found")
     
     storage.delete(session)
     storage.save()
     
-    return jsonify({}), 200
-
+    return jsonify({"message": "Session deleted"}), 200
