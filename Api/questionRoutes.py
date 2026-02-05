@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request, abort
 from Persistence.DBStorage import storage
 from Models.questionModel import Question
+from Utils.authVerification import auth_required, admin_required
 from Models.tablesSchema import QuestionType, Difficulty
 from Models.themeModel import Theme
 

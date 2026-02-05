@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request, abort
 from Persistence.DBStorage import storage
 from Models.themeModel import Theme
 from Models.userModel import User
+from Utils.authVerification import auth_required, admin_required
 
 
 theme_bp = Blueprint("themes", __name__, url_prefix="/api/themes")

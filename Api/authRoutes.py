@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, make_response
 from Utils.passwordSecurity import PasswordManager
 from Utils.tokenSecurity import TokenManager
-from Utils.authVerication import auth_required, admin_required
+from Utils.authVerification import auth_required, admin_required
 from Persistence.DBStorage import storage
 from Models.userModel import User
 

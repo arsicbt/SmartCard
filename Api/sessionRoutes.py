@@ -7,6 +7,7 @@ from Models.sessionModel import Session
 from Models.tablesSchema import SessionType
 from Models.userModel import User
 from Models.themeModel import Theme
+from Utils.authVerification import auth_required, admin_required
 from Persistence.DBStorage import storage
 
 
