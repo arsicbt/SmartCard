@@ -1,7 +1,3 @@
-"""
-sessionRoutes.py — Routes HTTP pour les sessions
-"""
-
 from flask import Blueprint, jsonify, request, abort
 from Models.sessionModel import Session
 from Models.tablesSchema import SessionType
@@ -9,7 +5,12 @@ from Models.userModel import User
 from Models.themeModel import Theme
 from Utils.authVerification import auth_required, admin_required
 from Persistence.DBStorage import storage
+import os
 
+
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+ALLOWED_EXTENSIONS = {"pdf"}
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 session_bp = Blueprint("sessions", __name__, url_prefix="/api/sessions")
 
@@ -20,6 +21,7 @@ session_bp = Blueprint("sessions", __name__, url_prefix="/api/sessions")
 @admin_required
 @session_bp.route('/user/<user_id>', methods=['GET'])
 def get_user_sessions(user_id):
+    
     """
     Récupère les sessions d'un utilisateur
     """
@@ -47,7 +49,6 @@ def get_session(session_id):
         abort(404, description="Session not found")
         
     return jsonify(session.to_dict()), 200
-
 
 
 
@@ -164,4 +165,4 @@ def delete_session(session_id):
     storage.delete(session)
     storage.save()
     
-    return jsonify({"message": "Session deleted"}), 200
+    return jsonify({"message": "Session deleted"}), 200 

@@ -1,0 +1,21 @@
+[33m59e2351[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32marchitecture_review[m[33m, [m[1;31morigin/architecture_review[m[33m)[m 1. Complete the __init__ file to avoid circular imports
+[33m4914da3[m x
+[33meeda2f3[m feat: Add admin routes and JWT authentication
+[33ma1ee431[m Add bleuprints
+[33m4ef03f0[m 1. Models/tablesSchema.py → Base + 3 Enums
+[33m3f8c3b9[m[33m ([m[1;31morigin/test_CRUD[m[33m, [m[1;32mtest_CRUD[m[33m)[m Backup: fix some syntaxes erors and discrepancy in my app
+[33mb9d115e[m[33m ([m[1;31morigin/app_flask[m[33m, [m[1;32mapp_flask[m[33m)[m Setup the project for CRUD tests
+[33ma806400[m[33m ([m[1;31morigin/API_implementation[m[33m, [m[1;32mAPI_implementation[m[33m)[m Finish to implement the API routes
+[33m83f2afe[m Impement the Theme and Session endpoints for CRUD operations
+[33mf6716fe[m Implement the session endpoints for CRUd operation
+[33ma157613[m Implement the users endpoints for CRUD operation
+[33mdd885ce[m Finish the first version of my models
+[33m26deddf[m[33m ([m[1;31morigin/review_model[m[33m, [m[1;32mreview_model[m[33m)[m Remove: Card et Quizz Models
+[33ma6bbbb0[m Create theme and Question Models base on the new DB
+[33mffd52dc[m Create the Theme model based on the new database schema
+[33m0f16e43[m Review the user and the base model, based on the DB
+[33m9341aae[m[33m ([m[1;32mmain[m[33m)[m Review the User Model based on the database
+[33m305b1dd[m Create Database Schema base on user workflow :
+[33m4781d98[m feat: Implement a full security layer for the back
+[33m32103c3[m Create Services: add users services
+[33m4ace1a9[m Create the models: Add initial data models and core model structure

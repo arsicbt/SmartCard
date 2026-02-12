@@ -79,12 +79,12 @@ def create_user():
             password=hashed,
             name=data['name']
         )
-        
+    
         storage.new(user)
         storage.save()
-    
+
         return jsonify(user.to_dict()), 201
-    
+
     except Exception as e:
         abort(400, description=str(e))
 
