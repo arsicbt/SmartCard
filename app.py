@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
+import os
 
 DATABASE_URL = 'sqlite:///smartcard.db'
 

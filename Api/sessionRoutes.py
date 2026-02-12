@@ -1,5 +1,6 @@
 from flask import jsonify, request, abort
 from API.v1.views import app_views
+import os
 from Persistence.db_storage import storage
 from Models.session import Session
 

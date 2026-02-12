@@ -1,7 +1,9 @@
-from Models.user import User
-from Utils.security import PasswordManager, TokenManager
-from Utils.validators import InputValidator
+from Models.userModel import User
+from Utils.passwordSecurity import PasswordManager
+from Utils.tokenSecurity import TokenManager
+from Utils.inputSecurity import InputValidator
 from typing import Optional, Dict, Tuple
+
 
 class AuthService:
     """Service gérant l'authentification"""
@@ -16,6 +18,7 @@ class AuthService:
     def register(self, email: str, password: str, name: str) -> Tuple[bool, Optional[Dict], Optional[str]]:
         """
         Enregistre un nouvel utilisateur
+        
         
         Processus sécurisé :
         1. Validation des entrées
@@ -51,7 +54,7 @@ class AuthService:
         # 4. CRÉATION USER
         user = User(
             email=email,
-            password=hashed_password,  # ⚠️ Hash, pas clair !
+            password=hashed_password,
             name=name
         )
         self.storage.new(user)

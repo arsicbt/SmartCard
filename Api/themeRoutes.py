@@ -82,7 +82,7 @@ def create_theme():
             description=data.get('description')
         )
         
-        temp_user = User(...)  # Créer user temporaire
+        temp_user = User(...)
         session.add(temp_user)
         session.commit()
 

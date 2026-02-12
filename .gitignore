@@ -1,4 +1,5 @@
 venv/
 smartcard.db
 env.example
-
+*Zone.Identifier*
+  
