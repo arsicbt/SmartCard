@@ -26,6 +26,7 @@ class User(BaseModel):
         - password : Hash bcrypt du mot de passe
         - name : Pseudo/nom d'affichage
         - is_verified : Email vérifié
+        - is_admin : Privilèges administrateur
         - verification_token : Token de vérification email
         - last_login_at : Dernière connexion
     
@@ -48,6 +49,7 @@ class User(BaseModel):
     
     # Vérification email
     is_verified = Column(Boolean, default=False, nullable=False)
+    is_admin = Column(Boolean, default=False, nullable=False)
     verification_token = Column(String(255), nullable=True)
     last_login_at = Column(String, nullable=True)
     
@@ -65,6 +67,7 @@ class User(BaseModel):
     __table_args__ = (
         Index('idx_users_email', 'email'),
         Index('idx_users_deleted', 'deleted_at'),
+        Index('idx_users_admin', 'is_admin'),
     )
     
     # ********************************************************
@@ -77,7 +80,8 @@ class User(BaseModel):
         last_name: str,
         email: str,
         password: str,
-        name: Optional[str] = None
+        name: Optional[str] = None,
+        is_admin: bool = False
     ) -> Tuple[Optional['User'], Optional[str]]:
         """
         Valide les données et crée un utilisateur
@@ -92,6 +96,7 @@ class User(BaseModel):
             last_name: Nom
             email: Email
             password: Mot de passe en clair
+            is_admin: Privilege administrateur
             name: Pseudo optionnel
         
         Returns:
@@ -123,7 +128,8 @@ class User(BaseModel):
             email=email.lower().strip(),
             password=password_hash,
             name=name,
-            is_verified=False
+            is_verified=False,
+            is_admin=is_admin
         )
         
         return user, None

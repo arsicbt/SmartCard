@@ -1,23 +1,27 @@
-from flask import Flask, request, jsonify
+from flask import Flask
 from flask_cors import CORS
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
 
-DATABASE_URL = 'sqlite:///smartcard.db'
+from Api.userRoutes import users_bp
+from Api.themeRoutes import theme_bp
+from Api.questionRoutes import question_bp
+from Api.answerRoutes import answer_bp
+from Api.sessionRoutes import session_bp
+from Api.authRoutes import auth_bp
+
 
 app = Flask(__name__)
 CORS(app)
 
 @app.route("/")
 def index():
-    return {
-        "status": "ok"
-    }, 200
-    
+    return {"status": "SmartCards API running"}, 200
 
-# Engine & session
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(bind=engine)
+app.register_blueprint(users_bp)
+app.register_blueprint(theme_bp)
+app.register_blueprint(question_bp)
+app.register_blueprint(answer_bp)
+app.register_blueprint(session_bp)
+app.register_blueprint(auth_bp)
 
 if __name__ == "__main__":
     app.run(debug=True)

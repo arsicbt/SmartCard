@@ -1,133 +1,103 @@
-from flask import jsonify, request, abort
-from Persistence.db_storage import storage
-from Models.question import Question
+from flask import Blueprint, jsonify, request, abort
+from Persistence.DBStorage import storage
+from Models.questionModel import Question
+from Utils.authVerification import auth_required, admin_required
+from Models.tablesSchema import QuestionType, Difficulty
+from Models.themeModel import Theme
 
-
-question_bp = Blueprint("users", __name__, url_prefix="/question")
-
-
-# ************************************************
-# GET BY QUESTION BY ID
-# ************************************************
-@app_views.route('/questions', methods=['GET'], strict_slashes=False)
-def get_questions():
-    """
-    Récupère toutes les questions
-    """
-    questions = storage.all("Question")
-    return jsonify([q.to_dict() for q in questions.values()])
-
+question_bp = Blueprint("questions", __name__, url_prefix="/api/questions")
 
 # ************************************************
 # GET ALL QUESTIONS
 # ************************************************
-@app_views.route('/questions/<question_id>', methods=['GET'], strict_slashes=False)
+@admin_required
+@question_bp.route("/", methods=["GET"])
+def get_questions():
+    questions = storage.all(Question)
+    return jsonify([q.to_dict() for q in questions.values()]), 200
+
+
+# ************************************************
+# GET QUESTION BY ID
+# ************************************************
+@admin_required
+@question_bp.route("/<question_id>", methods=["GET"])
 def get_question(question_id):
-    """Récupère une question par ID"""
-    question = storage.get("Question", question_id)
-    
+    question = storage.get(Question, question_id)
     if not question:
-        abort(404)
-    
-    return jsonify(question.to_dict())
+        abort(404, description="Question not found")
+    return jsonify(question.to_dict()), 200
 
 
 # ************************************************
-# GET QUESTION BY THEME ID
+# CREATE QUESTION
 # ************************************************
-@app_views.route('/themes/<theme_id>/questions', methods=['GET'], strict_slashes=False)
-def get_theme_questions(theme_id):
-    """Récupère les questions d'un thème"""
-    theme = storage.get("Theme", theme_id)
-    if not theme:
-        abort(404)
-    
-    questions = storage.filter_by("Question", theme_id=theme_id)
-    return jsonify([q.to_dict() for q in questions])
-
-
-
-# ************************************************
-# POST
-# ************************************************
-@app_views.route('/questions', methods=['POST'], strict_slashes=False)
+@auth_required
+@question_bp.route("/", methods=["POST"])
 def create_question():
-    """Crée une nouvelle question"""
-    
-    if not request.json:
+    if not request.is_json:
         abort(400, description="Not a JSON")
-    
-    required_fields = ['question_text', 'theme_id']
-    for field in required_fields:
-        if field not in request.json:
+
+    data = request.get_json()
+    required = ["question_text", "theme_id"]
+
+    for field in required:
+        if field not in data:
             abort(400, description=f"Missing {field}")
-    
-    data = request.json
-    
-    # Vérifier que le thème existe
-    theme = storage.get("Theme", data['theme_id'])
+
+    theme = storage.get(Theme, data["theme_id"])
     if not theme:
         abort(404, description="Theme not found")
-    
-    try:
-        question = Question(
-            question_text=data['question_text'],
-            theme_id=data['theme_id'],
-            question_type=data.get('type', 'quiz'),
-            difficulty=data.get('difficulty', 'medium'),
-            explanation=data.get('explanation')
-        )
-        
-        storage.new(question)
-        storage.save()
-        
-        return jsonify(question.to_dict()), 201
-        
-    except Exception as e:
-        abort(400, description=str(e))
 
+    question = Question(
+        question_text=data["question_text"],
+        theme_id=data["theme_id"],
+        type=QuestionType[data.get('type', 'QUIZ').upper()],
+        difficulty=Difficulty[data.get('difficulty', 'MEDIUM').upper()],
+        explanation=data.get("explanation")
+    )
+
+    storage.new(question)
+    storage.save()
+
+    return jsonify(question.to_dict()), 201
 
 
 # ************************************************
-# PUT
+# UPDATE QUESTION
 # ************************************************
-@app_views.route('/questions/<question_id>', methods=['PUT'], strict_slashes=False)
+@auth_required
+@question_bp.route("/<question_id>", methods=["PUT"])
 def update_question(question_id):
-    """Met à jour une question"""
-    
-    question = storage.get("Question", question_id)
+    question = storage.get(Question, question_id)
     if not question:
         abort(404)
-    
-    if not request.json:
+
+    if not request.is_json:
         abort(400, description="Not a JSON")
-    
-    data = request.json
-    ignore_keys = ['id', 'theme_id', 'created_at', 'updated_at', 'deleted_at']
-    
-    for key, value in data.items():
-        if key not in ignore_keys and hasattr(question, key):
+
+    ignore = ["id", "theme_id", "created_at", "updated_at", "deleted_at"]
+
+    for key, value in request.json.items():
+        if key not in ignore and hasattr(question, key):
             setattr(question, key, value)
-    
+
     question.update_timestamp()
     storage.save()
-    
-    return jsonify(question.to_dict())
 
+    return jsonify(question.to_dict()), 200
 
 
 # ************************************************
-# DELETE
+# DELETE QUESTION
 # ************************************************
-@app_views.route('/questions/<question_id>', methods=['DELETE'], strict_slashes=False)
+@admin_required
+@question_bp.route("/<question_id>", methods=["DELETE"])
 def delete_question(question_id):
-    """Supprime une question"""
-    
-    question = storage.get("Question", question_id)
+    question = storage.get(Question, question_id)
     if not question:
         abort(404)
-    
+
     storage.delete(question)
     storage.save()
-    
     return jsonify({}), 200

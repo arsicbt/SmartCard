@@ -45,7 +45,7 @@ class Question(BaseModel):
     question_text = Column(Text, nullable=False)
     difficulty = Column(SQLEnum(Difficulty), default=Difficulty.MEDIUM, nullable=False)
     explanation = Column(Text, nullable=True)
-    source = Column(String(50), default='ai_generated')  # 'ai_generated' ou 'user_created'
+    #source = Column(String(50), default='ai_generated')  # 'ai_generated' ou 'user_created'
     
     # Statistiques
     times_used = Column(Integer, default=0)

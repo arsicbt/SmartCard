@@ -16,7 +16,7 @@ from typing import Optional, List, Dict, Type, Any
 from datetime import datetime
 import os
 
-# Import des modèles (Architecture HBNB)
+# Import des modèles
 from Models.tablesSchema import Base
 from Models.userModel import User
 from Models.themeModel import Theme
@@ -265,11 +265,11 @@ class DBStorage:
         """Récupère tous les thèmes d'un utilisateur"""
         return self.filter_by(Theme, user_id=user_id)
     
-    def get_theme_flashcards(self, theme_id: str) -> List[Flashcard]:
+    def get_theme_flashcards(self, theme_id: str) ->  "List[Flashcard]":
         """Récupère toutes les flashcards d'un thème"""
         return self.filter_by(Flashcard, theme_id=theme_id)
     
-    def get_flashcards_to_review(self, user_id: str, limit: int = 20) -> List[Flashcard]:
+    def get_flashcards_to_review(self, user_id: str, limit: int = 20) ->  "List[Flashcard]":
         """
         Récupère les flashcards à réviser (spaced repetition)
         

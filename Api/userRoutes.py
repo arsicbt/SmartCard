@@ -1,20 +1,23 @@
-from flask import jsonify, request, abort
-from .Utils import hash_password
-from Persistence.db_storage import storage
-from Models.user import User
+from flask import Blueprint, jsonify, request, abort
+from Utils.passwordSecurity import PasswordManager
+from Utils.inputSecurity import InputValidator
+from Persistence.DBStorage import storage
+from Models.userModel import User
+from Utils.authVerification import auth_required, admin_required
 import bcrypt
 
 
-users_bp = Blueprint("users", __name__, url_prefix="/users")
+users_bp = Blueprint("users", __name__, url_prefix="/api/users")
 
 
 # ************************************************
 # GET ALl
 # ************************************************
-@app_views.route('/user', methods=[GET])
+@admin_required
+@users_bp.route('/', methods=['GET'])
 def get_users():
     """REcupere tous les utilisateur"""
-    users = storage.all('Users')
+    users = storage.all(User)
     # Serialization
     return jsonify([user.to_dict() for user in users.values()])
 
@@ -23,10 +26,11 @@ def get_users():
 # ************************************************
 # GET BY ID
 # ************************************************
-@app_views.route('/users/<user_id>', methods=['GET'])
-def get_user_by_id():
+@admin_required
+@users_bp.route('/<user_id>', methods=['GET'])
+def get_user_by_id(user_id):
     """Recupere l'utilisateur via son id"""
-    user = storage.get("User", user_id)
+    user = storage.get(User, user_id)
     
     if not user:
         abort(404)
@@ -38,11 +42,11 @@ def get_user_by_id():
 # ************************************************
 # POST
 # ************************************************
-@app_views.route('/users', methods=['POST'])
+@auth_required
+@users_bp.route('/', methods=['POST'])
 def create_user():
-    
     """Crée un nouvel utilisateur"""
-    if not requests.json:
+    if not request.json:
         abort(400, description="Not a JSON")
         
     if 'email' not in request.json:
@@ -54,27 +58,25 @@ def create_user():
     
     data = request.json
     
-    if not User.validate_email(data['email']):
-        abort(400, description="Invalid email format")
-    
-    # Valider password
-    is_valid, error = User.validate_password(data['password'])
+    is_valid, error = InputValidator.validate_email(data['email'])
     if not is_valid:
         abort(400, description=error)
-    
-    existing_users = storage.filter_by("Users", email=data['email'])
-    id existing_users:
-        abort(400, desciption="Email already exusts")
-        
-    # Hasher le mdp 
-    hash_password(data['password'])
 
+    is_valid, error = InputValidator.validate_password(data['password'])
+    if not is_valid:
+        abort(400, description=error)
+
+    if storage.filter_by(User, email=data['email']):
+        abort(400, description="Email already exists")
+
+    hashed = PasswordManager.hash_password(data['password'])
+    
     try:
         user = User(
-            first_name=data['first_name']
-            last_name=data['last_name']
-            email=data['email']
-            password=data['password']
+            first_name=data['first_name'],
+            last_name=data['last_name'],
+            email=data['email'],
+            password=hashed,
             name=data['name']
         )
         
@@ -91,12 +93,13 @@ def create_user():
 # ************************************************
 # PUT
 # ************************************************
-@app_views.route('/users/<user_id', methods=['PUT'])
-def update_user():
+@auth_required
+@users_bp.route('/<user_id>', methods=['PUT'])
+def update_user(user_id):
     """
     Mets à jour les données utilisateurs
     """
-    user = storage.get("User", user_id)
+    user = storage.get(User, user_id)
     if not user:
         abort(404)
         
@@ -105,13 +108,13 @@ def update_user():
         
     data = request.json
           
-    ignored_key = ['id', 'created_at', 'updated_at', 'deleted_at', 'password_hash']
+    ignored_keys = ['id', 'created_at', 'updated_at', 'deleted_at', 'password_hash']
     
     for k, v in data.items():
-        if key not in ignored_keys and hasattr(user, k):
-            settattr(user, k, v)
+        if k not in ignored_keys and hasattr(user, k):
+            setattr(user, k, v)
             
-    user.updated_timestamp()
+    user.update_timestamp()
     storage.save()
     
     return jsonify(user.to_dict())
@@ -121,15 +124,16 @@ def update_user():
 # ************************************************
 # DELETE
 # ************************************************
-@app_views.route('/user/<user_id>', method['DELETE'])
-def delete_user():
+@admin_required
+@users_bp.route('/<user_id>', methods=['DELETE'])
+def delete_user(user_id):
     """
     Supprime (soft delete) l'utilisateur 
     """
 
-    user = storage.get("User", user_id)
+    user = storage.get(User, user_id)
     
-    if note user:
+    if not user:
         abort(404)
         
     storage.delete(user)
