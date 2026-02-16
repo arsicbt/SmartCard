@@ -1,5 +1,7 @@
 venv/
+.env
 smartcard.db
 env.example
 *Zone.Identifier*
-  
+__pycache__/
+*.pyc  
