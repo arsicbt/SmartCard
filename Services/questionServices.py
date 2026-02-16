@@ -33,7 +33,6 @@ class QuizzService:
     # ********************************************************
     # CREATION QUESTIONS
     # ********************************************************
-    
     def create_question(
         self,
         theme_id: str,
@@ -124,7 +123,6 @@ class QuizzService:
     # ********************************************************
     # SESSIONS DE QUIZ
     # ********************************************************
-    
     def create_quiz_session(
         self,
         user_id: str,
@@ -232,7 +230,6 @@ class QuizzService:
     # ********************************************************
     # SOUMISSION QUIZ
     # ********************************************************
-    
     def submit_quiz(
         self,
         session_id: str,
@@ -304,7 +301,6 @@ class QuizzService:
     # ********************************************************
     # STATISTIQUES
     # ********************************************************
-    
     def get_user_stats(self, user_id: str) -> Dict:
         """
         Récupère les statistiques d'un utilisateur

@@ -77,10 +77,10 @@ class Session(BaseModel):
         Index('idx_sessions_completed', 'completed_at'),
     )
     
+
     # ********************************************************
     # LOGIQUE MÉTIER - SESSION MANAGEMENT
     # ********************************************************
-    
     def complete_session(self, score: int, max_score: int) -> None:
         """
         Termine la session et enregistre le score
@@ -140,10 +140,10 @@ class Session(BaseModel):
             self.questions_ids.append(question_id)
             self.update_timestamp()
     
+    
     # ********************************************************
     # REPRÉSENTATION
     # ********************************************************
-    
     def __repr__(self) -> str:
         status = "completed" if self.is_completed() else "in_progress"
         score_str = f"{self.score}/{self.max_score}" if self.score is not None else "N/A"

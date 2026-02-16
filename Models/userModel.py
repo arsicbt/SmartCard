@@ -40,7 +40,6 @@ class User(BaseModel):
     # ********************************************************
     # COLONNES SPÉCIFIQUES
     # ********************************************************
-    
     first_name = Column(String(255), nullable=False)
     last_name = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, nullable=False, index=True)
@@ -56,14 +55,12 @@ class User(BaseModel):
     # ********************************************************
     # RELATIONS SQLALCHEMY
     # ********************************************************
-    
     themes = relationship('Theme', back_populates='user', cascade='all, delete-orphan')
     sessions = relationship('Session', back_populates='user', cascade='all, delete-orphan')
     
     # ********************************************************
     # INDEX
     # ********************************************************
-    
     __table_args__ = (
         Index('idx_users_email', 'email'),
         Index('idx_users_deleted', 'deleted_at'),
@@ -73,7 +70,6 @@ class User(BaseModel):
     # ********************************************************
     # VALIDATION AVEC UTILS
     # ********************************************************
-    
     @staticmethod
     def validate_and_create(
         first_name: str,
@@ -155,6 +151,5 @@ class User(BaseModel):
     # ********************************************************
     # REPRÉSENTATION
     # ********************************************************
-    
     def __repr__(self) -> str:
         return f"<User(id={self.id[:8] if self.id else 'None'}, email={self.email})>"

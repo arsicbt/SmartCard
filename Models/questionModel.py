@@ -68,10 +68,10 @@ class Question(BaseModel):
         Index('idx_questions_difficulty', 'difficulty'),
     )
     
+    
     # ********************************************************
     # LOGIQUE MÉTIER - TYPE CHECKING
     # ********************************************************
-    
     def is_quiz(self) -> bool:
         """
         Vérifie si c'est une question de quiz
@@ -113,10 +113,10 @@ class Question(BaseModel):
             self.times_correct += 1
         self.update_timestamp()
     
+
     # ********************************************************
     # REPRÉSENTATION
     # ********************************************************
-    
     def __repr__(self) -> str:
         text_preview = self.question_text[:50] + '...' if len(self.question_text) > 50 else self.question_text
         return f"<Question(id={self.id[:8] if self.id else 'None'}, type={self.type.value if self.type else 'None'}, text='{text_preview}')>"

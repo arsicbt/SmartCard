@@ -1,7 +1,6 @@
 data = {}
 
 class coreServices():
-    
     # *********************************************
     # POST 
     # *********************************************
@@ -10,14 +9,12 @@ class coreServices():
         instance = cls(**kwargs)
         return instance 
     
-
     # *********************************************
     # GET 
     # *********************************************
     @staticmethod
     def read(self, object_id):
         return data.get(object_id)
-    
     
     # *********************************************
     # DEL

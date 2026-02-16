@@ -38,7 +38,6 @@ class Theme(BaseModel):
     # ********************************************************
     # COLONNES SPÉCIFIQUES
     # ********************************************************
-    
     user_id = Column(String(60), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     name = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
@@ -51,7 +50,6 @@ class Theme(BaseModel):
     # ********************************************************
     # RELATIONS SQLALCHEMY
     # ********************************************************
-    
     user = relationship('User', back_populates='themes')
     questions = relationship('Question', back_populates='theme', cascade='all, delete-orphan')
     sessions = relationship('Session', back_populates='theme')
@@ -59,7 +57,6 @@ class Theme(BaseModel):
     # ********************************************************
     # CONTRAINTES ET INDEX
     # ********************************************************
-    
     __table_args__ = (
         UniqueConstraint('user_id', 'name', name='uq_user_theme_name'),
         Index('idx_themes_user', 'user_id'),
@@ -67,8 +64,7 @@ class Theme(BaseModel):
     
     # ********************************************************
     # LOGIQUE MÉTIER - KEYWORDS MATCHING
-    # ********************************************************
-    
+    # *******************************************************
     def matches_keywords(self, search_keywords: List[str], threshold: float = 0.5) -> bool:
         """
         Vérifie si les mots-clés de recherche correspondent au thème
@@ -142,6 +138,5 @@ class Theme(BaseModel):
     # ********************************************************
     # REPRÉSENTATION
     # ********************************************************
-    
     def __repr__(self) -> str:
         return f"<Theme(id={self.id[:8] if self.id else 'None'}, name={self.name}, questions={self.questions_count})>"
