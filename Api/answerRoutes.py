@@ -11,8 +11,8 @@ answer_bp = Blueprint("answers", __name__, url_prefix="/api/answers")
 # ************************************************
 # GET ANSWER BY ID
 # ************************************************
-@admin_required
 @answer_bp.route("/<answer_id>", methods=["GET"])
+@admin_required
 def get_answer(answer_id):
     """Récupère une réponse par ID"""
     answer = storage.get(Answer, answer_id)
@@ -26,8 +26,8 @@ def get_answer(answer_id):
 # ************************************************
 # GET ALL ANSWERS FOR A QUESTION 
 # ************************************************
-@admin_required
 @answer_bp.route("/question/<question_id>", methods=["GET"])
+@admin_required
 def get_question_answers(question_id):
     """Récupère les réponses d'une question"""
     question = storage.get("Question", question_id)
@@ -41,8 +41,8 @@ def get_question_answers(question_id):
 # ************************************************
 # CREATE ANSWER
 # ************************************************
-@auth_required
 @answer_bp.route("/", methods=["POST"])
+@auth_required
 def create_answer():
     """Crée une nouvelle réponse"""
     
@@ -77,8 +77,8 @@ def create_answer():
 # ************************************************
 # DELETE ASNWER
 # ************************************************
-@admin_required
 @answer_bp.route("/<answer_id>", methods=["DELETE"])
+@admin_required
 def delete_answer(answer_id):
     """Supprime une réponse"""
     

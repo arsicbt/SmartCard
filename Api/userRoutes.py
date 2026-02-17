@@ -13,8 +13,8 @@ users_bp = Blueprint("users", __name__, url_prefix="/api/users")
 # ************************************************
 # GET ALl
 # ************************************************
-@admin_required
 @users_bp.route('/', methods=['GET'])
+@admin_required
 def get_users():
     """REcupere tous les utilisateur"""
     users = storage.all(User)
@@ -26,8 +26,8 @@ def get_users():
 # ************************************************
 # GET BY ID
 # ************************************************
-@admin_required
 @users_bp.route('/<user_id>', methods=['GET'])
+@admin_required
 def get_user_by_id(user_id):
     """Recupere l'utilisateur via son id"""
     user = storage.get(User, user_id)
@@ -42,7 +42,6 @@ def get_user_by_id(user_id):
 # ************************************************
 # POST
 # ************************************************
-@auth_required
 @users_bp.route('/', methods=['POST'])
 def create_user():
     """Crée un nouvel utilisateur"""
@@ -93,8 +92,8 @@ def create_user():
 # ************************************************
 # PUT
 # ************************************************
-@auth_required
 @users_bp.route('/<user_id>', methods=['PUT'])
+@auth_required
 def update_user(user_id):
     """
     Mets à jour les données utilisateurs
@@ -124,8 +123,8 @@ def update_user(user_id):
 # ************************************************
 # DELETE
 # ************************************************
-@admin_required
 @users_bp.route('/<user_id>', methods=['DELETE'])
+@admin_required
 def delete_user(user_id):
     """
     Supprime (soft delete) l'utilisateur 

@@ -7,9 +7,12 @@ from Models.sessionModel import Session
 from Models.tablesSchema import SessionType
 from Models.userModel import User
 from Models.themeModel import Theme
+from Models.questionModel import Question
+from Models.answerModel import Answer
 from Utils.authVerification import auth_required, admin_required
 from Persistence.DBStorage import storage
-
+from Services.pdfAnalysisService import PDFAnalysisService
+from Services.similarityService import SimilarityService
 
 session_bp = Blueprint("sessions", __name__, url_prefix="/api/sessions")
 
@@ -17,8 +20,8 @@ session_bp = Blueprint("sessions", __name__, url_prefix="/api/sessions")
 # ************************************************
 # GET SESSIONS BY USER ID
 # ************************************************
-@admin_required
 @session_bp.route('/user/<user_id>', methods=['GET'])
+@admin_required
 def get_user_sessions(user_id):
     """
     Récupère les sessions d'un utilisateur
@@ -35,8 +38,8 @@ def get_user_sessions(user_id):
 # ************************************************
 # GET SESSION BY ID
 # ************************************************
-@admin_required
 @session_bp.route('/<session_id>', methods=['GET'])
+@admin_required
 def get_session(session_id):
     """
     Récupère une session en passant par son ID
@@ -54,8 +57,8 @@ def get_session(session_id):
 # ************************************************
 # POST - CREATE SESSION
 # ************************************************
-@auth_required
 @session_bp.route('/', methods=['POST'])
+@auth_required
 def create_session():
     """
     Crée une nouvelle session
@@ -120,9 +123,9 @@ def create_session():
      
 # ************************************************
 # PUT - UPDATE SESSION
-# ************************************************
-@auth_required    
+# ************************************************   
 @session_bp.route('/<session_id>', methods=['PUT'])
+@auth_required
 def update_session(session_id):
     """Met à jour une session (ex: compléter avec score)"""
     
@@ -151,8 +154,8 @@ def update_session(session_id):
 # ************************************************
 # DELETE - DELETE SESSION
 # ************************************************
-@admin_required
 @session_bp.route('/<session_id>', methods=['DELETE'])  
+@admin_required
 def delete_session(session_id):
     """
     Supprime une session
@@ -169,10 +172,10 @@ def delete_session(session_id):
 
 
 # ************************************************
-# POST - XREATE SESSION WITH PDF ANALYSIS
+# POST - CREATE SESSION WITH PDF ANALYSIS
 # ************************************************
+@session_bp.route('/create-with-pdf', methods=['POST'])
 @auth_required
-@session_bp.route('/create-with-pdf', method=['POST'])
 def create_session_with_pdf():
     """
     Crée une session en analysant un PDF
@@ -201,7 +204,7 @@ def create_session_with_pdf():
     if not user_id:
         abort(400, desciption="Missins user_id")
         
-    user = storage.get(Usern user_id):
+    user = storage.get(User, user_id)
     if not user:
         abort(404, description="User not found")
         
@@ -370,7 +373,7 @@ def create_session_with_pdf():
                 "name": theme_name,
                 "was_existing": matching_theme is not None
             },
-            "questions_count": len(question_ids)
+            "questions_count": len(question_ids),
             "pdf_analysed": True
         }), 201
             

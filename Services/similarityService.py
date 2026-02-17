@@ -140,7 +140,7 @@ class SimilarityService:
         
         similarity = len(intersection) / len(union)
         
-        reutrn similarity
+        return similarity
         
     
     @staticmethod
@@ -158,6 +158,122 @@ class SimilarityService:
         Returns:
             Score entre 0.0 et 1.0
         """
+        if not text_keywords or not target_keywords:
+            return 0.0
         
+        set1 = set(k.lower().strip() for k in text_keywords)
+        set2 = set(k.lower().strip() for k in target_keywords)
         
+        intersection = set1 & set2
+        
+        # Calculer par rapport à la taille du plus petit set
+        min_size = min(len(set1), len(set2))
+        
+        if min_size == 0:
+            return 0.0
+        
+        return len(intersection) / min_size
     
+
+    # ********************************************************
+    # MATCHING AVEC QUESTIONS
+    # ********************************************************
+    
+    @staticmethod
+    def find_matching_questions(
+        pdf_content: str,
+        questions: List[Dict],
+        threshold: float = 0.4
+    ) -> List[Dict]:
+        """
+        Trouve les questions qui correspondent au contenu du PDF
+        
+        Args:
+            pdf_content: Contenu du PDF
+            questions: Liste de questions (dict avec 'question_text' et 'id')
+            threshold: Seuil minimum de similarité (0.4 = 40%)
+        
+        Returns:
+            Liste de questions avec leur score de similarité
+            Format: [
+                {
+                    'question': question_dict,
+                    'similarity_score': 0.67
+                },
+                ...
+            ]
+        """
+        # Extraire les mots-clés du PDF
+        pdf_keywords = SimilarityService.extract_keywords(pdf_content, top_n=50)
+        
+        matching_questions = []
+        
+        for question in questions:
+            # Texte de la question
+            question_text = question.get('question_text', '')
+            
+            # Calculer la similarité
+            similarity = SimilarityService.calculate_text_similarity(
+                pdf_content,
+                question_text
+            )
+            
+            # Si au-dessus du seuil, ajouter
+            if similarity >= threshold:
+                matching_questions.append({
+                    'question': question,
+                    'similarity_score': similarity
+                })
+        
+        # Trier par score décroissant
+        matching_questions.sort(key=lambda x: x['similarity_score'], reverse=True)
+        
+        return matching_questions
+        
+
+    # ********************************************************
+    # MATCHING AVEC THÈMES
+    # ********************************************************
+    
+    @staticmethod
+    def find_matching_theme(
+        pdf_keywords: List[str],
+        themes: List[Dict],
+        threshold: float = 0.4
+    ) -> Dict:
+        """
+        Trouve le thème qui correspond le mieux aux mots-clés du PDF
+        
+        Args:
+            pdf_keywords: Mots-clés extraits du PDF
+            themes: Liste de thèmes (dict avec 'id', 'name', 'keywords')
+            threshold: Seuil minimum de correspondance (0.4 = 40%)
+        
+        Returns:
+            Meilleur thème correspondant ou None
+            Format: {
+                'theme': theme_dict,
+                'match_score': 0.65
+            }
+        """
+        best_match = None
+        best_score = 0.0
+        
+        for theme in themes:
+            theme_keywords = theme.get('keywords', [])
+            
+            # Calculer le chevauchement
+            overlap = SimilarityService.calculate_keyword_overlap(
+                pdf_keywords,
+                theme_keywords
+            )
+            
+            # Mettre à jour si meilleur score
+            if overlap >= threshold and overlap > best_score:
+                best_score = overlap
+                best_match = {
+                    'theme': theme,
+                    'match_score': overlap
+                }
+        
+        return best_match

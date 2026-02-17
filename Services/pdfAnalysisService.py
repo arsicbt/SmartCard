@@ -14,11 +14,14 @@ from typing import Dict, List, Optional, Tuple
 import PyPDF2
 import json
 from groq import Groq
+from io import BytesIO
+from dotenv import load_dotenv
 
+load_dotenv() 
 
 # Configuration Groq
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
-if note GROQ_API_KEY:
+if not GROQ_API_KEY:
     raise ValueError("Groq à besoin de sa clé dans les var d'environement")
 
 groq_client = Groq(api_key=GROQ_API_KEY)
@@ -70,7 +73,7 @@ class PDFAnalysisService:
             if not full_text.strip():
                 raise ValueError("No text could be extracted from PDF")
             
-            retrun full_text.strip()
+            return full_text.strip()
             
         except Execption as e:
             raise ValueError(f"Error extracting PDF text: {str(e)}")
@@ -128,58 +131,55 @@ Important:
 - Description should be one sentence
 - Return ONLY the JSON, no other text"""
 
-
         try:
             response = groq_client.chat.completions.create(
-                model="llama-3.3-70b-versatile"
-                messges=[
+                model="llama-3.3-70b-versatile",
+                messages=[
                     {
                         "role": "system",
-                        "content": "You are an expert educational content analyzer. Always respond with valid JSON only."
+                        "content": "You are an expert educator who creates high-quality study materials. Always respond with valid JSON only."
                     },
                     {
                         "role": "user",
                         "content": prompt
                     }
                 ],
-                temperature=0.3,
-                max_tokens=500
+                temperature=0.7,
+                max_tokens=3000
             )
             
-            # Extraire la réponse 
+            # Extraire la réponse
             result_text = response.choices[0].message.content.strip()
             
-            # Nettoyer la réponse (=enlever le markdown si y'en a)
+            # Nettoyer la réponse
             result_text = re.sub(r'```json\s*', '', result_text)
             result_text = re.sub(r'```\s*', '', result_text)
             
             # Parser le JSON
-            theme_data = json.loads(result_text)
+            questions_data = json.loads(result_text)
             
-            # Valider la structure
-            required_keys = ['theme_name', 'keywords', 'description']
-            if not all(key in theme_data for key in required_keys):
-                raise ValueError("Invalid response strucutre from AI")
+            # Valider
+            if 'questions' not in questions_data or not isinstance(questions_data['questions'], list):
+                raise ValueError("Invalid questions structure")
             
-            return theme_data
+            return questions_data['questions']
         
-        except json.JsonDecodeError as e:
-            raise ValueError(f"Failed to parse Groq respinse as JSON: {str(e)}")
-        
-        except Execption as e:
-            raise ValueError(f"Error analyzing theme with Groq: {str(e)}")
-        
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Failed to parse Groq response as JSON: {str(e)}")
+        except Exception as e:
+            raise ValueError(f"Error generating questions with Groq: {str(e)}")
+    
         
     # ********************************************************
     # GÉNÉRATION DE QUESTIONS/RÉPONSES
     # ********************************************************
     
     @staticmethod
-    def generated_questions_from_pdf(
-        pdf_content:str,
+    def generate_questions_from_pdf(
+        pdf_content: str,
         session_type: str,
         count: int = 10
-    ) -> List[Dict[str, any]] :
+    ) -> List[Dict[str, any]]:
         """
         Génère des questions à partir du contenu PDF
         
@@ -215,11 +215,10 @@ Important:
             }
         ]
         """
-        
         # Limiter le contenu
         content_sample = pdf_content[:6000] if len(pdf_content) > 6000 else pdf_content
         
-        if session_type == "QUIZZ":
+        if session_type == "QUIZ":
             prompt = f"""Based on the following educational content, generate {count} multiple-choice quiz questions.
 
 CONTENT:
@@ -275,7 +274,7 @@ Requirements:
 - Questions should be clear and specific
 - Answers should be concise but complete (2-4 sentences max)
 - Return ONLY the JSON, no other text"""
-
+        
         try:
             response = groq_client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
@@ -292,29 +291,29 @@ Requirements:
                 temperature=0.7,
                 max_tokens=3000
             )
+            
+            # Extraire la réponse
+            result_text = response.choices[0].message.content.strip()
+            
+            # Nettoyer la réponse
+            result_text = re.sub(r'```json\s*', '', result_text)
+            result_text = re.sub(r'```\s*', '', result_text)
+            
+            # Parser le JSON
+            questions_data = json.loads(result_text)
+            
+            # Valider
+            if 'questions' not in questions_data or not isinstance(questions_data['questions'], list):
+                raise ValueError("Invalid questions structure")
+            
+            return questions_data['questions']
+        
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Failed to parse Groq response as JSON: {str(e)}")
+        except Exception as e:
+            raise ValueError(f"Error generating questions with Groq: {str(e)}")
+    
 
-        # Extraire la réponse
-        result_text = response.choices[0].message.content.strip()
-        
-        # Netoyer la réponse 
-        result_text = re.sub(r'```json\s*', '', result_text)
-        result_text = re.sub(r'```\s*', '', result_text)
-        
-        # Parser le JSON
-        question_data = json.loads(result_text)
-        
-        # Valider
-        if 'questions' not in questions_data or not isinstance(questions_data['questions'], list):
-            raise ValueError("Invalid questions structure")
-        
-        return questions_data['questions']
-    
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Failed to parse AI response as JSON: {str(e)}")
-    except Exception as e:
-        raise ValueError(f"Error generating questions with AI: {str(e)}")
-    
-    
     # ********************************************************
     # PIPELINE COMPLET
     # ********************************************************

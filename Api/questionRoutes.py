@@ -12,8 +12,8 @@ question_bp = Blueprint("questions", __name__, url_prefix="/api/questions")
 # ************************************************
 # # GET ALL QUESTIONS
 # ************************************************
-@admin_required
 @question_bp.route("/", methods=["GET"])
+@admin_required
 def get_questions():
     """
     Récupère toutes les questions
@@ -25,8 +25,8 @@ def get_questions():
 # ************************************************
 # GET QUESTION BY ID
 # ************************************************
-@admin_required
 @question_bp.route("/<question_id>", methods=["GET"])
+@admin_required
 def get_question(question_id):
     """Récupère une question par ID"""
     question = storage.get(Question, question_id)
@@ -40,8 +40,8 @@ def get_question(question_id):
 # ************************************************
 # CREATE QUESTION
 # ************************************************
-@auth_required
 @question_bp.route("/", methods=["POST"])
+@auth_required
 def create_question():
     if not request.is_json:
         abort(400, description="Not a JSON")
@@ -72,8 +72,8 @@ def create_question():
 # ************************************************
 # UPDATE QUESTION
 # ************************************************
-@auth_required
 @question_bp.route("/<question_id>", methods=["PUT"])
+@auth_required
 def update_question(question_id):
     """Met à jour une question"""
     
@@ -96,8 +96,8 @@ def update_question(question_id):
 # ************************************************
 # DELETE QUESTION
 # ************************************************
-@admin_required
 @question_bp.route("/<question_id>", methods=["DELETE"])
+@admin_required
 def delete_question(question_id):
     """Supprime une question"""
     
