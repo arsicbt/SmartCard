@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Accueil - SmartCard{% endblock %}
+
+{% block content %}
+<h1>Bienvenue, {{ username }} 👋</h1>
+<p>Continuez votre apprentissage</p>
+
+<div class="dashboard">
+    <div class="card">
+        <h2>{{ total_cards }}</h2>
+        <p>Cartes générées</p>
+    </div>
+
+    <div class="card">
+        <h2>{{ total_quiz }}</h2>
+        <p>Quiz créés</p>
+    </div>
+
+    <div class="card">
+        <h2>{{ correct_answers }}</h2>
+        <p>Réponses correctes</p>
+    </div>
+</div>
+{% endblock %}

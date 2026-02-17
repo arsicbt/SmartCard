@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}SmartCard{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar">
+        <div class="logo">SmartCard</div>
+
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('cards') }}">Card</a>
+        <a href="{{ url_for('quiz') }}">Quizz</a>
+
+        <div class="logout">
+            <a href="{{ url_for('logout') }}">Déconnexion</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <button id="burger" class="burger">☰</button>
+
+        {% block content %}
+        {% endblock %}
+    </div>
+
+<script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+</body>
+</html>

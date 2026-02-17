@@ -1,0 +1,84 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #0f0f1a, #1a1a2e);
+    color: white;
+}
+
+/* Sidebar */
+.sidebar {
+    position: fixed;
+    left: -250px;
+    top: 0;
+    width: 250px;
+    height: 100%;
+    background: #141427;
+    padding: 30px 20px;
+    transition: 0.3s;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar.active {
+    left: 0;
+}
+
+.sidebar .logo {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 40px;
+}
+
+.sidebar a {
+    text-decoration: none;
+    color: white;
+    margin-bottom: 20px;
+    transition: 0.2s;
+}
+
+.sidebar a:hover {
+    color: #a855f7;
+}
+
+/* Logout bottom */
+.logout {
+    margin-top: auto;
+}
+
+/* Main */
+.main {
+    padding: 40px;
+}
+
+/* Burger */
+.burger {
+    font-size: 24px;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+/* Dashboard cards */
+.dashboard {
+    display: flex;
+    gap: 20px;
+}
+
+.card {
+    background: #1f1f3a;
+    padding: 30px;
+    border-radius: 15px;
+    width: 250px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+}
+
+.card h2 {
+    font-size: 40px;
+    margin: 0;
+}
+
+.card p {
+    opacity: 0.7;
+}
