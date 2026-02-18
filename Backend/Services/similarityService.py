@@ -74,7 +74,7 @@ class SimilarityService:
     
     
     @staticmethod
-    def extact_keywords(text: str, top_n: int = 20) -> List[str]:
+    def extract_keywords(text: str, top_n: int = 20) -> List[str]:
         """
         Extrait les mots-clés les plus importants d'un texte
         
@@ -93,7 +93,7 @@ class SimilarityService:
             return []
         
         # Compter les fréquences
-        word_counts = Counter(words)
+        words_counts = Counter(words)
         
         # Prendre les top_n plus fréquents 
         top_words = words_counts.most_common(top_n)
@@ -106,7 +106,7 @@ class SimilarityService:
     # ********************************************************
     
     @staticmethod
-    def calcullate_text_similarity(text1: str, text2: str) -> float:
+    def calculate_text_similarity(text1: str, text2: str) -> float:
         """
         Calcule la similarité entre deux textes
         
@@ -144,7 +144,7 @@ class SimilarityService:
         
     
     @staticmethod
-    def calculate_keyword_ooverlap(
+    def calculate_keyword_overlap(
         text_keywords: List[str],
         target_keywords: List[str]
     ) -> float:

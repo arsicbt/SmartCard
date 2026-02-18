@@ -49,9 +49,11 @@ def login():
     # Cookie sécurisé (anti XSS)
     response = make_response(jsonify({
         'message': 'Connexion réussie',
+        'token': token,
         'user': user.to_dict()
     }))
 
+    """
     response.set_cookie(
         'access_token',
         token,
@@ -59,7 +61,7 @@ def login():
         samesite='Strict',
         secure=False  # True en prod (HTTPS)
     )
-
+    """
     return response, 200
 
 

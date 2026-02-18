@@ -11,14 +11,18 @@ from Api.sessionRoutes import session_bp
 from Api.authRoutes import auth_bp
 
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 app = Flask(
     __name__,
-    template_folder=os.path.join(BASE_DIR, "../Frontend/Templates"),
-    static_folder=os.path.join(BASE_DIR, "../Frontend/Static")
+    template_folder=os.path.join(BASE_DIR, "Frontend/Templates"),
+    static_folder=os.path.join(BASE_DIR, "Frontend/Static")
 )
+
 CORS(app)
+
+print("TEMPLATES:", app.template_folder)
+print("STATIC:", app.static_folder)
 
 # **************************************
 # Route temporaire du front 

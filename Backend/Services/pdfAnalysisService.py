@@ -84,7 +84,7 @@ class PDFAnalysisService:
     # ********************************************************
     
     @staticmethod
-    def analyse_theme_with_groq(pdf_content: str) -> Dict[str, any]:
+    def analyze_theme_with_groq(pdf_content: str) -> Dict[str, any]:
         """
         Analyse le contenu du PDF avec Groq pour déduire le thème
         
@@ -137,39 +137,41 @@ Important:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are an expert educator who creates high-quality study materials. Always respond with valid JSON only."
+                        "content": "You are an expert educational content analyzer. Always respond with valid JSON only."  # ← Change aussi ce message
                     },
                     {
                         "role": "user",
                         "content": prompt
                     }
                 ],
-                temperature=0.7,
-                max_tokens=3000
+                temperature=0.3,  
+                max_tokens=500   
+
             )
-            
+
             # Extraire la réponse
             result_text = response.choices[0].message.content.strip()
-            
-            # Nettoyer la réponse
+
+            # Nettoyer la réponse (enlever markdown si présent)
             result_text = re.sub(r'```json\s*', '', result_text)
             result_text = re.sub(r'```\s*', '', result_text)
-            
+
             # Parser le JSON
-            questions_data = json.loads(result_text)
-            
-            # Valider
-            if 'questions' not in questions_data or not isinstance(questions_data['questions'], list):
-                raise ValueError("Invalid questions structure")
-            
-            return questions_data['questions']
-        
+            theme_data = json.loads(result_text) 
+
+            # Valider la structure
+            required_keys = ['theme_name', 'keywords', 'description']
+            if not all(key in theme_data for key in required_keys):
+                raise ValueError("Invalid response structure from Groq")
+
+            return theme_data  
+
         except json.JSONDecodeError as e:
             raise ValueError(f"Failed to parse Groq response as JSON: {str(e)}")
         except Exception as e:
-            raise ValueError(f"Error generating questions with Groq: {str(e)}")
-    
-        
+            raise ValueError(f"Error analyzing theme with Groq: {str(e)}")
+
+   
     # ********************************************************
     # GÉNÉRATION DE QUESTIONS/RÉPONSES
     # ********************************************************
@@ -319,7 +321,7 @@ Requirements:
     # ********************************************************
     
     @staticmethod
-    def analysis_pdf_fulll_pipeline(
+    def analysis_pdf_full_pipeline(
         pdf_file,
         session_type: str,
         questions_count: int = 10
@@ -352,7 +354,7 @@ Requirements:
         )
         
         return {
-            'pdf_content': pddf_content,
+            'pdf_content': pdf_content,
             'theme': theme_data,
             'questions': questions
         }

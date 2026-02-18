@@ -128,6 +128,10 @@ class DBStorage:
         except Exception as e:
             self.__session.rollback()
             raise e
+        
+    def rollback(self):
+        """Annule les changements non sauvegardés"""
+        self.__session.rollback()
     
     def delete(self, obj: Base = None, hard_delete: bool = False):
         """

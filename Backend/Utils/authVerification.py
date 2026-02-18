@@ -9,6 +9,7 @@ from functools import wraps
 from flask import request, jsonify
 from Utils.tokenSecurity import TokenManager
 from Persistence.DBStorage import storage
+from Models.userModel import User
 
 
 def _get_token_from_request():
@@ -53,7 +54,7 @@ def auth_required(f):
             }), 401
 
         # 2. Vérifier le token
-        payload = TokenManager.verify_token(token)
+        payload = TokenManager.decode_token(token)
         if not payload:
             return jsonify({
                 'error': 'Token invalide ou expiré',
@@ -68,7 +69,7 @@ def auth_required(f):
                 'message': 'user_id manquant'
             }), 401
 
-        user = storage.get('User', user_id)
+        user = storage.get(User, user_id)
 
         if not user or user.is_deleted():
             return jsonify({
@@ -100,7 +101,7 @@ def admin_required(f):
             }), 401
 
         # 2. Vérifier le token
-        payload = TokenManager.verify_token(token)
+        payload = TokenManager.decode_token(token)
         if not payload:
             return jsonify({
                 'error': 'Token invalide ou expiré',
@@ -115,7 +116,7 @@ def admin_required(f):
                 'message': 'user_id manquant'
             }), 401
 
-        user = storage.get('User', user_id)
+        user = storage.get(User, user_id)
 
         if not user or user.is_deleted():
             return jsonify({

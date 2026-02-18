@@ -202,7 +202,7 @@ def create_session_with_pdf():
     # Vérifier le user_id
     user_id = request.form.get('user_id')
     if not user_id:
-        abort(400, desciption="Missins user_id")
+        abort(400, description="Missins user_id")
         
     user = storage.get(User, user_id)
     if not user:
@@ -210,8 +210,8 @@ def create_session_with_pdf():
         
     # Vérifier le type de la session
     session_type = request.form.get('session_type', '').upper()
-    if session_type not in ["QUIZZ", "FLASHCARD"]:
-        abort(400, description="Invalid sessio_type. Must be QUIZZ or FLASHCARD")
+    if session_type not in ["QUIZ", "FLASHCARD"]:
+        abort(400, description="Invalid sessio_type. Must be QUIZ or FLASHCARD")
         
     # Vérifier le fichier PDF
     if 'pdf_file' not in request.files:
@@ -221,22 +221,22 @@ def create_session_with_pdf():
     if pdf_file.filename == '':
         abort(400, description="No file selected")
 
-    if not pdf_file.filename.lower().endwith('.pdf'):
+    if not pdf_file.filename.lower().endswith('.pdf'):
         abort(400, description="File must be a PDF")
         
     # Nombre de questions
     try:
-        question_count = int(request.form.get('questions_count', 10))
-        if questions_ocount < 1 or questions_count > 50:
-            avort(400, description="question_count must be between 1 and 50")
+        questions_count = int(request.form.get('questions_count', 10))
+        if questions_count < 1 or questions_count > 50:
+            abort(400, description="questions_count must be between 1 and 50")
     except ValueError:
-        abort(400, description="Invalid question_count")
+        abort(400, description="Invalid questions_count")
         
     try:
         # ********************************************************
         # ÉTAPE 1 : ANALYSER LE PDF
         # ********************************************************
-        analysis_result = PDFAnalysisService.analyse_pdf_full_pipeline(
+        analysis_result = PDFAnalysisService.analysis_pdf_full_pipeline(
             pdf_file,
             session_type,
             questions_count
@@ -272,7 +272,7 @@ def create_session_with_pdf():
         )
         
         theme_id = None
-        theme_name = theme_date['theme_name']
+        theme_name = theme_data['theme_name']
         
         if matching_theme:
             # theme trouvé dans ma DB 
@@ -289,7 +289,7 @@ def create_session_with_pdf():
             existing_questions = storage.filter_by(Question, theme_id=theme_id)
             
             # Convertir en dictionnaire
-            question_dict = [
+            questions_dict = [
                 {
                     'id': q.id,
                     'question_text': q.question_text,
@@ -302,7 +302,7 @@ def create_session_with_pdf():
             # Trouver les question avec minimum 40% de similarité
             matching_questions = SimilarityService.find_matching_questions(
                 pdf_content,
-                question_dict,
+                questions_dict,
                 threshold= 0.4
             )
             
@@ -314,13 +314,13 @@ def create_session_with_pdf():
             
             if len(questions_ids) < questions_count:
                 # Créer les questions manquantes grace à Groq
-                remaining_count = qustion_count - len(questions_ids)
-                new_questions_ids = _create_questions_from_generated(
+                remaining_count = questions_count - len(questions_ids)
+                new_question_ids = _create_questions_from_generated(
                     generated_questions[:remaining_count],
                     theme_id,
                     session_type 
                 )
-                question_ids.extend(new_question_ids)
+                questions_ids.extend(new_question_ids)
                 
         else:
             # ********************************************************
@@ -330,17 +330,17 @@ def create_session_with_pdf():
                 user_id=user_id,
                 name=theme_data['theme_name'],
                 description=theme_data['description'],
-                keyword=theme_data['keywords'],
-                question_count=0
+                keywords=theme_data['keywords'],
+                questions_count=0
             )
             
             storage.new(new_theme)
             storage.save()
             
-            theme_id = new_theme.identifier
+            theme_id = new_theme.id
             
             # Créer toutes les questions depuis Groq
-            quetion_ids = _create_questions_from_generated(
+            questions_ids = _create_questions_from_generated(
                 generated_questions,
                 theme_id,
                 session_type
@@ -356,8 +356,8 @@ def create_session_with_pdf():
             user_id=user_id,
             theme_id=theme_id,
             type=session_type,
-            questions_ids=question_ids,
-            questions_count=len(question_ids)
+            questions_ids=questions_ids, 
+            questions_count=len(questions_ids)
         )  
             
         storage.new(session)
@@ -373,23 +373,23 @@ def create_session_with_pdf():
                 "name": theme_name,
                 "was_existing": matching_theme is not None
             },
-            "questions_count": len(question_ids),
+            "questions_count": len(questions_ids),
             "pdf_analysed": True
         }), 201
             
     except ValueError as e:
-        sotrage.rollback()
+        storage.rollback()
         abort(400, description=str(e))
         
-    except Execption as e:
+    except Exception as e:
         storage.rollback()
         abort(500, description=f"Error creating session: {str(e)}")
         
         
 def _create_questions_from_generated(
-    generated_questions_from_generated: list,
+    generated_questions: list,
     theme_id: str,
-    sesion_type: str
+    session_type: str
 ) -> list:
     """
     Crée des objets Question et Answer depuis les questions générées par Groq
@@ -410,7 +410,7 @@ def _create_questions_from_generated(
         # Créer la question
         question = Question(
             theme_id=theme_id,
-            type=QuestionType[sessionn_type],
+            type=QuestionType[session_type],
             question_text=q_data['question'],
             difficulty=Difficulty[q_data.get('difficulty', 'MEDIUM')],
         )
@@ -418,9 +418,9 @@ def _create_questions_from_generated(
         storage.new(question)
         storage.save()
         
-        if session_type == 'QUIZZ':
-            # QUIZZ: 4 réponses
-            for idx, ans_data in enumerate(q_data['anwers']):
+        if session_type == 'QUIZ':
+            # QUIZ: 4 réponses
+            for idx, ans_data in enumerate(q_data['answers']):
                 answer = Answer(
                     question_id=question.id,
                     answer_text=ans_data['text'],
