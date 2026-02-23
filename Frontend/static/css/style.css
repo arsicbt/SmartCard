@@ -284,6 +284,34 @@ button {
     height: 20px;
 }
 
+.session-cta-btn {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    border-radius: 0.75rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    font-size: 1.125rem;
+    color: var(--muted-foreground);
+}
+
+.session-cta-btn:hover {
+    background-color: rgba(42, 42, 42, 0.5);
+    color: var(--foreground);
+}
+
+.session-cta-btn.active {
+    background: linear-gradient(to right, var(--gradient-orange), var(--gradient-purple));
+    color: white;
+    box-shadow: 0 10px 15px -3px rgba(255, 107, 53, 0.2);
+}
+
+.session-cta-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
 .menu-footer {
     margin-top: auto;
     padding-top: 2rem;
@@ -314,6 +342,15 @@ button {
     width: 20px;
     height: 20px;
 }
+
+.menu-cta {
+    padding: 1rem 1.5rem;
+}
+
+.menu-cta-btn:hover {
+    opacity: 0.9;
+}
+
 
 /* ===== Main Content ===== */
 .main-content {

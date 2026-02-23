@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -438,7 +437,7 @@
         }
     </style>
 </head>
-<body>
+<body data-user-id="{{ user_id }}">
 
     <!-- Background -->
     <div class="gradient-bg">
@@ -615,7 +614,7 @@
         }
 
         // ── Start session ──
-        function startSession() {
+        async function startSession() {
             if (!selectedType || !selectedFile) return;
 
             const btn = document.getElementById('ctaBtn');
@@ -623,20 +622,38 @@
             btn.innerHTML = '<i data-lucide="loader-2" style="animation:spin 1s linear infinite"></i> Analyse en cours…';
             lucide.createIcons();
 
-            // TODO: envoyer le PDF à l'API
-            // const formData = new FormData();
-            // formData.append('pdf', selectedFile);
-            // formData.append('type', selectedType);
-            // fetch('/api/sessions', { method: 'POST', body: formData })
-            //   .then(r => r.json())
-            //   .then(data => {
-            //       window.location.href = selectedType === 'quiz' ? `/quiz/${data.sessionId}` : `/cards/${data.sessionId}`;
-            //   });
+            try {
+                const formData = new FormData();
+                formData.append('pdf_file', selectedFile);
+                formData.append('session_type', selectedType === 'quiz' ? 'QUIZ' : 'FLASHCARD');
+                formData.append('user_id', document.body.dataset.userId);
 
-            // Simulation (à remplacer par l'appel API)
-            setTimeout(() => {
-                window.location.href = selectedType === 'quiz' ? '/quiz' : '/cards';
-            }, 1800);
+                const response = await fetch('/api/sessions/create-with-pdf', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || `Erreur ${response.status}`);
+                }
+
+                const data = await response.json();
+                const sessionId = data.session.id;
+
+                window.location.href = selectedType === 'quiz'
+                    ? `/quiz/${sessionId}`
+                    : `/cards/${sessionId}`;
+
+            } catch (error) {
+                btn.disabled = false;
+                btn.innerHTML = 'Commencer l\'apprentissage <i data-lucide="arrow-right"></i>';
+                lucide.createIcons();
+
+                const subtitle = document.querySelector('.page-subtitle');
+                subtitle.textContent = `Erreur : ${error.message}`;
+                subtitle.style.color = '#ef4444';
+            }
         }
 
         // ── Spin animation ──

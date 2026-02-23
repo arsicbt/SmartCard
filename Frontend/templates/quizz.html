@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartCards - Quiz</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="gradient-bg">
+        <div class="gradient-circle gradient-top-right"></div>
+        <div class="gradient-circle gradient-bottom-left"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Header -->
+        {% include 'components/header.html' %}
+        <!-- Sidebar -->
+        {% include 'components/sidebar.html' %}
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="view-container active" id="quizView">
+
+                <!-- Quiz Questions -->
+                <div class="quiz-container" id="quizQuestions">
+                    <div class="quiz-header">
+                        <div>
+                            <h2 class="quiz-title">Quizz</h2>
+                            <p class="quiz-subtitle">Testez vos connaissances</p>
+                        </div>
+                        <div class="quiz-progress-info">
+                            <div class="progress-label">Question</div>
+                            <div class="progress-count gradient-text-orange" id="quizProgress">1 / 5</div>
+                        </div>
+                    </div>
+
+                    <div class="quiz-progress-bar">
+                        <div class="quiz-progress-fill" id="quizProgressBar" style="width: 20%"></div>
+                    </div>
+
+                    <div class="quiz-question-card">
+                        <div class="quiz-question-category" id="quizCategory">—</div>
+                        <div class="quiz-question-header">
+                            <div class="quiz-question-icon">
+                                <i data-lucide="brain"></i>
+                            </div>
+                            <h3 class="quiz-question-text" id="quizQuestion">Chargement…</h3>
+                        </div>
+                        <div class="quiz-options" id="quizOptions"></div>
+                    </div>
+
+                    <div class="quiz-controls">
+                        <div class="quiz-status" id="quizStatus">Sélectionnez une réponse</div>
+                        <button class="quiz-next-btn" id="quizNextBtn" disabled>
+                            <span id="nextBtnText">Suivant</span>
+                            <i data-lucide="arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quiz Results -->
+                <div class="quiz-results hidden" id="quizResults">
+                    <div class="quiz-results-header">
+                        <div class="quiz-results-icon">
+                            <i data-lucide="trophy"></i>
+                        </div>
+                        <h2 class="quiz-results-title">Quiz Terminé !</h2>
+                        <p class="quiz-results-subtitle">Voici vos résultats</p>
+                    </div>
+
+                    <div class="quiz-results-card">
+                        <div class="quiz-results-score">
+                            <div class="quiz-score-value gradient-text-orange" id="quizScoreValue">0 / 5</div>
+                            <div class="quiz-score-percentage" id="quizScorePercentage">0% de réussite</div>
+                            <div class="quiz-score-progress">
+                                <div class="quiz-score-progress-bar" id="quizScoreBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="quiz-results-breakdown">
+                            <div class="quiz-breakdown-item">
+                                <div class="quiz-breakdown-value quiz-breakdown-correct" id="quizCorrectTotal">0</div>
+                                <div class="quiz-breakdown-label">Correctes</div>
+                            </div>
+                            <div class="quiz-breakdown-item">
+                                <div class="quiz-breakdown-value quiz-breakdown-incorrect" id="quizIncorrectTotal">5</div>
+                                <div class="quiz-breakdown-label">Incorrectes</div>
+                            </div>
+                            <div class="quiz-breakdown-item">
+                                <div class="quiz-breakdown-value gradient-text-orange" id="quizGrade">C</div>
+                                <div class="quiz-breakdown-label">Note</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quiz-answer-details">
+                        <h3 class="quiz-details-title">Détails des réponses</h3>
+                        <div id="quizAnswersList"></div>
+                    </div>
+
+                    <div class="quiz-restart-wrapper">
+                        <button class="quiz-restart-btn" id="quizRestartBtn">
+                            Recommencer le Quiz
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // ── Données injectées par Flask ──
+        const SESSION_DATA = {{ session_data | tojson }};
+        const QUIZ_DATA    = {{ quiz_data | tojson }};
+
+        // ── State ──
+        let currentIndex   = 0;
+        let score          = 0;
+        let selectedAnswer = null;
+        let answered       = false;
+        const userAnswers  = [];
+
+        // ── DOM ──
+        const quizProgress    = document.getElementById('quizProgress');
+        const quizProgressBar = document.getElementById('quizProgressBar');
+        const quizCategory    = document.getElementById('quizCategory');
+        const quizQuestion    = document.getElementById('quizQuestion');
+        const quizOptions     = document.getElementById('quizOptions');
+        const quizStatus      = document.getElementById('quizStatus');
+        const quizNextBtn     = document.getElementById('quizNextBtn');
+        const nextBtnText     = document.getElementById('nextBtnText');
+
+        function renderQuestion(index) {
+            const q = QUIZ_DATA[index];
+            if (!q) return;
+
+            answered = false;
+            selectedAnswer = null;
+            quizNextBtn.disabled = true;
+            quizStatus.textContent = 'Sélectionnez une réponse';
+
+            quizCategory.textContent = q.theme || '—';
+            quizQuestion.textContent = q.question_text;
+
+            const total = QUIZ_DATA.length;
+            quizProgress.textContent = `${index + 1} / ${total}`;
+            quizProgressBar.style.width = `${((index + 1) / total) * 100}%`;
+            nextBtnText.textContent = index === total - 1 ? 'Terminer' : 'Suivant';
+
+            // Render options
+            quizOptions.innerHTML = '';
+            q.answers.forEach((ans, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-option';
+                btn.textContent = ans.answer_text;
+                btn.dataset.index = i;
+                btn.dataset.correct = ans.is_correct;
+                btn.addEventListener('click', () => selectAnswer(btn, ans));
+                quizOptions.appendChild(btn);
+            });
+        }
+
+        function selectAnswer(btn, ans) {
+            if (answered) return;
+            answered = true;
+            selectedAnswer = ans;
+
+            // Reveal correct / incorrect
+            document.querySelectorAll('.quiz-option').forEach(b => {
+                b.disabled = true;
+                if (b.dataset.correct === 'True' || b.dataset.correct === true) {
+                    b.classList.add('correct');
+                } else if (b === btn) {
+                    b.classList.add('incorrect');
+                }
+            });
+
+            if (ans.is_correct) {
+                score++;
+                quizStatus.textContent = '✓ Bonne réponse !';
+            } else {
+                quizStatus.textContent = '✗ Mauvaise réponse';
+            }
+
+            userAnswers.push({ question: QUIZ_DATA[currentIndex], selected: ans });
+            quizNextBtn.disabled = false;
+        }
+
+        quizNextBtn.addEventListener('click', () => {
+            if (currentIndex < QUIZ_DATA.length - 1) {
+                renderQuestion(++currentIndex);
+            } else {
+                showResults();
+            }
+        });
+
+        function showResults() {
+            document.getElementById('quizQuestions').classList.add('hidden');
+            const results = document.getElementById('quizResults');
+            results.classList.remove('hidden');
+
+            const total = QUIZ_DATA.length;
+            const pct   = total > 0 ? Math.round((score / total) * 100) : 0;
+            const grade = pct >= 90 ? 'A' : pct >= 75 ? 'B' : pct >= 60 ? 'C' : pct >= 40 ? 'D' : 'F';
+
+            document.getElementById('quizScoreValue').textContent      = `${score} / ${total}`;
+            document.getElementById('quizScorePercentage').textContent  = `${pct}% de réussite`;
+            document.getElementById('quizScoreBar').style.width         = `${pct}%`;
+            document.getElementById('quizCorrectTotal').textContent     = score;
+            document.getElementById('quizIncorrectTotal').textContent   = total - score;
+            document.getElementById('quizGrade').textContent            = grade;
+
+            // Détails
+            const list = document.getElementById('quizAnswersList');
+            list.innerHTML = '';
+            userAnswers.forEach(({ question, selected }) => {
+                const div = document.createElement('div');
+                div.className = `quiz-answer-detail ${selected.is_correct ? 'correct' : 'incorrect'}`;
+                div.innerHTML = `<p class="quiz-detail-question">${question.question_text}</p>
+                                 <p class="quiz-detail-answer">Votre réponse : ${selected.answer_text}</p>`;
+                list.appendChild(div);
+            });
+
+            // Sauvegarder le score via l'API
+            fetch(`/api/sessions/${SESSION_DATA.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ score: score, max_score: total })
+            });
+        }
+
+        document.getElementById('quizRestartBtn').addEventListener('click', () => {
+            currentIndex = 0; score = 0; userAnswers.length = 0;
+            document.getElementById('quizResults').classList.add('hidden');
+            document.getElementById('quizQuestions').classList.remove('hidden');
+            renderQuestion(0);
+        });
+
+        // Init
+        if (QUIZ_DATA.length > 0) renderQuestion(0);
+        else quizQuestion.textContent = "Aucune question disponible pour cette session.";
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>

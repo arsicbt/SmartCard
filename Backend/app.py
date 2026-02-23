@@ -1,7 +1,8 @@
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask
 from flask_cors import CORS
+from dotenv import load_dotenv
 
-import os
+load_dotenv()
 
 from Api.userRoutes import users_bp
 from Api.themeRoutes import theme_bp
@@ -13,7 +14,6 @@ from Api.authRoutes import auth_bp
 
 app = Flask(__name__)
 CORS(app)
-
 
 app.register_blueprint(users_bp)
 app.register_blueprint(theme_bp)

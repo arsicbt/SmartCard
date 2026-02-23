@@ -14,16 +14,13 @@ API_URL = 'http://localhost:5000/api'
 # Fonctions pour les appels API
 # **********************************************
 def make_api_request(endpoint, method='GET', data=None, token=None):
-    """
-    Helper pour faire des requêtes à l'API backend
-    """
+    """Helper pour faire des requêtes à l'API backend"""
     headers = {'Content-Type': 'application/json'}
-    
     if token:
         headers['Authorization'] = f'Bearer {token}'
-    
+
     url = f'{API_URL}{endpoint}'
-    
+
     try:
         if method == 'GET':
             response = requests.get(url, headers=headers)
@@ -35,12 +32,12 @@ def make_api_request(endpoint, method='GET', data=None, token=None):
             response = requests.delete(url, headers=headers)
         else:
             return False, {'error': 'Invalid HTTP method'}, 400
-        
+
         if response.status_code in [200, 201]:
             return True, response.json(), response.status_code
         else:
             return False, response.json(), response.status_code
-    
+
     except requests.exceptions.ConnectionError:
         return False, {'error': 'Backend API non accessible'}, 500
     except Exception as e:
@@ -50,7 +47,6 @@ def make_api_request(endpoint, method='GET', data=None, token=None):
 # **********************************************
 # Décorateur pour vérifier l'authentification
 # **********************************************
-
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -63,7 +59,6 @@ def login_required(f):
 # **********************************************
 # Routes Frontend
 # **********************************************
-
 @app.route('/')
 def index():
     """Page d'accueil - redirige vers dashboard si connecté"""
@@ -86,80 +81,162 @@ def dashboard():
     token = session.get('token')
     user_id = user.get('id')
     user_name = user.get('first_name', 'Utilisateur')
-    
-    # Récupérer les sessions de l'utilisateur
-    success, sessions, _ = make_api_request(
-        f'/sessions/user/{user_id}',
-        token=token
-    )
-    
+
+    success, sessions, _ = make_api_request(f'/sessions/user/{user_id}', token=token)
     if not success:
         sessions = []
-    
-    # Calculer les statistiques réelles
-    total_sessions = len(sessions)
-    
-    # Compter les Quiz et Flashcards
-    quiz_count = sum(1 for s in sessions if s.get('type') == 'QUIZ')
-    flashcard_count = sum(1 for s in sessions if s.get('type') == 'FLASHCARD')
-    
-    # Calculer les réponses correctes et le taux de réussite
-    total_correct = 0
-    total_questions = 0
-    
+
+    total_sessions   = len(sessions)
+    quiz_count       = sum(1 for s in sessions if s.get('type') == 'QUIZ')
+    flashcard_count  = sum(1 for s in sessions if s.get('type') == 'FLASHCARD')
+    total_correct    = 0
+    total_questions  = 0
+
     for s in sessions:
         if s.get('score') is not None and s.get('max_score') is not None:
-            total_correct += s.get('score', 0)
+            total_correct   += s.get('score', 0)
             total_questions += s.get('max_score', 0)
-    
-    accuracy = int((total_correct / total_questions * 100)) if total_questions > 0 else 0
-    
-    # Calculer la progression
+
+    accuracy       = int((total_correct / total_questions * 100)) if total_questions > 0 else 0
     cards_progress = min(75, flashcard_count * 5)
-    quiz_progress = min(100, quiz_count * 10)
-    
-    # Stats réelles
+    quiz_progress  = min(100, quiz_count * 10)
+
     stats = {
         'cards_generated': flashcard_count,
-        'cards_progress': cards_progress,
+        'cards_progress':  cards_progress,
         'quizzes_created': quiz_count,
-        'quiz_progress': quiz_progress,
+        'quiz_progress':   quiz_progress,
         'correct_answers': total_correct,
-        'accuracy': accuracy,
-        'cards_mastered': flashcard_count,
-        'study_time': f"{total_sessions * 5}h",
-        'streak': 7  # TODO: Calculer depuis les dates
+        'accuracy':        accuracy,
+        'cards_mastered':  flashcard_count,
+        'study_time':      f"{total_sessions * 5}h",
+        'streak':          7  # TODO: calculer depuis les dates
     }
-    
-    return render_template('dashboard.html', 
-                         user_name=user_name,
-                         stats=stats,
-                         active_view='dashboard')
+
+    return render_template('dashboard.html',
+                           user_name=user_name,
+                           stats=stats,
+                           active_view='dashboard')
+
+
+# **********************************************
+# Route - Création d'une session d'apprentissage
+# **********************************************
+@app.route('/session')
+@login_required
+def session_page():
+    """Page de création d'une session d'apprentissage"""
+    user = session.get('user')
+    return render_template('session.html', user_id=user.get('id'))
+
+
+@app.route('/api/sessions/create-with-pdf', methods=['POST'])
+@login_required
+def proxy_create_session_with_pdf():
+    """Proxy multipart vers l'API backend (le front ne peut pas rediriger un upload fichier)"""
+    token = session.get('token')
+    user  = session.get('user')
+
+    print(f"[DEBUG] token = {token}")
+    print(f"[DEBUG] user  = {user}")
+
+    try:
+        pdf_file     = request.files.get('pdf_file')
+        session_type = request.form.get('session_type')
+
+        files   = {'pdf_file': (pdf_file.filename, pdf_file.stream, pdf_file.mimetype)}
+        data    = {'session_type': session_type, 'user_id': user.get('id')}
+        headers = {'Authorization': f'Bearer {token}'}
+
+        response = requests.post(
+            f'{API_URL}/sessions/create-with-pdf',
+            files=files,
+            data=data,
+            headers=headers
+        )
+
+        return response.json(), response.status_code
+
+    except Exception as e:
+        return {'error': str(e)}, 500
+
+
+# **********************************************
+# Route - Flashcards
+# **********************************************
+@app.route('/cards/<session_id>')
+@login_required
+def cards_page(session_id):
+    """Page de flashcards pour une session donnée"""
+    token = session.get('token')
+
+    # Récupérer la session
+    success, session_data, _ = make_api_request(f'/sessions/{session_id}', token=token)
+    if not success:
+        return redirect(url_for('session_page'))
+
+    # Récupérer les questions avec leurs réponses
+    cards_data = []
+    for q_id in session_data.get('questions_ids', []):
+        ok, question, _ = make_api_request(f'/questions/{q_id}', token=token)
+        if ok:
+            ok_ans, answers, _ = make_api_request(f'/answers/question/{q_id}', token=token)
+            question['answer_text'] = answers[0]['answer_text'] if ok_ans and answers else '—'
+            cards_data.append(question)
+
+    return render_template('cards.html',
+                           session_data=session_data,
+                           cards_data=cards_data)
+
+
+# **********************************************
+# Route - Quiz
+# **********************************************
+@app.route('/quiz/<session_id>')
+@login_required
+def quiz_page(session_id):
+    """Page de quiz pour une session donnée"""
+    token = session.get('token')
+
+    # Récupérer la session
+    success, session_data, _ = make_api_request(f'/sessions/{session_id}', token=token)
+    if not success:
+        return redirect(url_for('session_page'))
+
+    # Récupérer les questions avec leurs réponses (choix multiples)
+    quiz_data = []
+    for q_id in session_data.get('questions_ids', []):
+        ok, question, _ = make_api_request(f'/questions/{q_id}', token=token)
+        if ok:
+            ok_ans, answers, _ = make_api_request(f'/answers/question/{q_id}', token=token)
+            question['answers'] = answers if ok_ans else []
+            quiz_data.append(question)
+
+    return render_template('quizz.html',
+                           session_data=session_data,
+                           quiz_data=quiz_data)
 
 
 # **********************************************
 # Routes d'authentification (proxy vers API)
 # **********************************************
-
 @app.route('/auth/login', methods=['POST'])
 def auth_login():
     """Proxy vers l'API de login"""
     try:
         response = requests.post(
-            'http://localhost:5000/api/auth/login',
+            f'{API_URL}/auth/login',
             json=request.json,
             headers={'Content-Type': 'application/json'}
         )
-        
         data = response.json()
-        
+
         if response.status_code == 200:
-            # Sauvegarder dans la session Flask
-            session['user'] = data.get('user')
+            session['user']  = data.get('user')
             session['token'] = data.get('token')
-        
+
         return data, response.status_code
-    
+
     except Exception as e:
         return {'error': str(e)}, 500
 
@@ -174,10 +251,5 @@ def auth_logout():
 # **********************************************
 # Lancement de l'application
 # **********************************************
-
 if __name__ == '__main__':
-    app.run(
-        host='0.0.0.0',
-        port=3000,
-        debug=True
-    )
+    app.run(host='0.0.0.0', port=3000, debug=True)

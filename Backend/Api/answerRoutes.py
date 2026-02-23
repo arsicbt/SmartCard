@@ -30,7 +30,7 @@ def get_answer(answer_id):
 @admin_required
 def get_question_answers(question_id):
     """Récupère les réponses d'une question"""
-    question = storage.get("Question", question_id)
+    question = storage.get(Question, question_id)
     if not question:
         abort(404, description="Question not found")
     
