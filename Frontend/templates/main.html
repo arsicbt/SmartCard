@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartCards - Plateforme d'apprentissage</title>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Chart.js for charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <!-- Gradient background effects -->
+    <div class="gradient-bg">
+        <div class="gradient-circle gradient-top-right"></div>
+        <div class="gradient-circle gradient-bottom-left"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <!-- App Name & Logo -->
+                <div class="logo-section">
+                    <div class="logo-icon">
+                        <i data-lucide="brain"></i>
+                    </div>
+                    <h1 class="app-title">SmartCards</h1>
+                </div>
+
+                <!-- Burger Menu Button -->
+                <button class="burger-btn" id="burgerBtn" aria-label="Toggle Menu">
+                    <i data-lucide="menu" class="menu-icon"></i>
+                    <i data-lucide="x" class="close-icon hidden"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Burger Menu Overlay -->
+        <div class="menu-overlay" id="menuOverlay"></div>
+        
+        <!-- Menu Content -->
+        <div class="menu-sidebar" id="menuSidebar">
+            <div class="menu-header">
+                <h3 class="menu-title">MENU</h3>
+                <button class="menu-close-btn" id="menuCloseBtn">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <nav class="menu-nav">
+                <button class="menu-item active" data-view="dashboard">
+                    <i data-lucide="trending-up"></i>
+                    Dashboard
+                </button>
+                <button class="menu-item" data-view="cards">
+                    <i data-lucide="book-open"></i>
+                    Cartes Mémo
+                </button>
+                <button class="menu-item" data-view="quiz">
+                    <i data-lucide="target"></i>
+                    Quizz
+                </button>
+            </nav>
+
+            <div class="menu-footer">
+                <button class="menu-logout" id="logoutBtn">
+                    <i data-lucide="log-out"></i>
+                    Déconnexion
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard View -->
+            <div class="view-container active" id="dashboardView">
+                <!-- Welcome Header -->
+                <div class="welcome-header">
+                    <h2 class="welcome-title">Bienvenue, Alex 👋</h2>
+                    <p class="welcome-subtitle">Continuez votre parcours d'apprentissage</p>
+                </div>
+
+                <!-- Main Stats Cards -->
+                <div class="stats-grid">
+                    <!-- Cards Generated -->
+                    <div class="stat-card stat-card-orange">
+                        <div class="stat-card-glow"></div>
+                        <div class="stat-card-content">
+                            <div class="stat-header">
+                                <div class="stat-icon stat-icon-orange">
+                                    <i data-lucide="book-open"></i>
+                                </div>
+                                <div class="stat-badge">+18 today</div>
+                            </div>
+                            <div class="stat-value gradient-text-orange">342</div>
+                            <div class="stat-label">Cartes générées</div>
+                            <div class="stat-progress">
+                                <div class="stat-progress-bar gradient-orange" style="width: 75%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quizzes Created -->
+                    <div class="stat-card stat-card-blue">
+                        <div class="stat-card-glow"></div>
+                        <div class="stat-card-content">
+                            <div class="stat-header">
+                                <div class="stat-icon stat-icon-blue">
+                                    <i data-lucide="award"></i>
+                                </div>
+                                <div class="stat-badge">+5 this week</div>
+                            </div>
+                            <div class="stat-value gradient-text-blue">48</div>
+                            <div class="stat-label">Quizz créés</div>
+                            <div class="stat-progress">
+                                <div class="stat-progress-bar gradient-blue" style="width: 60%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Correct Answers -->
+                    <div class="stat-card stat-card-purple">
+                        <div class="stat-card-glow"></div>
+                        <div class="stat-card-content">
+                            <div class="stat-header">
+                                <div class="stat-icon stat-icon-purple">
+                                    <i data-lucide="check-circle-2"></i>
+                                </div>
+                                <div class="stat-badge">87% rate</div>
+                            </div>
+                            <div class="stat-value gradient-text-purple">1,248</div>
+                            <div class="stat-label">Réponses correctes</div>
+                            <div class="stat-progress">
+                                <div class="stat-progress-bar gradient-purple" style="width: 87%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Progrès hebdomadaires</h3>
+                        <p class="chart-subtitle">Votre activité d'apprentissage au cours des 7 derniers jours</p>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-dot legend-dot-orange"></div>
+                            <span>Cartes créées</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot legend-dot-blue"></div>
+                            <span>Temps d'apprentissage (min)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Stats -->
+                <div class="additional-stats">
+                    <div class="small-stat-card">
+                        <div class="small-stat-glow small-stat-glow-orange"></div>
+                        <div class="small-stat-content">
+                            <div class="small-stat-header">
+                                <div class="small-stat-icon small-stat-icon-orange">
+                                    <i data-lucide="check-circle"></i>
+                                </div>
+                                <span class="small-stat-change">+12%</span>
+                            </div>
+                            <div class="small-stat-value">342</div>
+                            <div class="small-stat-label">Cartes maîtrisées</div>
+                            <div class="small-stat-progress">
+                                <div class="small-stat-progress-bar gradient-orange" style="width: 65%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="small-stat-card">
+                        <div class="small-stat-glow small-stat-glow-blue"></div>
+                        <div class="small-stat-content">
+                            <div class="small-stat-header">
+                                <div class="small-stat-icon small-stat-icon-blue">
+                                    <i data-lucide="clock"></i>
+                                </div>
+                                <span class="small-stat-change">+8%</span>
+                            </div>
+                            <div class="small-stat-value">24.5h</div>
+                            <div class="small-stat-label">Temps d'apprentissage</div>
+                            <div class="small-stat-progress">
+                                <div class="small-stat-progress-bar gradient-blue" style="width: 75%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="small-stat-card">
+                        <div class="small-stat-glow small-stat-glow-purple"></div>
+                        <div class="small-stat-content">
+                            <div class="small-stat-header">
+                                <div class="small-stat-icon small-stat-icon-purple">
+                                    <i data-lucide="trending-up"></i>
+                                </div>
+                                <span class="small-stat-change">+5%</span>
+                            </div>
+                            <div class="small-stat-value">87%</div>
+                            <div class="small-stat-label">Accuracy Rate</div>
+                            <div class="small-stat-progress">
+                                <div class="small-stat-progress-bar gradient-purple" style="width: 85%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="small-stat-card">
+                        <div class="small-stat-glow small-stat-glow-orange"></div>
+                        <div class="small-stat-content">
+                            <div class="small-stat-header">
+                                <div class="small-stat-icon small-stat-icon-orange">
+                                    <i data-lucide="flame"></i>
+                                </div>
+                                <span class="small-stat-change">Days</span>
+                            </div>
+                            <div class="small-stat-value">7</div>
+                            <div class="small-stat-label">Current Streak</div>
+                            <div class="small-stat-progress">
+                                <div class="small-stat-progress-bar gradient-orange" style="width: 95%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flashcard View -->
+            <div class="view-container" id="cardsView">
+                <div class="flashcard-container">
+                    <!-- Header -->
+                    <div class="flashcard-header">
+                        <div>
+                            <h2 class="flashcard-title">Flashcards</h2>
+                            <p class="flashcard-subtitle">Master your knowledge, one card at a time</p>
+                        </div>
+                        <div class="flashcard-progress-info">
+                            <div class="progress-label">Progress</div>
+                            <div class="progress-count gradient-text-orange" id="cardProgress">1 / 5</div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="flashcard-progress-bar">
+                        <div class="flashcard-progress-fill" id="cardProgressBar" style="width: 20%"></div>
+                    </div>
+
+                    <!-- Flashcard -->
+                    <div class="flashcard-wrapper">
+                        <div class="flashcard" id="flashcard">
+                            <!-- Front -->
+                            <div class="flashcard-front">
+                                <div class="flashcard-decorative-gradient flashcard-gradient-beginner"></div>
+                                <div class="flashcard-content-wrapper">
+                                    <div class="flashcard-badges">
+                                        <span class="flashcard-category" id="cardCategory">Frontend</span>
+                                        <span class="flashcard-difficulty flashcard-difficulty-beginner" id="cardDifficulty">Beginner</span>
+                                    </div>
+                                    <div class="flashcard-question-wrapper">
+                                        <h3 class="flashcard-question" id="cardQuestion">What is React?</h3>
+                                    </div>
+                                </div>
+                                <div class="flashcard-hint">
+                                    <i data-lucide="rotate-ccw"></i>
+                                    <span>Click to reveal answer</span>
+                                </div>
+                            </div>
+
+                            <!-- Back -->
+                            <div class="flashcard-back">
+                                <div class="flashcard-decorative-gradient flashcard-gradient-beginner"></div>
+                                <div class="flashcard-content-wrapper">
+                                    <div class="flashcard-answer-header">
+                                        <div class="flashcard-answer-icon">
+                                            <i data-lucide="lightbulb"></i>
+                                        </div>
+                                        <span class="flashcard-answer-label">Answer</span>
+                                    </div>
+                                    <div class="flashcard-question-wrapper">
+                                        <p class="flashcard-answer" id="cardAnswer">React is a JavaScript library for building user interfaces.</p>
+                                    </div>
+                                </div>
+                                <div class="flashcard-hint">
+                                    <i data-lucide="rotate-ccw"></i>
+                                    <span>Click to see question</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="flashcard-controls">
+                        <button class="flashcard-nav-btn" id="prevCardBtn" disabled>
+                            <i data-lucide="chevron-left"></i>
+                        </button>
+
+                        <div class="flashcard-actions">
+                            <button class="flashcard-action-btn flashcard-incorrect-btn" id="incorrectBtn">
+                                <i data-lucide="x-circle"></i>
+                                <span>Need Review</span>
+                            </button>
+                            <button class="flashcard-action-btn flashcard-correct-btn" id="correctBtn">
+                                <i data-lucide="check-circle"></i>
+                                <span>Got It!</span>
+                            </button>
+                        </div>
+
+                        <button class="flashcard-nav-btn" id="nextCardBtn">
+                            <i data-lucide="chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="flashcard-stats">
+                        <div class="flashcard-stat-item">
+                            <div class="flashcard-stat-value flashcard-stat-correct" id="correctCount">0</div>
+                            <div class="flashcard-stat-label">Correct</div>
+                        </div>
+                        <div class="flashcard-stat-item">
+                            <div class="flashcard-stat-value flashcard-stat-incorrect" id="incorrectCount">0</div>
+                            <div class="flashcard-stat-label">Review</div>
+                        </div>
+                        <div class="flashcard-stat-item">
+                            <div class="flashcard-stat-value gradient-text-orange" id="remainingCount">5</div>
+                            <div class="flashcard-stat-label">Remaining</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz View -->
+            <div class="view-container" id="quizView">
+                <!-- Quiz Questions -->
+                <div class="quiz-container" id="quizQuestions">
+                    <!-- Header -->
+                    <div class="quiz-header">
+                        <div>
+                            <h2 class="quiz-title">Quizz</h2>
+                            <p class="quiz-subtitle">Testez vos connaissances</p>
+                        </div>
+                        <div class="quiz-progress-info">
+                            <div class="progress-label">Question</div>
+                            <div class="progress-count gradient-text-orange" id="quizProgress">1 / 5</div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="quiz-progress-bar">
+                        <div class="quiz-progress-fill" id="quizProgressBar" style="width: 20%"></div>
+                    </div>
+
+                    <!-- Question Card -->
+                    <div class="quiz-question-card">
+                        <div class="quiz-question-category" id="quizCategory">Frontend</div>
+                        
+                        <div class="quiz-question-header">
+                            <div class="quiz-question-icon">
+                                <i data-lucide="brain"></i>
+                            </div>
+                            <h3 class="quiz-question-text" id="quizQuestion">Qu'est-ce que React?</h3>
+                        </div>
+
+                        <!-- Options -->
+                        <div class="quiz-options" id="quizOptions">
+                            <!-- Options will be generated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="quiz-controls">
+                        <div class="quiz-status" id="quizStatus">Sélectionnez une réponse</div>
+                        <button class="quiz-next-btn" id="quizNextBtn" disabled>
+                            <span id="nextBtnText">Suivant</span>
+                            <i data-lucide="arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quiz Results -->
+                <div class="quiz-results hidden" id="quizResults">
+                    <div class="quiz-results-header">
+                        <div class="quiz-results-icon">
+                            <i data-lucide="trophy"></i>
+                        </div>
+                        <h2 class="quiz-results-title">Quiz Terminé!</h2>
+                        <p class="quiz-results-subtitle">Voici vos résultats</p>
+                    </div>
+
+                    <div class="quiz-results-card">
+                        <div class="quiz-results-score">
+                            <div class="quiz-score-value gradient-text-orange" id="quizScoreValue">0 / 5</div>
+                            <div class="quiz-score-percentage" id="quizScorePercentage">0% de réussite</div>
+                            <div class="quiz-score-progress">
+                                <div class="quiz-score-progress-bar" id="quizScoreBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="quiz-results-breakdown">
+                            <div class="quiz-breakdown-item">
+                                <div class="quiz-breakdown-value quiz-breakdown-correct" id="quizCorrectTotal">0</div>
+                                <div class="quiz-breakdown-label">Correctes</div>
+                            </div>
+                            <div class="quiz-breakdown-item">
+                                <div class="quiz-breakdown-value quiz-breakdown-incorrect" id="quizIncorrectTotal">5</div>
+                                <div class="quiz-breakdown-label">Incorrectes</div>
+                            </div>
+                            <div class="quiz-breakdown-item">
+                                <div class="quiz-breakdown-value gradient-text-orange" id="quizGrade">C</div>
+                                <div class="quiz-breakdown-label">Note</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Answer Details -->
+                    <div class="quiz-answer-details">
+                        <h3 class="quiz-details-title">Détails des réponses</h3>
+                        <div id="quizAnswersList">
+                            <!-- Answer details will be generated dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="quiz-restart-wrapper">
+                        <button class="quiz-restart-btn" id="quizRestartBtn">
+                            Recommencer le Quiz
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Logout Modal -->
+    <div class="modal-overlay hidden" id="logoutModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i data-lucide="log-out"></i>
+                </div>
+                <h3 class="modal-title">Déconnexion</h3>
+            </div>
+            <p class="modal-text">
+                Êtes-vous sûr de vouloir vous déconnecter ? Vous serez redirigé vers la page de connexion.
+            </p>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" id="cancelLogoutBtn">Annuler</button>
+                <button class="modal-btn modal-btn-confirm" id="confirmLogoutBtn">Déconnexion</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>

@@ -11,43 +11,9 @@ from Api.sessionRoutes import session_bp
 from Api.authRoutes import auth_bp
 
 
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-
-app = Flask(
-    __name__,
-    template_folder=os.path.join(BASE_DIR, "Frontend/Templates"),
-    static_folder=os.path.join(BASE_DIR, "Frontend/Static")
-)
-
+app = Flask(__name__)
 CORS(app)
 
-print("TEMPLATES:", app.template_folder)
-print("STATIC:", app.static_folder)
-
-# **************************************
-# Route temporaire du front 
-# **************************************
-@app.route("/")
-def home():
-    return render_template(
-        "index.html",
-        username="Arsi", 
-        total_cards=342,
-        total_quiz=48,
-        correct_answers=1248
-    )
-
-@app.route("/cards")
-def cards():
-    return render_template("cards.html")
-
-@app.route("/quiz")
-def quiz():
-    return render_template("quiz.html")
-
-@app.route("/logout")
-def logout():
-    return redirect(url_for("home"))
 
 app.register_blueprint(users_bp)
 app.register_blueprint(theme_bp)

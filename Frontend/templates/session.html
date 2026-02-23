@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nouvelle Session - SmartCards</title>
+
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <style>
+        :root {
+            --gradient-orange: #ff6b35;
+            --gradient-blue: #4a90e2;
+            --gradient-purple: #9b59b6;
+            --background: #0a0a0a;
+            --foreground: #f5f5f5;
+            --card: #141414;
+            --muted: #252525;
+            --muted-foreground: #a0a0a0;
+            --border: rgba(255, 255, 255, 0.08);
+            --radius: 1rem;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--background);
+            color: var(--foreground);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .hidden { display: none !important; }
+
+        /* ── Background ── */
+        .gradient-bg {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .gradient-circle {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            filter: blur(100px);
+        }
+        .gradient-top-right {
+            top: 0; right: 0;
+            background: linear-gradient(to bottom right, rgba(255,107,53,.12), rgba(155,89,182,.1), transparent);
+        }
+        .gradient-bottom-left {
+            bottom: 0; left: 0;
+            background: linear-gradient(to top right, rgba(74,144,226,.1), rgba(155,89,182,.1), transparent);
+        }
+
+        /* ── Header ── */
+        .app-header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            border-bottom: 1px solid rgba(255,255,255,.05);
+            background-color: rgba(15,15,15,.6);
+            backdrop-filter: blur(12px);
+        }
+        .header-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+        }
+        .back-btn {
+            padding: .5rem;
+            border-radius: .75rem;
+            background: rgba(42,42,42,.3);
+            border: 1px solid rgba(255,255,255,.05);
+            color: var(--muted-foreground);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s;
+            text-decoration: none;
+        }
+        .back-btn:hover { background: rgba(42,42,42,.6); color: var(--foreground); }
+        .back-btn svg { width: 20px; height: 20px; }
+
+        .logo-section { display: flex; align-items: center; gap: .75rem; margin-left: .5rem; }
+        .logo-icon {
+            padding: .5rem;
+            border-radius: .75rem;
+            background: linear-gradient(to bottom right, var(--gradient-orange), var(--gradient-purple));
+            box-shadow: 0 10px 15px -3px rgba(255,107,53,.3);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .logo-icon svg { width: 20px; height: 20px; color: white; }
+        .app-title {
+            font-size: 1.125rem;
+            font-weight: bold;
+            background: linear-gradient(to right, white, rgba(255,255,255,.7));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ── Page ── */
+        .page-wrapper {
+            position: relative;
+            z-index: 10;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem 4rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeUp .5s ease both;
+        }
+        .page-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .375rem 1rem;
+            border-radius: 9999px;
+            background: rgba(255,107,53,.1);
+            border: 1px solid rgba(255,107,53,.2);
+            font-size: .75rem;
+            color: var(--gradient-orange);
+            font-weight: 500;
+            margin-bottom: 1.25rem;
+        }
+        .page-badge svg { width: 14px; height: 14px; }
+        .page-title {
+            font-size: 2.25rem;
+            font-weight: 700;
+            letter-spacing: -.03em;
+            margin-bottom: .75rem;
+            background: linear-gradient(to right, #fff, rgba(255,255,255,.75));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .page-subtitle { color: var(--muted-foreground); font-size: 1rem; line-height: 1.6; }
+
+        /* ── Step labels ── */
+        .step-label {
+            font-size: .7rem;
+            font-weight: 600;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--muted-foreground);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            animation: fadeUp .5s ease both;
+        }
+        .step-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,.05);
+        }
+
+        /* ── Type selector ── */
+        .type-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            animation: fadeUp .5s .1s ease both;
+        }
+
+        .type-card {
+            position: relative;
+            padding: 1.75rem 1.5rem;
+            border-radius: 1rem;
+            border: 1.5px solid rgba(255,255,255,.06);
+            background: linear-gradient(135deg, var(--card), rgba(20,20,20,.5));
+            cursor: pointer;
+            transition: all .25s ease;
+            overflow: hidden;
+            text-align: center;
+        }
+        .type-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity .25s;
+        }
+        .type-card.quiz::before {
+            background: linear-gradient(135deg, rgba(74,144,226,.08), rgba(155,89,182,.06));
+        }
+        .type-card.cards::before {
+            background: linear-gradient(135deg, rgba(255,107,53,.08), rgba(155,89,182,.06));
+        }
+        .type-card:hover::before,
+        .type-card.selected::before { opacity: 1; }
+
+        .type-card:hover {
+            border-color: rgba(255,255,255,.12);
+            transform: translateY(-2px);
+        }
+        .type-card.quiz.selected {
+            border-color: rgba(74,144,226,.6);
+            box-shadow: 0 0 0 1px rgba(74,144,226,.2), 0 20px 40px -10px rgba(74,144,226,.15);
+        }
+        .type-card.cards.selected {
+            border-color: rgba(255,107,53,.6);
+            box-shadow: 0 0 0 1px rgba(255,107,53,.2), 0 20px 40px -10px rgba(255,107,53,.15);
+        }
+
+        .type-check {
+            position: absolute;
+            top: .875rem;
+            right: .875rem;
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255,255,255,.1);
+            display: flex; align-items: center; justify-content: center;
+            transition: all .2s;
+            background: transparent;
+        }
+        .type-card.quiz.selected .type-check {
+            background: linear-gradient(135deg, var(--gradient-blue), var(--gradient-purple));
+            border-color: transparent;
+        }
+        .type-card.cards.selected .type-check {
+            background: linear-gradient(135deg, var(--gradient-orange), var(--gradient-purple));
+            border-color: transparent;
+        }
+        .type-check svg { width: 11px; height: 11px; color: white; opacity: 0; transition: opacity .2s; }
+        .type-card.selected .type-check svg { opacity: 1; }
+
+        .type-icon {
+            width: 52px; height: 52px;
+            border-radius: .875rem;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.1rem;
+            position: relative; z-index: 1;
+        }
+        .type-card.quiz .type-icon {
+            background: linear-gradient(135deg, var(--gradient-blue), var(--gradient-purple));
+            box-shadow: 0 12px 24px -6px rgba(74,144,226,.3);
+        }
+        .type-card.cards .type-icon {
+            background: linear-gradient(135deg, var(--gradient-orange), var(--gradient-purple));
+            box-shadow: 0 12px 24px -6px rgba(255,107,53,.3);
+        }
+        .type-icon svg { width: 26px; height: 26px; color: white; }
+
+        .type-name {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: .4rem;
+            position: relative; z-index: 1;
+        }
+        .type-desc {
+            font-size: .8rem;
+            color: var(--muted-foreground);
+            line-height: 1.5;
+            position: relative; z-index: 1;
+        }
+
+        /* ── Upload zone ── */
+        .upload-section {
+            margin-bottom: 2rem;
+            animation: fadeUp .5s .2s ease both;
+        }
+
+        .upload-zone {
+            position: relative;
+            border: 1.5px dashed rgba(255,255,255,.1);
+            border-radius: 1rem;
+            background: rgba(20,20,20,.4);
+            padding: 2.5rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all .25s ease;
+            overflow: hidden;
+        }
+        .upload-zone:hover, .upload-zone.drag-over {
+            border-color: rgba(255,107,53,.4);
+            background: rgba(255,107,53,.04);
+        }
+        .upload-zone.has-file {
+            border-style: solid;
+            border-color: rgba(255,107,53,.4);
+            background: rgba(255,107,53,.05);
+        }
+
+        .upload-icon-wrapper {
+            width: 56px; height: 56px;
+            border-radius: 1rem;
+            background: rgba(42,42,42,.6);
+            border: 1px solid rgba(255,255,255,.06);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.25rem;
+            transition: all .25s;
+        }
+        .upload-zone:hover .upload-icon-wrapper,
+        .upload-zone.drag-over .upload-icon-wrapper {
+            background: rgba(255,107,53,.15);
+            border-color: rgba(255,107,53,.3);
+        }
+        .upload-zone.has-file .upload-icon-wrapper {
+            background: rgba(255,107,53,.15);
+            border-color: rgba(255,107,53,.3);
+        }
+        .upload-icon-wrapper svg { width: 26px; height: 26px; color: var(--muted-foreground); transition: color .25s; }
+        .upload-zone:hover .upload-icon-wrapper svg,
+        .upload-zone.drag-over .upload-icon-wrapper svg,
+        .upload-zone.has-file .upload-icon-wrapper svg { color: var(--gradient-orange); }
+
+        .upload-title { font-size: .95rem; font-weight: 500; margin-bottom: .4rem; }
+        .upload-subtitle { font-size: .8rem; color: var(--muted-foreground); }
+        .upload-hint {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: .3rem .875rem;
+            border-radius: 9999px;
+            background: rgba(42,42,42,.5);
+            font-size: .72rem;
+            color: var(--muted-foreground);
+        }
+
+        /* File preview */
+        .file-preview {
+            display: none;
+            align-items: center;
+            gap: .875rem;
+            padding: 1rem 1.25rem;
+            border-radius: .875rem;
+            background: rgba(255,107,53,.08);
+            border: 1px solid rgba(255,107,53,.2);
+            margin-top: 1rem;
+            text-align: left;
+        }
+        .file-preview.visible { display: flex; }
+        .file-icon {
+            width: 40px; height: 40px;
+            border-radius: .625rem;
+            background: linear-gradient(135deg, var(--gradient-orange), var(--gradient-purple));
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .file-icon svg { width: 20px; height: 20px; color: white; }
+        .file-info { flex: 1; min-width: 0; }
+        .file-name { font-size: .875rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .file-size { font-size: .75rem; color: var(--muted-foreground); margin-top: .15rem; }
+        .file-remove {
+            width: 32px; height: 32px;
+            border-radius: .5rem;
+            background: rgba(239,68,68,.1);
+            border: 1px solid rgba(239,68,68,.2);
+            color: #ef4444;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all .2s;
+            flex-shrink: 0;
+        }
+        .file-remove:hover { background: rgba(239,68,68,.2); }
+        .file-remove svg { width: 16px; height: 16px; }
+
+        /* hidden input */
+        #pdfInput { display: none; }
+
+        /* ── CTA Button ── */
+        .cta-section { animation: fadeUp .5s .3s ease both; }
+
+        .cta-btn {
+            width: 100%;
+            padding: 1rem 2rem;
+            border-radius: .875rem;
+            background: linear-gradient(to right, var(--gradient-orange), var(--gradient-purple));
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .625rem;
+            transition: all .3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .cta-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,.08);
+            opacity: 0;
+            transition: opacity .2s;
+        }
+        .cta-btn:hover:not(:disabled)::before { opacity: 1; }
+        .cta-btn:hover:not(:disabled) {
+            box-shadow: 0 20px 40px -10px rgba(255,107,53,.4);
+            transform: translateY(-1px);
+        }
+        .cta-btn:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+        }
+        .cta-btn svg { width: 20px; height: 20px; }
+
+        .cta-note {
+            text-align: center;
+            margin-top: .875rem;
+            font-size: .75rem;
+            color: var(--muted-foreground);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .375rem;
+        }
+        .cta-note svg { width: 13px; height: 13px; }
+
+        /* ── Animations ── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 480px) {
+            .type-grid { grid-template-columns: 1fr; }
+            .page-title { font-size: 1.75rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background -->
+    <div class="gradient-bg">
+        <div class="gradient-circle gradient-top-right"></div>
+        <div class="gradient-circle gradient-bottom-left"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-content">
+            <a href="/dashboard" class="back-btn" title="Retour">
+                <i data-lucide="arrow-left"></i>
+            </a>
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <i data-lucide="brain"></i>
+                </div>
+                <span class="app-title">SmartCards</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Page -->
+    <div class="page-wrapper">
+
+        <!-- Header -->
+        <div class="page-header">
+            <div class="page-badge">
+                <i data-lucide="sparkles"></i>
+                Nouvelle session
+            </div>
+            <h1 class="page-title">Créer une session<br>d'apprentissage</h1>
+            <p class="page-subtitle">Choisissez votre mode d'apprentissage et importez<br>votre document pour commencer.</p>
+        </div>
+
+        <!-- Step 1 : type -->
+        <div class="step-label">
+            <i data-lucide="list-ordered" style="width:14px;height:14px;"></i>
+            Étape 1 — Mode d'apprentissage
+        </div>
+
+        <div class="type-grid" id="typeGrid">
+            <div class="type-card quiz" data-type="quiz" onclick="selectType('quiz')">
+                <div class="type-check"><i data-lucide="check"></i></div>
+                <div class="type-icon"><i data-lucide="target"></i></div>
+                <div class="type-name">Quizz</div>
+                <div class="type-desc">Questions à choix multiples générées depuis votre document.</div>
+            </div>
+            <div class="type-card cards" data-type="cards" onclick="selectType('cards')">
+                <div class="type-check"><i data-lucide="check"></i></div>
+                <div class="type-icon"><i data-lucide="book-open"></i></div>
+                <div class="type-name">Cartes Mémo</div>
+                <div class="type-desc">Flashcards recto-verso pour mémoriser l'essentiel.</div>
+            </div>
+        </div>
+
+        <!-- Step 2 : upload -->
+        <div class="step-label" style="animation-delay:.15s">
+            <i data-lucide="upload" style="width:14px;height:14px;"></i>
+            Étape 2 — Document PDF
+        </div>
+
+        <div class="upload-section">
+            <div class="upload-zone" id="uploadZone"
+                 onclick="document.getElementById('pdfInput').click()"
+                 ondragover="handleDragOver(event)"
+                 ondragleave="handleDragLeave(event)"
+                 ondrop="handleDrop(event)">
+                <div class="upload-icon-wrapper">
+                    <i data-lucide="file-up"></i>
+                </div>
+                <div class="upload-title">Glissez votre PDF ici</div>
+                <div class="upload-subtitle">ou cliquez pour parcourir vos fichiers</div>
+                <span class="upload-hint">PDF uniquement · Max 20 Mo</span>
+            </div>
+
+            <div class="file-preview" id="filePreview">
+                <div class="file-icon"><i data-lucide="file-text"></i></div>
+                <div class="file-info">
+                    <div class="file-name" id="fileName">—</div>
+                    <div class="file-size" id="fileSize">—</div>
+                </div>
+                <button class="file-remove" onclick="removeFile(event)" title="Supprimer">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <input type="file" id="pdfInput" accept=".pdf" onchange="handleFileSelect(event)">
+        </div>
+
+        <!-- CTA -->
+        <div class="cta-section">
+            <button class="cta-btn" id="ctaBtn" disabled onclick="startSession()">
+                <i data-lucide="zap"></i>
+                Commencer à apprendre
+            </button>
+            <div class="cta-note">
+                <i data-lucide="shield-check"></i>
+                Votre document est traité localement et ne sera pas conservé.
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let selectedType = null;
+        let selectedFile = null;
+
+        // ── Type selection ──
+        function selectType(type) {
+            selectedType = type;
+            document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+            document.querySelector(`.type-card.${type}`).classList.add('selected');
+            checkReady();
+            lucide.createIcons();
+        }
+
+        // ── File helpers ──
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' o';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' Ko';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' Mo';
+        }
+
+        function applyFile(file) {
+            if (!file || file.type !== 'application/pdf') {
+                alert('Veuillez sélectionner un fichier PDF valide.');
+                return;
+            }
+            if (file.size > 20 * 1024 * 1024) {
+                alert('Le fichier dépasse la limite de 20 Mo.');
+                return;
+            }
+            selectedFile = file;
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatSize(file.size);
+            document.getElementById('filePreview').classList.add('visible');
+            document.getElementById('uploadZone').classList.add('has-file');
+            checkReady();
+            lucide.createIcons();
+        }
+
+        function handleFileSelect(e) {
+            if (e.target.files[0]) applyFile(e.target.files[0]);
+        }
+
+        function removeFile(e) {
+            e.stopPropagation();
+            selectedFile = null;
+            document.getElementById('pdfInput').value = '';
+            document.getElementById('filePreview').classList.remove('visible');
+            document.getElementById('uploadZone').classList.remove('has-file');
+            checkReady();
+        }
+
+        // ── Drag & drop ──
+        function handleDragOver(e) {
+            e.preventDefault();
+            document.getElementById('uploadZone').classList.add('drag-over');
+        }
+        function handleDragLeave(e) {
+            document.getElementById('uploadZone').classList.remove('drag-over');
+        }
+        function handleDrop(e) {
+            e.preventDefault();
+            document.getElementById('uploadZone').classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file) applyFile(file);
+        }
+
+        // ── CTA state ──
+        function checkReady() {
+            document.getElementById('ctaBtn').disabled = !(selectedType && selectedFile);
+        }
+
+        // ── Start session ──
+        function startSession() {
+            if (!selectedType || !selectedFile) return;
+
+            const btn = document.getElementById('ctaBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" style="animation:spin 1s linear infinite"></i> Analyse en cours…';
+            lucide.createIcons();
+
+            // TODO: envoyer le PDF à l'API
+            // const formData = new FormData();
+            // formData.append('pdf', selectedFile);
+            // formData.append('type', selectedType);
+            // fetch('/api/sessions', { method: 'POST', body: formData })
+            //   .then(r => r.json())
+            //   .then(data => {
+            //       window.location.href = selectedType === 'quiz' ? `/quiz/${data.sessionId}` : `/cards/${data.sessionId}`;
+            //   });
+
+            // Simulation (à remplacer par l'appel API)
+            setTimeout(() => {
+                window.location.href = selectedType === 'quiz' ? '/quiz' : '/cards';
+            }, 1800);
+        }
+
+        // ── Spin animation ──
+        const style = document.createElement('style');
+        style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+        document.head.appendChild(style);
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>
