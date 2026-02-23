@@ -1,0 +1,49 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SmartCards - Plateforme d'apprentissage{% endblock %}</title>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Gradient background effects -->
+    {% include 'components/background.html' %}
+
+    <div class="app-container">
+        <!-- Header avec logo et burger menu -->
+        {% include 'components/header.html' %}
+
+        <!-- Menu sidebar -->
+        {% include 'components/sidebar.html' %}
+
+        <!-- Contenu principal -->
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Logout Modal -->
+    {% include 'components/logout_modal.html' %}
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+    
+    <!-- Initialize Lucide icons -->
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+
+{# Macro pour un input de formulaire #}
+{% macro input_field(name, type='text', label='', placeholder='', required=True, value='') %}
+<div class="form-group">
+    {% if label %}
+    <label class="form-label" for="{{ name }}">{{ label }}</label>
+    {% endif %}
+    <input 
+        type="{{ type }}" 
+        id="{{ name }}" 
+        name="{{ name }}" 
+        class="form-input" 
+        placeholder="{{ placeholder }}"
+        {% if required %}required{% endif %}
+        {% if value %}value="{{ value }}"{% endif %}
+    >
+</div>
+{% endmacro %}
+
+{# Macro pour un bouton #}
+{% macro button(text, type='submit', color='primary', full_width=False, icon='') %}
+<button 
+    type="{{ type }}" 
+    class="btn btn-{{ color }} {% if full_width %}btn-full{% endif %}"
+>
+    {% if icon %}
+    <i data-lucide="{{ icon }}"></i>
+    {% endif %}
+    <span>{{ text }}</span>
+</button>
+{% endmacro %}
+
+{# Macro pour une carte de formulaire #}
+{% macro form_card(title, subtitle='') %}
+<div class="form-card">
+    <div class="form-header">
+        <h2 class="form-title">{{ title }}</h2>
+        {% if subtitle %}
+        <p class="form-subtitle">{{ subtitle }}</p>
+        {% endif %}
+    </div>
+    {{ caller() }}
+</div>
+{% endmacro %}

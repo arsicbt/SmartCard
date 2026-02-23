@@ -1,16 +1,183 @@
-"""
-Flask application pour LearnFlow AI
-Plateforme d'apprentissage avec flashcards et quiz
-"""
-
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for, session, request
+from functools import wraps
+import requests
+import os
 
 app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-me')
+
+# URL de l'API backend
+API_URL = 'http://localhost:5000/api'
+
+
+# **********************************************
+# Fonctions pour les appels API
+# **********************************************
+def make_api_request(endpoint, method='GET', data=None, token=None):
+    """
+    Helper pour faire des requêtes à l'API backend
+    """
+    headers = {'Content-Type': 'application/json'}
+    
+    if token:
+        headers['Authorization'] = f'Bearer {token}'
+    
+    url = f'{API_URL}{endpoint}'
+    
+    try:
+        if method == 'GET':
+            response = requests.get(url, headers=headers)
+        elif method == 'POST':
+            response = requests.post(url, json=data, headers=headers)
+        elif method == 'PUT':
+            response = requests.put(url, json=data, headers=headers)
+        elif method == 'DELETE':
+            response = requests.delete(url, headers=headers)
+        else:
+            return False, {'error': 'Invalid HTTP method'}, 400
+        
+        if response.status_code in [200, 201]:
+            return True, response.json(), response.status_code
+        else:
+            return False, response.json(), response.status_code
+    
+    except requests.exceptions.ConnectionError:
+        return False, {'error': 'Backend API non accessible'}, 500
+    except Exception as e:
+        return False, {'error': str(e)}, 500
+
+
+# **********************************************
+# Décorateur pour vérifier l'authentification
+# **********************************************
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+# **********************************************
+# Routes Frontend
+# **********************************************
 
 @app.route('/')
 def index():
-    """Page principale de l'application"""
-    return render_template('main.html')
+    """Page d'accueil - redirige vers dashboard si connecté"""
+    if 'user' in session:
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('login'))
+
+
+@app.route('/login')
+def login():
+    """Page de connexion"""
+    return render_template('login.html')
+
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    """Dashboard principal avec statistiques réelles depuis l'API"""
+    user = session.get('user')
+    token = session.get('token')
+    user_id = user.get('id')
+    user_name = user.get('first_name', 'Utilisateur')
+    
+    # Récupérer les sessions de l'utilisateur
+    success, sessions, _ = make_api_request(
+        f'/sessions/user/{user_id}',
+        token=token
+    )
+    
+    if not success:
+        sessions = []
+    
+    # Calculer les statistiques réelles
+    total_sessions = len(sessions)
+    
+    # Compter les Quiz et Flashcards
+    quiz_count = sum(1 for s in sessions if s.get('type') == 'QUIZ')
+    flashcard_count = sum(1 for s in sessions if s.get('type') == 'FLASHCARD')
+    
+    # Calculer les réponses correctes et le taux de réussite
+    total_correct = 0
+    total_questions = 0
+    
+    for s in sessions:
+        if s.get('score') is not None and s.get('max_score') is not None:
+            total_correct += s.get('score', 0)
+            total_questions += s.get('max_score', 0)
+    
+    accuracy = int((total_correct / total_questions * 100)) if total_questions > 0 else 0
+    
+    # Calculer la progression
+    cards_progress = min(75, flashcard_count * 5)
+    quiz_progress = min(100, quiz_count * 10)
+    
+    # Stats réelles
+    stats = {
+        'cards_generated': flashcard_count,
+        'cards_progress': cards_progress,
+        'quizzes_created': quiz_count,
+        'quiz_progress': quiz_progress,
+        'correct_answers': total_correct,
+        'accuracy': accuracy,
+        'cards_mastered': flashcard_count,
+        'study_time': f"{total_sessions * 5}h",
+        'streak': 7  # TODO: Calculer depuis les dates
+    }
+    
+    return render_template('dashboard.html', 
+                         user_name=user_name,
+                         stats=stats,
+                         active_view='dashboard')
+
+
+# **********************************************
+# Routes d'authentification (proxy vers API)
+# **********************************************
+
+@app.route('/auth/login', methods=['POST'])
+def auth_login():
+    """Proxy vers l'API de login"""
+    try:
+        response = requests.post(
+            'http://localhost:5000/api/auth/login',
+            json=request.json,
+            headers={'Content-Type': 'application/json'}
+        )
+        
+        data = response.json()
+        
+        if response.status_code == 200:
+            # Sauvegarder dans la session Flask
+            session['user'] = data.get('user')
+            session['token'] = data.get('token')
+        
+        return data, response.status_code
+    
+    except Exception as e:
+        return {'error': str(e)}, 500
+
+
+@app.route('/auth/logout', methods=['POST'])
+def auth_logout():
+    """Déconnexion"""
+    session.clear()
+    return {'message': 'Logged out'}, 200
+
+
+# **********************************************
+# Lancement de l'application
+# **********************************************
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=3000)
+    app.run(
+        host='0.0.0.0',
+        port=3000,
+        debug=True
+    )

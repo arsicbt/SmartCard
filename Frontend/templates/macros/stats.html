@@ -1,0 +1,73 @@
+
+{# Macro pour une grande carte de statistique (dashboard principal) #}
+{% macro stat_card(icon, value, label, badge, progress_width, color='orange') %}
+<div class="stat-card stat-card-{{ color }}">
+    <div class="stat-card-glow"></div>
+    <div class="stat-card-content">
+        <div class="stat-header">
+            <div class="stat-icon stat-icon-{{ color }}">
+                <i data-lucide="{{ icon }}"></i>
+            </div>
+            <div class="stat-badge">{{ badge }}</div>
+        </div>
+        <div class="stat-value gradient-text-{{ color }}">{{ value }}</div>
+        <div class="stat-label">{{ label }}</div>
+        <div class="stat-progress">
+            <div class="stat-progress-bar gradient-{{ color }}" style="width: {{ progress_width }}%"></div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{# Macro pour une petite carte de statistique (stats additionnelles) #}
+{% macro small_stat_card(icon, value, label, change, progress_width, color='orange') %}
+<div class="small-stat-card">
+    <div class="small-stat-glow small-stat-glow-{{ color }}"></div>
+    <div class="small-stat-content">
+        <div class="small-stat-header">
+            <div class="small-stat-icon small-stat-icon-{{ color }}">
+                <i data-lucide="{{ icon }}"></i>
+            </div>
+            <span class="small-stat-change">{{ change }}</span>
+        </div>
+        <div class="small-stat-value">{{ value }}</div>
+        <div class="small-stat-label">{{ label }}</div>
+        <div class="small-stat-progress">
+            <div class="small-stat-progress-bar gradient-{{ color }}" style="width: {{ progress_width }}%"></div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{# Macro pour l'en-tête de bienvenue #}
+{% macro welcome_header(name, subtitle='Continuez votre parcours d\'apprentissage') %}
+<div class="welcome-header">
+    <h2 class="welcome-title">Bienvenue, {{ name }} 👋</h2>
+    <p class="welcome-subtitle">{{ subtitle }}</p>
+</div>
+{% endmacro %}
+
+{# Macro pour le conteneur de graphique #}
+{% macro chart_container(title, subtitle, chart_id='progressChart', show_legend=True) %}
+<div class="chart-container">
+    <div class="chart-header">
+        <h3 class="chart-title">{{ title }}</h3>
+        <p class="chart-subtitle">{{ subtitle }}</p>
+    </div>
+    <div class="chart-wrapper">
+        <canvas id="{{ chart_id }}"></canvas>
+    </div>
+    {% if show_legend %}
+    <div class="chart-legend">
+        <div class="legend-item">
+            <div class="legend-dot legend-dot-orange"></div>
+            <span>Cartes créées</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot legend-dot-blue"></div>
+            <span>Temps d'apprentissage (min)</span>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}

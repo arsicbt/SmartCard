@@ -1,0 +1,35 @@
+
+<!-- Burger Menu Overlay -->
+<div class="menu-overlay" id="menuOverlay"></div>
+
+<!-- Menu Content -->
+<div class="menu-sidebar" id="menuSidebar">
+    <div class="menu-header">
+        <h3 class="menu-title">MENU</h3>
+        <button class="menu-close-btn" id="menuCloseBtn">
+            <i data-lucide="x"></i>
+        </button>
+    </div>
+
+    <nav class="menu-nav">
+        <button class="menu-item {{ 'active' if active_view == 'dashboard' else '' }}" data-view="dashboard">
+            <i data-lucide="trending-up"></i>
+            Dashboard
+        </button>
+        <button class="menu-item {{ 'active' if active_view == 'cards' else '' }}" data-view="cards">
+            <i data-lucide="book-open"></i>
+            Cartes Mémo
+        </button>
+        <button class="menu-item {{ 'active' if active_view == 'quiz' else '' }}" data-view="quiz">
+            <i data-lucide="target"></i>
+            Quizz
+        </button>
+    </nav>
+
+    <div class="menu-footer">
+        <button class="menu-logout" id="logoutBtn">
+            <i data-lucide="log-out"></i>
+            Déconnexion
+        </button>
+    </div>
+</div>

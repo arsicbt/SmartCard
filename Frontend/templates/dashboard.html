@@ -1,0 +1,173 @@
+
+{% extends "base.html" %}
+{% import 'macros/stats.html' as stats_macros %}
+
+{% block title %}Dashboard - SmartCards{% endblock %}
+
+{% block content %}
+<div class="view-container active" id="dashboardView">
+    <!-- Welcome Header -->
+    {{ stats_macros.welcome_header(user_name) }}
+
+    <!-- Main Stats Cards -->
+    <div class="stats-grid">
+        {{ stats_macros.stat_card(
+            icon='book-open',
+            value=stats.cards_generated,
+            label='Cartes générées',
+            badge='+18 aujourd\'hui',
+            progress_width=stats.cards_progress,
+            color='orange'
+        ) }}
+
+        {{ stats_macros.stat_card(
+            icon='award',
+            value=stats.quizzes_created,
+            label='Quizz créés',
+            badge='+5 cette semaine',
+            progress_width=stats.quiz_progress,
+            color='blue'
+        ) }}
+
+        {{ stats_macros.stat_card(
+            icon='check-circle-2',
+            value=stats.correct_answers,
+            label='Réponses correctes',
+            badge=stats.accuracy ~ '% de taux',
+            progress_width=stats.accuracy,
+            color='purple'
+        ) }}
+    </div>
+
+    <!-- Progress Chart -->
+    {{ stats_macros.chart_container(
+        title='Progrès hebdomadaires',
+        subtitle='Votre activité d\'apprentissage au cours des 7 derniers jours',
+        chart_id='progressChart'
+    ) }}
+
+    <!-- Additional Stats -->
+    <div class="additional-stats">
+        {{ stats_macros.small_stat_card(
+            icon='check-circle',
+            value=stats.cards_mastered,
+            label='Cartes maîtrisées',
+            change='+12%',
+            progress_width=65,
+            color='orange'
+        ) }}
+
+        {{ stats_macros.small_stat_card(
+            icon='clock',
+            value=stats.study_time,
+            label='Temps d\'apprentissage',
+            change='+8%',
+            progress_width=75,
+            color='blue'
+        ) }}
+
+        {{ stats_macros.small_stat_card(
+            icon='trending-up',
+            value=stats.accuracy ~ '%',
+            label='Taux de réussite',
+            change='+5%',
+            progress_width=stats.accuracy,
+            color='purple'
+        ) }}
+
+        {{ stats_macros.small_stat_card(
+            icon='flame',
+            value=stats.streak,
+            label='Série actuelle',
+            change='Jours',
+            progress_width=95,
+            color='orange'
+        ) }}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Weekly Progress Chart
+    const ctx = document.getElementById('progressChart');
+    if (ctx) {
+        const data = [
+            { day: 'Lun', cards: 28, time: 45 },
+            { day: 'Mar', cards: 35, time: 52 },
+            { day: 'Mer', cards: 42, time: 68 },
+            { day: 'Jeu', cards: 38, time: 55 },
+            { day: 'Ven', cards: 48, time: 72 },
+            { day: 'Sam', cards: 55, time: 85 },
+            { day: 'Dim', cards: 62, time: 92 },
+        ];
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.map(d => d.day),
+                datasets: [
+                    {
+                        label: 'Cartes créées',
+                        data: data.map(d => d.cards),
+                        borderColor: '#ff6b35',
+                        backgroundColor: 'rgba(255, 107, 53, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2,
+                    },
+                    {
+                        label: 'Temps d\'apprentissage (min)',
+                        data: data.map(d => d.time),
+                        borderColor: '#4a90e2',
+                        backgroundColor: 'rgba(74, 144, 226, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: '#141414',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1,
+                        padding: 12,
+                        titleColor: '#f5f5f5',
+                        bodyColor: '#f5f5f5',
+                        cornerRadius: 12,
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)',
+                            drawBorder: false,
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.3)',
+                            font: { size: 12 }
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)',
+                            drawBorder: false,
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.3)',
+                            font: { size: 12 }
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}
