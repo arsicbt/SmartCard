@@ -130,3 +130,30 @@ def create_admin():
     storage.save()
 
     return jsonify(admin.to_dict()), 201
+
+
+@auth_bp.route('/refresh', methods=['POST'])
+def refresh():
+    """Renouveler l'access token avec le refresh token"""
+    data = request.get_json()
+    refresh_token = data.get('refresh_token')
+    
+    if not refresh_token:
+        abort(400, description="Refresh token manquant")
+    
+    # Décoder le refresh token
+    payload = token_manager.decode_refresh_token(refresh_token)
+    
+    if not payload:
+        abort(401, description="Refresh token invalide ou expiré")
+    
+    user_id = payload.get('user_id')
+    email = payload.get('email')
+    
+    # Générer un nouveau access token
+    new_access_token, _ = token_manager.generate_tokens(user_id, email)
+    
+    return jsonify({
+        'access_token': new_access_token,
+        'message': 'Token renouvelé'
+    }), 200

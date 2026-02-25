@@ -2,6 +2,8 @@ from flask import Flask, render_template, redirect, url_for, session, request
 from functools import wraps
 import requests
 import os
+from datetime import datetime, timedelta
+from collections import defaultdict
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-me')
@@ -14,7 +16,7 @@ API_URL = 'http://localhost:5000/api'
 # Fonctions pour les appels API
 # **********************************************
 def make_api_request(endpoint, method='GET', data=None, token=None):
-    """Helper pour faire des requêtes à l'API backend"""
+    """Helper avec auto-refresh du token"""
     headers = {'Content-Type': 'application/json'}
     if token:
         headers['Authorization'] = f'Bearer {token}'
@@ -22,24 +24,33 @@ def make_api_request(endpoint, method='GET', data=None, token=None):
     url = f'{API_URL}{endpoint}'
 
     try:
-        if method == 'GET':
-            response = requests.get(url, headers=headers)
-        elif method == 'POST':
-            response = requests.post(url, json=data, headers=headers)
-        elif method == 'PUT':
-            response = requests.put(url, json=data, headers=headers)
-        elif method == 'DELETE':
-            response = requests.delete(url, headers=headers)
-        else:
-            return False, {'error': 'Invalid HTTP method'}, 400
+        response = requests.request(method, url, json=data, headers=headers)
+        
+        # Si 401 et on a un refresh token
+        if response.status_code == 401:
+            refresh_token = session.get('refresh_token')
+            
+            if refresh_token:
+                # Essayer de refresh le token
+                refresh_response = requests.post(
+                    f'{API_URL}/auth/refresh',
+                    json={'refresh_token': refresh_token}
+                )
+                
+                if refresh_response.status_code == 200:
+                    # Nouveau token obtenu
+                    new_token = refresh_response.json().get('access_token')
+                    session['token'] = new_token
+                    
+                    # Réessayer la requête avec le nouveau token
+                    headers['Authorization'] = f'Bearer {new_token}'
+                    response = requests.request(method, url, json=data, headers=headers)
 
         if response.status_code in [200, 201]:
             return True, response.json(), response.status_code
         else:
             return False, response.json(), response.status_code
 
-    except requests.exceptions.ConnectionError:
-        return False, {'error': 'Backend API non accessible'}, 500
     except Exception as e:
         return False, {'error': str(e)}, 500
 
@@ -77,15 +88,21 @@ def login():
 @login_required
 def dashboard():
     """Dashboard principal avec statistiques réelles depuis l'API"""
+    from datetime import datetime, timedelta
+    from collections import defaultdict
+    
+    # 1. Récupérer l'utilisateur et le token
     user = session.get('user')
     token = session.get('token')
     user_id = user.get('id')
     user_name = user.get('first_name', 'Utilisateur')
 
+    # 2. Récupérer les sessions depuis l'API
     success, sessions, _ = make_api_request(f'/sessions/user/{user_id}', token=token)
     if not success:
         sessions = []
 
+    # 3. Calculer les statistiques de base
     total_sessions   = len(sessions)
     quiz_count       = sum(1 for s in sessions if s.get('type') == 'quiz')
     flashcard_count  = sum(1 for s in sessions if s.get('type') == 'flashcard')
@@ -101,6 +118,33 @@ def dashboard():
     cards_progress = min(75, flashcard_count * 5)
     quiz_progress  = min(100, quiz_count * 10)
 
+    # 4. Calculer les données du graphique (7 derniers jours)
+    today = datetime.now()
+    chart_data = {
+        'labels': [],
+        'cards_created': [],
+        'study_time': []
+    }
+    
+    sessions_by_day = defaultdict(lambda: {'cards': 0, 'time': 0})
+    
+    for i in range(6, -1, -1):  # 7 jours en arrière
+        day = today - timedelta(days=i)
+        day_name = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'][day.weekday()]
+        day_key = day.strftime('%Y-%m-%d')
+        chart_data['labels'].append(day_name)
+        
+        # Compter les sessions créées ce jour
+        for s in sessions:
+            created_at = s.get('created_at', '')
+            if created_at and created_at.startswith(day_key):
+                sessions_by_day[day_key]['cards'] += 1
+                sessions_by_day[day_key]['time'] += 5  # 5 min par session
+        
+        chart_data['cards_created'].append(sessions_by_day[day_key]['cards'])
+        chart_data['study_time'].append(sessions_by_day[day_key]['time'])
+
+    # 5. Préparer les stats pour le template
     stats = {
         'cards_generated': flashcard_count,
         'cards_progress':  cards_progress,
@@ -112,18 +156,13 @@ def dashboard():
         'study_time':      f"{total_sessions * 5}h",
         'streak':          7  # TODO: calculer depuis les dates
     }
-    
-    success, sessions, status = make_api_request(f'/sessions/user/{user_id}', token=token)
 
-    print("SUCCESS:", success)
-    print("STATUS:", status)
-    print("SESSIONS:", sessions)
-
+    # 6. Rendre le template
     return render_template('dashboard.html',
                            user_name=user_name,
                            stats=stats,
+                           chart_data=chart_data,
                            active_view='dashboard')
-
 
 # **********************************************
 # Route - Galerie des Quizz
@@ -175,9 +214,19 @@ def quizzes_page():
 @login_required
 def session_page():
     """Page de création d'une session d'apprentissage"""
-    user = session.get('user')
-    return render_template('session.html', user_id=user.get('id'))
 
+    user = session.get('user')
+    token = session.get('token')
+    user_id = user.get('id')
+    
+    success, sessions, _ = make_api_request(f'/sessions/user/{user_id}', token=token)
+    if not success:
+        sessions = []
+
+    if sessions:
+        print("DEBUG SESSION:", sessions[0])
+    
+    return render_template('session.html', user_id=user_id)
 
 @app.route('/api/sessions/create-with-pdf', methods=['POST'])
 @login_required
@@ -274,18 +323,18 @@ def auth_login():
     """Proxy vers l'API de login"""
     try:
         response = requests.post(
-            f'{API_URL}/auth/login',
-            json=request.json,
-            headers={'Content-Type': 'application/json'}
+            'http://localhost:5000/api/auth/login',
+            json=request.json
         )
+        
         data = response.json()
-
+        
         if response.status_code == 200:
-            session['user']  = data.get('user')
-            session['token'] = data.get('token')
-
+            session['user'] = data.get('user')
+            session['token'] = data.get('token')  # access_token
+            session['refresh_token'] = data.get('refresh_token')  # ⭐ Nouveau
+        
         return data, response.status_code
-
     except Exception as e:
         return {'error': str(e)}, 500
 

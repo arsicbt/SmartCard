@@ -1,8 +1,8 @@
 """
 Middleware Auth & Admin - Vérification de l'authentification et des privilèges
 
-- @auth_required : utilisateur connecté
-- @admin_required : utilisateur admin uniquement
+- @auth_required : utilisateur connecté (avec auto-refresh)
+- @admin_required : utilisateur admin uniquement (avec auto-refresh)
 """
 
 from functools import wraps
@@ -38,9 +38,63 @@ def _get_token_from_request():
     return token
 
 
+def _get_refresh_token_from_request():
+    """
+    Récupère le refresh token depuis :
+    1. Cookie refresh_token
+    2. Header X-Refresh-Token
+
+    Returns:
+        refresh_token (str) ou None
+    """
+    # 1. Cookie
+    refresh_token = request.cookies.get('refresh_token')
+    
+    # 2. Header (fallback)
+    if not refresh_token:
+        refresh_token = request.headers.get('X-Refresh-Token')
+    
+    return refresh_token
+
+
+def _try_refresh_token():
+    """
+    Tente de rafraîchir l'access token avec le refresh token
+    
+    Returns:
+        tuple: (success: bool, new_access_token: str|None, error_message: str|None)
+    """
+    refresh_token = _get_refresh_token_from_request()
+    
+    if not refresh_token:
+        return False, None, "Refresh token manquant"
+    
+    # Décoder le refresh token
+    payload = TokenManager.decode_refresh_token(refresh_token)
+    
+    if not payload:
+        return False, None, "Refresh token invalide ou expiré"
+    
+    # Vérifier que c'est bien un refresh token
+    if payload.get('type') != 'refresh':
+        return False, None, "Token invalide"
+    
+    user_id = payload.get('user_id')
+    email = payload.get('email')
+    
+    if not user_id or not email:
+        return False, None, "Payload incomplet"
+    
+    # Générer un nouveau access token
+    new_access_token, _ = TokenManager.generate_tokens(user_id, email)
+    
+    return True, new_access_token, None
+
+
 def auth_required(f):
     """
     Décorateur pour vérifier que l'utilisateur est authentifié
+    Gère automatiquement le refresh du token si expiré
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -54,12 +108,36 @@ def auth_required(f):
             }), 401
 
         # 2. Vérifier le token
-        payload = TokenManager.decode_token(token)
+        payload = TokenManager.decode_access_token(token)
+        
+        # AUTO-REFRESH : Si le token est expiré, essayer de le rafraîchir
         if not payload:
-            return jsonify({
-                'error': 'Token invalide ou expiré',
-                'message': 'Veuillez vous reconnecter'
-            }), 401
+            success, new_token, error = _try_refresh_token()
+            
+            if success:
+                # Token rafraîchi avec succès
+                token = new_token
+                payload = TokenManager.decode_access_token(token)
+                
+                # Retourner le nouveau token dans le header de réponse
+                response = f(*args, **kwargs)
+                if isinstance(response, tuple):
+                    resp, status = response[0], response[1] if len(response) > 1 else 200
+                else:
+                    resp, status = response, 200
+                
+                # Ajouter le nouveau token dans la réponse
+                if isinstance(resp, dict):
+                    resp['new_access_token'] = new_token
+                
+                return resp, status
+            else:
+                # Impossible de rafraîchir
+                return jsonify({
+                    'error': 'Token invalide ou expiré',
+                    'message': 'Veuillez vous reconnecter',
+                    'refresh_failed': True
+                }), 401
 
         # 3. Récupérer l'utilisateur
         user_id = payload.get('user_id')
@@ -88,6 +166,7 @@ def auth_required(f):
 def admin_required(f):
     """
     Décorateur pour vérifier que l'utilisateur est admin
+    Gère automatiquement le refresh du token si expiré
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -101,12 +180,26 @@ def admin_required(f):
             }), 401
 
         # 2. Vérifier le token
-        payload = TokenManager.decode_token(token)
+        payload = TokenManager.decode_access_token(token)
+        
+        # ⭐ AUTO-REFRESH : Si le token est expiré, essayer de le rafraîchir
         if not payload:
-            return jsonify({
-                'error': 'Token invalide ou expiré',
-                'message': 'Veuillez vous reconnecter'
-            }), 401
+            success, new_token, error = _try_refresh_token()
+            
+            if success:
+                # Token rafraîchi avec succès
+                token = new_token
+                payload = TokenManager.decode_access_token(token)
+                
+                # Continuer avec le nouveau token
+                # (le reste du code vérifiera l'admin)
+            else:
+                # Impossible de rafraîchir
+                return jsonify({
+                    'error': 'Token invalide ou expiré',
+                    'message': 'Veuillez vous reconnecter',
+                    'refresh_failed': True
+                }), 401
 
         # 3. Récupérer l'utilisateur
         user_id = payload.get('user_id')
