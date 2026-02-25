@@ -10,23 +10,19 @@
         </button>
     </div>
 
-    <div class="session-cta">
-        <a href="/session" class="session-cta-btn">
-            <i data-lucide="play-circle"></i>
-            Apprentissage
-        </a>
-    </div>
-
     <nav class="menu-nav">
-        <button class="menu-item {{ 'active' if active_view == 'dashboard' else '' }}" data-view="dashboard">
+        <button class="menu-item {{ 'active' if active_view == 'dashboard' else '' }}" onclick="window.location.href='/dashboard'">
             <i data-lucide="trending-up"></i>
             Dashboard
+        <button class="menu-item {{ 'active' if active_view == 'session' else '' }}" onclick="window.location.href='/session'">
+            <i data-lucide="play-circle"></i>
+                Apprentissage
         </button>
-        <button class="menu-item {{ 'active' if active_view == 'cards' else '' }}" data-view="cards">
+        <button class="menu-item {{ 'active' if active_view == 'cards' else '' }}" onclick="window.location.href='/cards-list'">
             <i data-lucide="book-open"></i>
             Cartes Mémo
         </button>
-        <button class="menu-item {{ 'active' if active_view == 'quiz' else '' }}" data-view="quiz">
+        <button class="menu-item {{ 'active' if active_view == 'quiz' else '' }}" onclick="window.location.href='/quizzes'">
             <i data-lucide="target"></i>
             Quizz
         </button>

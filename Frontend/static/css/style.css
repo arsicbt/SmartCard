@@ -343,15 +343,6 @@ button {
     height: 20px;
 }
 
-.menu-cta {
-    padding: 1rem 1.5rem;
-}
-
-.menu-cta-btn:hover {
-    opacity: 0.9;
-}
-
-
 /* ===== Main Content ===== */
 .main-content {
     max-width: 1280px;

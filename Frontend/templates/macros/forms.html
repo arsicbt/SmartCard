@@ -1,7 +1,6 @@
-
 {# Macro pour un input de formulaire #}
 {% macro input_field(name, type='text', label='', placeholder='', required=True, value='') %}
-<div class="form-group">
+<div class="form-group" id="group-{{ name }}">
     {% if label %}
     <label class="form-label" for="{{ name }}">{{ label }}</label>
     {% endif %}
@@ -14,6 +13,7 @@
         {% if required %}required{% endif %}
         {% if value %}value="{{ value }}"{% endif %}
     >
+    <span class="field-error" id="error-{{ name }}"></span>
 </div>
 {% endmacro %}
 

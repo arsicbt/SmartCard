@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 {% import 'macros/forms.html' as forms %}
 
@@ -180,38 +179,105 @@
     .auth-link:hover {
         text-decoration: underline;
     }
+
+    .form-input.input-error {
+        border-color: #ef4444;
+        background: rgba(239, 68, 68, 0.06);
+    }
+    .form-input.input-error:focus {
+        border-color: #ef4444;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+    }
+    .field-error {
+        display: block;
+        height: 0;
+        overflow: hidden;
+        font-size: .8rem;
+        color: #ef4444;
+        margin-top: 0;
+        opacity: 0;
+        transition: height .2s ease, margin-top .2s ease, opacity .2s ease;
+    }
+    .field-error.visible {
+        height: 1.2rem;
+        margin-top: .4rem;
+        opacity: 1;
+    }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+    // ── Helpers erreurs inline ──
+    function showError(fieldName, message) {
+        const input = document.getElementById(fieldName);
+        const error = document.getElementById('error-' + fieldName);
+        if (!input || !error) return;
+        input.classList.add('input-error');
+        error.textContent = message;
+        error.classList.add('visible');
+    }
+
+    function clearError(fieldName) {
+        const input = document.getElementById(fieldName);
+        const error = document.getElementById('error-' + fieldName);
+        if (!input || !error) return;
+        input.classList.remove('input-error');
+        error.classList.remove('visible');
+    }
+
+    function clearAllErrors() {
+        clearError('email');
+        clearError('password');
+    }
+
+    // Effacer l'erreur dès que l'utilisateur retape
+    document.getElementById('email').addEventListener('input', () => clearError('email'));
+    document.getElementById('password').addEventListener('input', () => clearError('password'));
+
     async function handleLogin(event) {
         event.preventDefault();
-        
-        const email = document.getElementById('email').value;
+        clearAllErrors();
+
+        const email    = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
-        
+
+        // Validation côté client
+        let hasError = false;
+        if (!email) {
+            showError('email', 'L\'adresse email est requise.');
+            hasError = true;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            showError('email', 'Format d\'email invalide.');
+            hasError = true;
+        }
+        if (!password) {
+            showError('password', 'Le mot de passe est requis.');
+            hasError = true;
+        }
+        if (hasError) return;
+
+        // Appel API
         try {
             const response = await fetch('/auth/login', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
             });
-            
+
             const data = await response.json();
-            
+
             if (response.ok && data.token) {
-                localStorage.setItem('auth_token', data.token);
-                localStorage.setItem('user', JSON.stringify(data.user));
                 window.location.href = '/dashboard';
+            } else if (response.status === 401) {
+                // On ne sait pas lequel est faux → on indique les deux
+                showError('email', 'Email incorrect.');
+                showError('password', 'Mot de passe incorrect.');
             } else {
-                alert('Erreur: ' + (data.error || 'Identifiants invalides'));
+                showError('email', data.error || 'Une erreur est survenue.');
             }
         } catch (error) {
-            alert('Erreur de connexion: ' + error.message);
-            console.error('Login error:', error);
+            showError('email', 'Impossible de contacter le serveur.');
         }
     }
 </script>

@@ -87,8 +87,8 @@ def dashboard():
         sessions = []
 
     total_sessions   = len(sessions)
-    quiz_count       = sum(1 for s in sessions if s.get('type') == 'QUIZ')
-    flashcard_count  = sum(1 for s in sessions if s.get('type') == 'FLASHCARD')
+    quiz_count       = sum(1 for s in sessions if s.get('type') == 'quiz')
+    flashcard_count  = sum(1 for s in sessions if s.get('type') == 'flashcard')
     total_correct    = 0
     total_questions  = 0
 
@@ -112,11 +112,60 @@ def dashboard():
         'study_time':      f"{total_sessions * 5}h",
         'streak':          7  # TODO: calculer depuis les dates
     }
+    
+    success, sessions, status = make_api_request(f'/sessions/user/{user_id}', token=token)
+
+    print("SUCCESS:", success)
+    print("STATUS:", status)
+    print("SESSIONS:", sessions)
 
     return render_template('dashboard.html',
                            user_name=user_name,
                            stats=stats,
                            active_view='dashboard')
+
+
+# **********************************************
+# Route - Galerie des Quizz
+# **********************************************
+@app.route('/quizzes')
+@login_required
+def quizzes_page():
+    """Liste de tous les quiz de l'utilisateur"""
+    user  = session.get('user')
+    token = session.get('token')
+    user_id = user.get('id')
+
+    success, sessions, _ = make_api_request(f'/sessions/user/{user_id}', token=token)
+    if not success:
+        sessions = []
+
+    # Garder uniquement les QUIZ et enrichir avec le nom du thème
+    quizzes = []
+    for s in sessions:
+        if s.get('type') != 'QUIZ':
+            continue
+
+        # Récupérer le nom du thème si disponible
+        theme_name = None
+        if s.get('theme_id'):
+            ok, theme, _ = make_api_request(f'/themes/{s["theme_id"]}', token=token)
+            if ok:
+                theme_name = theme.get('name')
+
+        quizzes.append({
+            'id':              s.get('id'),
+            'theme_name':      theme_name or 'Sans thème',
+            'questions_count': s.get('questions_count', 0),
+            'score':           s.get('score'),
+            'max_score':       s.get('max_score'),
+            'created_at':      s.get('created_at'),
+        })
+
+    # Plus récent en premier
+    quizzes.sort(key=lambda x: x['created_at'] or '', reverse=True)
+
+    return render_template('quizzes.html', quizzes=quizzes, active_view='quiz')
 
 
 # **********************************************
