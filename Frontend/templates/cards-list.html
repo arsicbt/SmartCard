@@ -3,33 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartCards - Mes Quizz</title>
+    <title>SmartCards - Mes Cartes</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        .quizzes-header {
+        .cards-header {
             margin-bottom: 2rem;
         }
-        .quizzes-title {
+        .cards-title {
             font-size: 1.6rem;
             font-weight: 700;
             color: var(--foreground);
             margin-bottom: .3rem;
         }
-        .quizzes-subtitle {
+        .cards-subtitle {
             font-size: .9rem;
             color: var(--muted-foreground);
         }
 
         /* ── Grid ── */
-        .quizzes-grid {
+        .cards-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
             gap: 1.2rem;
         }
 
         /* ── Card ── */
-        .quiz-tile {
+        .card-tile {
             position: relative;
             background: linear-gradient(135deg, var(--card), rgba(20,20,20,.5));
             border: 1px solid rgba(255,255,255,.07);
@@ -43,37 +43,37 @@
             flex-direction: column;
             gap: .75rem;
         }
-        .quiz-tile::before {
+        .card-tile::before {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, rgba(79,124,255,.15), transparent 60%);
+            background: linear-gradient(135deg, rgba(249,115,22,.15), transparent 60%);
             opacity: 0;
             transition: opacity .25s;
             border-radius: inherit;
         }
-        .quiz-tile:hover {
+        .card-tile:hover {
             transform: translateY(-3px);
-            border-color: rgba(79,124,255,.4);
-            box-shadow: 0 8px 24px rgba(79,124,255,.12);
+            border-color: rgba(249,115,22,.4);
+            box-shadow: 0 8px 24px rgba(249,115,22,.12);
         }
-        .quiz-tile:hover::before { opacity: 1; }
+        .card-tile:hover::before { opacity: 1; }
 
         /* Icon */
-        .quiz-tile-icon {
+        .card-tile-icon {
             width: 40px;
             height: 40px;
             border-radius: 10px;
-            background: rgba(79,124,255,.15);
+            background: rgba(249,115,22,.15);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--gradient-blue);
+            color: var(--gradient-orange);
         }
-        .quiz-tile-icon svg { width: 20px; height: 20px; }
+        .card-tile-icon svg { width: 20px; height: 20px; }
 
         /* Theme name */
-        .quiz-tile-theme {
+        .card-tile-theme {
             font-size: 1rem;
             font-weight: 600;
             color: var(--foreground);
@@ -81,7 +81,7 @@
         }
 
         /* Meta row */
-        .quiz-tile-meta {
+        .card-tile-meta {
             display: flex;
             align-items: center;
             gap: .5rem;
@@ -89,23 +89,23 @@
             color: var(--muted-foreground);
             margin-top: auto;
         }
-        .quiz-tile-meta svg { width: 12px; height: 12px; flex-shrink: 0; }
+        .card-tile-meta svg { width: 12px; height: 12px; flex-shrink: 0; }
 
-        /* Score badge */
-        .quiz-tile-score {
+        /* Status badge */
+        .card-tile-status {
             margin-left: auto;
             font-size: .75rem;
             font-weight: 600;
             padding: .2rem .55rem;
             border-radius: 20px;
-            background: rgba(79,124,255,.15);
-            color: var(--gradient-blue);
+            background: rgba(249,115,22,.15);
+            color: var(--gradient-orange);
         }
-        .quiz-tile-score.good  { background: rgba(34,197,94,.15); color: #22c55e; }
-        .quiz-tile-score.bad   { background: rgba(239,68,68,.15);  color: #ef4444; }
+        .card-tile-status.completed { background: rgba(34,197,94,.15); color: #22c55e; }
+        .card-tile-status.in-progress { background: rgba(251,191,36,.15); color: #fbbf24; }
 
         /* Arrow */
-        .quiz-tile-arrow {
+        .card-tile-arrow {
             position: absolute;
             top: 1rem;
             right: 1rem;
@@ -113,11 +113,11 @@
             opacity: 0;
             transition: opacity .2s, transform .2s;
         }
-        .quiz-tile-arrow svg { width: 16px; height: 16px; }
-        .quiz-tile:hover .quiz-tile-arrow { opacity: 1; transform: translate(2px,-2px); }
+        .card-tile-arrow svg { width: 16px; height: 16px; }
+        .card-tile:hover .card-tile-arrow { opacity: 1; transform: translate(2px,-2px); }
 
         /* Delete button */
-        .quiz-tile-delete {
+        .card-tile-delete {
             position: absolute;
             top: 1rem;
             right: 2.5rem;
@@ -135,34 +135,34 @@
             transition: opacity .2s, background .2s, transform .2s;
             z-index: 10;
         }
-        .quiz-tile-delete svg { width: 14px; height: 14px; }
-        .quiz-tile:hover .quiz-tile-delete { opacity: 1; }
-        .quiz-tile-delete:hover {
+        .card-tile-delete svg { width: 14px; height: 14px; }
+        .card-tile:hover .card-tile-delete { opacity: 1; }
+        .card-tile-delete:hover {
             background: rgba(239,68,68,.25);
             transform: scale(1.1);
         }
 
         /* Empty state */
-        .quizzes-empty {
+        .cards-empty {
             grid-column: 1 / -1;
             text-align: center;
             padding: 4rem 2rem;
             color: var(--muted-foreground);
         }
-        .quizzes-empty-icon {
+        .cards-empty-icon {
             width: 56px;
             height: 56px;
             border-radius: 14px;
-            background: rgba(79,124,255,.1);
+            background: rgba(249,115,22,.1);
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 1rem;
-            color: var(--gradient-blue);
+            color: var(--gradient-orange);
         }
-        .quizzes-empty-icon svg { width: 28px; height: 28px; }
-        .quizzes-empty h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: .4rem; color: var(--foreground); }
-        .quizzes-empty p  { font-size: .88rem; margin-bottom: 1.5rem; }
+        .cards-empty-icon svg { width: 28px; height: 28px; }
+        .cards-empty h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: .4rem; color: var(--foreground); }
+        .cards-empty p  { font-size: .88rem; margin-bottom: 1.5rem; }
 
         .btn-create {
             display: inline-flex;
@@ -170,7 +170,7 @@
             gap: .5rem;
             padding: .65rem 1.3rem;
             border-radius: 8px;
-            background: linear-gradient(135deg, var(--gradient-blue), var(--gradient-purple));
+            background: linear-gradient(135deg, var(--gradient-orange), var(--gradient-amber));
             color: #fff;
             font-weight: 600;
             font-size: .88rem;
@@ -194,51 +194,56 @@
         <main class="main-content">
             <div class="view-container active">
 
-                <div class="quizzes-header">
-                    <h2 class="quizzes-title">Mes Quizz</h2>
-                    <p class="quizzes-subtitle">{{ quizzes|length }} quiz{{ 'z' if quizzes|length > 1 else '' }} généré{{ 's' if quizzes|length > 1 else '' }}</p>
+                <div class="cards-header">
+                    <h2 class="cards-title">Mes Cartes Mémo</h2>
+                    <p class="cards-subtitle">{{ cards|length }} session{{ 's' if cards|length > 1 else '' }} de révision</p>
                 </div>
 
-                <div class="quizzes-grid">
-                    {% if quizzes %}
-                        {% for quiz in quizzes %}
-                        <a class="quiz-tile" href="/quiz/{{ quiz.id }}">
-                            <button class="quiz-tile-delete" onclick="deleteQuiz(event, '{{ quiz.id }}')">
+                <div class="cards-grid">
+                    {% if cards %}
+                        {% for card in cards %}
+                        <a class="card-tile" href="/flashcard/{{ card.id }}">
+                            <button class="card-tile-delete" onclick="deleteCard(event, '{{ card.id }}')">
                                 <i data-lucide="trash-2"></i>
                             </button>
-                            <div class="quiz-tile-arrow"><i data-lucide="arrow-up-right"></i></div>
+                            <div class="card-tile-arrow"><i data-lucide="arrow-up-right"></i></div>
 
-                            <div class="quiz-tile-icon">
-                                <i data-lucide="target"></i>
+                            <div class="card-tile-icon">
+                                <i data-lucide="book-open"></i>
                             </div>
 
-                            <div class="quiz-tile-theme">{{ quiz.theme_name or 'Sans thème' }}</div>
+                            <div class="card-tile-theme">{{ card.theme_name or 'Sans thème' }}</div>
 
-                            <div class="quiz-tile-meta">
-                                <i data-lucide="list-checks"></i>
-                                {{ quiz.questions_count }} question{{ 's' if quiz.questions_count > 1 else '' }}
+                            <div class="card-tile-meta">
+                                <i data-lucide="layers"></i>
+                                {{ card.questions_count }} carte{{ 's' if card.questions_count > 1 else '' }}
 
-                                {% if quiz.score is not none and quiz.max_score %}
-                                    {% set pct = (quiz.score / quiz.max_score * 100) | int %}
-                                    <span class="quiz-tile-score {{ 'good' if pct >= 70 else 'bad' if pct < 40 else '' }}">
-                                        {{ pct }}%
+                                {% if card.completed_at %}
+                                    <span class="card-tile-status completed">
+                                        Complété
+                                    </span>
+                                {% elif card.started_at %}
+                                    <span class="card-tile-status in-progress">
+                                        En cours
                                     </span>
                                 {% else %}
-                                    <span class="quiz-tile-score">Non joué</span>
+                                    <span class="card-tile-status">
+                                        Nouveau
+                                    </span>
                                 {% endif %}
                             </div>
                         </a>
                         {% endfor %}
                     {% else %}
-                        <div class="quizzes-empty">
-                            <div class="quizzes-empty-icon">
-                                <i data-lucide="target"></i>
+                        <div class="cards-empty">
+                            <div class="cards-empty-icon">
+                                <i data-lucide="book-open"></i>
                             </div>
-                            <h3>Aucun quiz pour l'instant</h3>
-                            <p>Importez un document pour générer votre premier quiz.</p>
+                            <h3>Aucune carte pour l'instant</h3>
+                            <p>Importez un document pour générer votre premier jeu de cartes.</p>
                             <a href="/session" class="btn-create">
                                 <i data-lucide="plus"></i>
-                                Créer un quiz
+                                Créer des cartes
                             </a>
                         </div>
                     {% endif %}
@@ -254,17 +259,17 @@
     <script>
         lucide.createIcons();
 
-        // Fonction de suppression de quiz
-        async function deleteQuiz(event, quizId) {
+        // Fonction de suppression de carte
+        async function deleteCard(event, cardId) {
             event.preventDefault();
             event.stopPropagation();
             
-            if (!confirm('Êtes-vous sûr de vouloir supprimer ce quiz ?')) {
+            if (!confirm('Êtes-vous sûr de vouloir supprimer cette session de cartes ?')) {
                 return;
             }
             
             try {
-                const response = await fetch(`/api/sessions/${quizId}`, {
+                const response = await fetch(`/api/sessions/${cardId}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json'
@@ -272,10 +277,11 @@
                 });
                 
                 if (response.ok) {
+                    // Recharger la page pour afficher la liste mise à jour
                     window.location.reload();
                 } else {
                     const data = await response.json();
-                    alert('Erreur: ' + (data.error || 'Impossible de supprimer le quiz'));
+                    alert('Erreur: ' + (data.error || 'Impossible de supprimer la carte'));
                 }
             } catch (error) {
                 console.error('Erreur lors de la suppression:', error);

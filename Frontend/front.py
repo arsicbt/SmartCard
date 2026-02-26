@@ -54,7 +54,7 @@ def make_api_request(endpoint, method='GET', data=None, token=None):
             return False, response.json(), response.status_code
 
     except Unauthorized:
-        raise  # ← laisser remonter
+        raise
     except Exception as e:
         return False, {'error': str(e)}, 500
     
@@ -211,6 +211,54 @@ def quizzes_page():
     return render_template('quizzes.html', quizzes=quizzes, active_view='quiz')
 
 
+@app.route('/cards-list')
+@login_required
+def card_list():
+    """Page listant toutes les sessions flashcard de l'utilisateur"""
+    from datetime import datetime, timedelta
+    
+    user = session.get('user')
+    token = session.get('token')
+    user_id = user.get('id')
+    
+    # Récupérer toutes les sessions de l'utilisateur
+    success, sessions, _ = make_api_request(f'/sessions/user/{user_id}', token=token)
+    
+    if not success:
+        sessions = []
+    
+    # Filtrer uniquement les sessions FLASHCARD
+    cards = []
+    for s in sessions:
+        if s.get('type', '').upper() == 'FLASHCARD':
+            # Enrichir avec le nom du thème si possible
+            theme_id = s.get('theme_id')
+            theme_name = 'Sans thème'
+            
+            if theme_id:
+                # Optionnel : récupérer le nom du thème depuis l'API
+                # success_theme, theme_data, _ = make_api_request(f'/themes/{theme_id}', token=token)
+                # if success_theme:
+                #     theme_name = theme_data.get('name', 'Sans thème')
+                pass
+            
+            cards.append({
+                'id': s.get('id'),
+                'theme_name': theme_name,
+                'questions_count': s.get('questions_count', 0),
+                'started_at': s.get('started_at'),
+                'completed_at': s.get('completed_at'),
+                'created_at': s.get('created_at')
+            })
+    
+    # Trier par date de création (plus récent en premier)
+    cards.sort(key=lambda x: x['created_at'], reverse=True)
+    
+    return render_template('cards-list.html', 
+                         cards=cards,
+                         active_view='cards')
+
+
 # **********************************************
 # Route - Création d'une session d'apprentissage
 # **********************************************
@@ -317,6 +365,30 @@ def quiz_page(session_id):
     return render_template('quizz.html',
                            session_data=session_data,
                            quiz_data=quiz_data)
+
+
+@app.route('/api/sessions/<session_id>', methods=['DELETE'])
+@login_required
+def proxy_delete_session(session_id):
+    """Proxy pour supprimer une session"""
+    token = session.get('token')
+    
+    try:
+        response = requests.delete(
+            f'http://localhost:5000/api/sessions/{session_id}',
+            headers={
+                'Authorization': f'Bearer {token}',
+                'Content-Type': 'application/json'
+            }
+        )
+        
+        if response.status_code == 200:
+            return response.json(), 200
+        else:
+            return response.json(), response.status_code
+    
+    except Exception as e:
+        return {'error': str(e)}, 500
 
 
 # **********************************************

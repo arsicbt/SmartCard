@@ -155,16 +155,21 @@ def update_session(session_id):
 # DELETE - DELETE SESSION
 # ************************************************
 @session_bp.route('/<session_id>', methods=['DELETE'])  
-@admin_required
+@auth_required 
 def delete_session(session_id):
     """
     Supprime une session
     """
-    session = storage.get(Session, session_id)
-    if not session:
+    session_obj = storage.get(Session, session_id)
+    if not session_obj:
         abort(404, description="Session not found")
     
-    storage.delete(session)
+    current_user = request.current_user
+    
+    if session_obj.user_id != current_user.id and not current_user.is_admin:
+        abort(403, description="Vous n'êtes pas autorisé à supprimer cette session")
+        
+    storage.delete(session_obj)
     storage.save()
     
     return jsonify({"message": "Session deleted"}), 200
