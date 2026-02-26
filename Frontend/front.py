@@ -186,7 +186,7 @@ def quizzes_page():
     # Garder uniquement les QUIZ et enrichir avec le nom du thème
     quizzes = []
     for s in sessions:
-        if s.get('type') != 'QUIZ':
+        if s.get('type') != 'quiz':
             continue
 
         # Récupérer le nom du thème si disponible
