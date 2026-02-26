@@ -61,64 +61,33 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
-
-    // Logout Modal
-    const logoutBtn = document.getElementById('logoutBtn');
-    const logoutModal = document.getElementById('logoutModal');
-    const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
-    const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
-
-    if (logoutBtn && logoutModal) {
-        logoutBtn.addEventListener('click', () => {
-            logoutModal.classList.remove('hidden');
-        });
-
-        if (cancelLogoutBtn) {
-            cancelLogoutBtn.addEventListener('click', () => {
-                logoutModal.classList.add('hidden');
-            });
-        }
-
-        if (confirmLogoutBtn) {
-            confirmLogoutBtn.addEventListener('click', () => {
-                window.location.href = '/login';
-            });
-        }
-
-        logoutModal.addEventListener('click', (e) => {
-            if (e.target === logoutModal) {
-                logoutModal.classList.add('hidden');
-            }
-        });
-    }
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-});
-
-// ===== View Switching =====
-function switchView(view) {
+    
+    // ===== View Switching =====
+    function switchView(view) {
     activeView = view;
     
-    document.querySelectorAll('.menu-item').forEach(item => {
-        if (item.getAttribute('data-view') === view) {
-            item.classList.add('active');
-        } else {
-            item.classList.remove('active');
+        document.querySelectorAll('.menu-item').forEach(item => {
+            if (item.getAttribute('data-view') === view) {
+                item.classList.add('active');
+            } else {
+               item.classList.remove('active');
+            }
+        });
+    
+        document.querySelectorAll('.view-container').forEach(container => {
+            container.classList.remove('active');
+        });
+    
+        const viewMap = {
+            'dashboard': 'dashboardView',
+            'cards': 'cardsView',
+            'quiz': 'quizView'
+        };
+        
+        const viewId = viewMap[view];
+        if (viewId) {
+            const viewEl = document.getElementById(viewId);
+            if (viewEl) viewEl.classList.add('active');
         }
-    });
-    
-    document.querySelectorAll('.view-container').forEach(container => {
-        container.classList.remove('active');
-    });
-    
-    const viewMap = {
-        'dashboard': 'dashboardView',
-        'cards': 'cardsView',
-        'quiz': 'quizView'
-    };
-    
-    const viewId = viewMap[view];
-    if (viewId) {
-        const viewEl = document.getElementById(viewId);
-        if (viewEl) viewEl.classList.add('active');
     }
-}
+});

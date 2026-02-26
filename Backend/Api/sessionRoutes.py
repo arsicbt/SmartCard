@@ -382,6 +382,8 @@ def create_session_with_pdf():
         abort(400, description=str(e))
         
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         storage.rollback()
         abort(500, description=f"Error creating session: {str(e)}")
         

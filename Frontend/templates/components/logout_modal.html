@@ -1,17 +1,173 @@
-<header class="app-header">
-    <div class="header-content">
-        <!-- App Name & Logo -->
-        <div class="logo-section">
-            <div class="logo-icon">
-                <i data-lucide="brain"></i>
-            </div>
-            <h1 class="app-title">SmartCards</h1>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modal Déconnexion</title>
+
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<style>
+
+/* ===== Logout Modal Overlay ===== */
+.logout-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    transition: opacity 0.2s ease;
+}
+
+/* Classe utilitaire */
+.hidden {
+    display: none;
+}
+
+/* ===== Modal Box ===== */
+.logout-modal-content {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 420px;
+    padding: 28px;
+    box-shadow: var(--shadow-lg);
+    animation: modalFadeIn 0.2s ease-out;
+}
+
+/* ===== Header ===== */
+.logout-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.logout-modal-icon {
+    width: 22px;
+    height: 22px;
+    color: var(--danger-color);
+}
+
+.logout-modal-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* ===== Text ===== */
+.logout-modal-text {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 24px;
+    line-height: 1.4;
+}
+
+/* ===== Actions ===== */
+.logout-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* Boutons généraux */
+.logout-modal-btn {
+    padding: 10px 18px;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    border: none;
+}
+
+/* Annuler */
+.logout-modal-btn-cancel {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.logout-modal-btn-cancel:hover {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* Confirmer */
+.logout-modal-btn-confirm {
+    background: var(--danger-color);
+    color: white;
+}
+
+.logout-modal-btn-confirm:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+/* ===== Animation ===== */
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- Modal -->
+<div class="logout-modal hidden" id="logoutModal">
+    <div class="logout-modal-content">
+        <div class="logout-modal-header">
+            <i data-lucide="log-out" class="logout-modal-icon"></i>
+            <h3>Confirmer la déconnexion</h3>
         </div>
 
-        <!-- Burger Menu Button -->
-        <button class="burger-btn" id="burgerBtn" aria-label="Toggle Menu">
-            <i data-lucide="menu" class="menu-icon"></i>
-            <i data-lucide="x" class="close-icon hidden"></i>
-        </button>
+        <p class="logout-modal-text">
+            Êtes-vous sûr de vouloir vous déconnecter ?
+        </p>
+
+        <div class="logout-modal-actions">
+            <button class="logout-modal-btn logout-modal-btn-cancel" id="cancelLogoutBtn">
+                Annuler
+            </button>
+
+            <button class="logout-modal-btn logout-modal-btn-confirm" id="confirmLogoutBtn">
+                Se déconnecter
+            </button>
+        </div>
     </div>
-</header>
+</div>
+
+<script>
+const logoutModal = document.getElementById("logoutModal");
+const logoutBtn = document.getElementById("logoutBtn");
+const cancelLogoutBtn = document.getElementById("cancelLogoutBtn");
+const confirmLogoutBtn = document.getElementById("confirmLogoutBtn");
+
+logoutBtn.addEventListener("click", () => {
+    logoutModal.classList.remove("hidden");
+});
+
+cancelLogoutBtn.addEventListener("click", () => {
+    logoutModal.classList.add("hidden");
+});
+
+confirmLogoutBtn.addEventListener("click", () => {
+    window.location.href = "/logout";
+});
+</script>
+
+</body>
+</html>

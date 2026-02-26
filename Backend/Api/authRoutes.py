@@ -60,6 +60,38 @@ def login():
 
     return response, 200
 
+# ********************************************************
+# REFRESH TOKEN
+# ********************************************************
+@auth_bp.route('/refresh', methods=['POST'])
+def refresh():
+    """Génère un nouvel access token depuis le refresh token"""
+    
+    # Récupérer le refresh token depuis le cookie OU le body JSON
+    refresh_token = (
+        request.cookies.get('refresh_token')
+        or (request.json or {}).get('refresh_token')
+    )
+    
+    if not refresh_token:
+        return jsonify({'error': 'Refresh token manquant'}), 401
+    
+    payload = token_manager.decode_refresh_token(refresh_token)
+    if not payload:
+        return jsonify({'error': 'Refresh token invalide ou expiré'}), 401
+    
+    user_id = payload.get('user_id')
+    email   = payload.get('email')
+    
+    # Vérifier que l'utilisateur existe toujours
+    user = storage.get(User, user_id)
+    if not user or user.is_deleted():
+        return jsonify({'error': 'Utilisateur introuvable'}), 401
+    
+    # Générer un nouveau access token uniquement
+    new_access_token, _ = token_manager.generate_tokens(user_id, email)
+    
+    return jsonify({'access_token': new_access_token}), 200
 
 # ********************************************************
 # LOGOUT

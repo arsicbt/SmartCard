@@ -343,6 +343,33 @@ button {
     height: 20px;
 }
 
+.open-modal-btn {
+    padding: 1rem 2rem;
+    background: #ff6b35;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+}
+
+/* ===== Overlay ===== */
+.logout-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Caché */
+.hidden {
+    display: none;
+}
+
 /* ===== Main Content ===== */
 .main-content {
     max-width: 1280px;

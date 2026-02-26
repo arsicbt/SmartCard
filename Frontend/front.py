@@ -15,8 +15,9 @@ API_URL = 'http://localhost:5000/api'
 # **********************************************
 # Fonctions pour les appels API
 # **********************************************
+from werkzeug.exceptions import Unauthorized
+
 def make_api_request(endpoint, method='GET', data=None, token=None):
-    """Helper avec auto-refresh du token"""
     headers = {'Content-Type': 'application/json'}
     if token:
         headers['Authorization'] = f'Bearer {token}'
@@ -26,34 +27,37 @@ def make_api_request(endpoint, method='GET', data=None, token=None):
     try:
         response = requests.request(method, url, json=data, headers=headers)
         
-        # Si 401 et on a un refresh token
         if response.status_code == 401:
             refresh_token = session.get('refresh_token')
             
             if refresh_token:
-                # Essayer de refresh le token
                 refresh_response = requests.post(
                     f'{API_URL}/auth/refresh',
                     json={'refresh_token': refresh_token}
                 )
                 
                 if refresh_response.status_code == 200:
-                    # Nouveau token obtenu
                     new_token = refresh_response.json().get('access_token')
                     session['token'] = new_token
-                    
-                    # Réessayer la requête avec le nouveau token
                     headers['Authorization'] = f'Bearer {new_token}'
                     response = requests.request(method, url, json=data, headers=headers)
+                else:
+                    session.clear()
+                    raise Unauthorized()
+            else:
+                session.clear()
+                raise Unauthorized()
 
         if response.status_code in [200, 201]:
             return True, response.json(), response.status_code
         else:
             return False, response.json(), response.status_code
 
+    except Unauthorized:
+        raise  # ← laisser remonter
     except Exception as e:
         return False, {'error': str(e)}, 500
-
+    
 
 # **********************************************
 # Décorateur pour vérifier l'authentification
@@ -167,7 +171,7 @@ def dashboard():
 # **********************************************
 # Route - Galerie des Quizz
 # **********************************************
-@app.route('/quizzes')
+@app.route('/quizzes-list')
 @login_required
 def quizzes_page():
     """Liste de tous les quiz de l'utilisateur"""
@@ -331,17 +335,24 @@ def auth_login():
         
         if response.status_code == 200:
             session['user'] = data.get('user')
-            session['token'] = data.get('token')  # access_token
-            session['refresh_token'] = data.get('refresh_token')  # ⭐ Nouveau
+            session['token'] = data.get('token') 
+            session['refresh_token'] = data.get('refresh_token') 
         
         return data, response.status_code
     except Exception as e:
         return {'error': str(e)}, 500
 
 
+@app.route('/logout')
+def logout():
+    """Déconnexion - nettoie la session et redirige vers login"""
+    session.clear()
+    return redirect(url_for('login'))
+
+
 @app.route('/auth/logout', methods=['POST'])
 def auth_logout():
-    """Déconnexion"""
+    """Déconnexion via API (pour AJAX)"""
     session.clear()
     return {'message': 'Logged out'}, 200
 
