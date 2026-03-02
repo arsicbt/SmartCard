@@ -428,6 +428,12 @@ def auth_logout():
     session.clear()
     return {'message': 'Logged out'}, 200
 
+from datetime import datetime
+
+@app.context_processor
+def inject_current_year():
+    """Injecte l'année courante dans tous les templates"""
+    return {'current_year': datetime.now().year}
 
 # **********************************************
 # Lancement de l'application

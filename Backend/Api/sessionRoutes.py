@@ -194,71 +194,118 @@ def create_session_with_pdf():
     6. Si pas assez de questions : générer avec Groq
     7. Transformer les questions selon le type (Quiz/Cards)
     8. Créer la session avec les questions
-    
-    Params (multipart/form-data):
-        - user_id: ID de l'utilisateur
-        - session_type: "QUIZ" ou "FLASHCARD"
-        - pdf_file: Fichier PDF à analyser
-        - questions_count: Nombre de questions (optionnel, défaut 10)
-    
-    Returns:
-        Session créée avec les questions générées
     """
-    # Vérifier le user_id
-    user_id = request.form.get('user_id')
-    if not user_id:
-        abort(400, description="Missins user_id")
-        
-    user = storage.get(User, user_id)
-    if not user:
-        abort(404, description="User not found")
-        
-    # Vérifier le type de la session
-    session_type = request.form.get('session_type', '').upper()
-    if session_type not in ["QUIZ", "FLASHCARD"]:
-        abort(400, description="Invalid sessio_type. Must be QUIZ or FLASHCARD")
-        
-    # Vérifier le fichier PDF
-    if 'pdf_file' not in request.files:
-        abort(400, description="Missing pdf_file")
     
-    pdf_file = request.files['pdf_file']
-    if pdf_file.filename == '':
-        abort(400, description="No file selected")
+    print("\n" + "="*80)
+    print("[DEBUG] === CREATE SESSION WITH PDF - START ===")
+    print("="*80)
+    
+    try:
+        # ********************************************************
+        # VALIDATION DES PARAMÈTRES
+        # ********************************************************
+        print("\n[DEBUG] 1. VALIDATION DES PARAMÈTRES")
+        
+        # Vérifier le user_id
+        user_id = request.form.get('user_id')
+        print(f"[DEBUG]   - user_id: {user_id}")
+        
+        if not user_id:
+            print("[ERROR]   ❌ user_id manquant!")
+            abort(400, description="Missing user_id")
+            
+        user = storage.get(User, user_id)
+        print(f"[DEBUG]   - User trouvé: {user is not None}")
+        
+        if not user:
+            print("[ERROR]   ❌ User non trouvé!")
+            abort(404, description="User not found")
+            
+        # Vérifier le type de la session
+        session_type = request.form.get('session_type', '').upper()
+        print(f"[DEBUG]   - session_type: {session_type}")
+        
+        if session_type not in ["QUIZ", "FLASHCARD"]:
+            print(f"[ERROR]   ❌ Type invalide: {session_type}")
+            abort(400, description="Invalid session_type. Must be QUIZ or FLASHCARD")
+            
+        # Vérifier le fichier PDF
+        print(f"[DEBUG]   - Files reçus: {list(request.files.keys())}")
+        
+        if 'pdf_file' not in request.files:
+            print("[ERROR]   ❌ pdf_file manquant!")
+            abort(400, description="Missing pdf_file")
+        
+        pdf_file = request.files['pdf_file']
+        print(f"[DEBUG]   - Filename: {pdf_file.filename}")
+        
+        if pdf_file.filename == '':
+            print("[ERROR]   ❌ Nom fichier vide!")
+            abort(400, description="No file selected")
 
-    if not pdf_file.filename.lower().endswith('.pdf'):
-        abort(400, description="File must be a PDF")
+        if not pdf_file.filename.lower().endswith('.pdf'):
+            print(f"[ERROR]   ❌ Pas un PDF: {pdf_file.filename}")
+            abort(400, description="File must be a PDF")
+           
+        # Nombre de questions
+        try:
+            questions_count = int(request.form.get('questions_count', 10))
+            print(f"[DEBUG]   - questions_count: {questions_count}")
+            
+            if questions_count < 1 or questions_count > 50:
+                print(f"[ERROR]   ❌ questions_count hors limites: {questions_count}")
+                abort(400, description="questions_count must be between 1 and 50")
+        except ValueError as e:
+            print(f"[ERROR]   ❌ questions_count invalide: {e}")
+            abort(400, description="Invalid questions_count")
+            
+        print("[DEBUG]   ✅ Validation OK\n")
         
-    # Nombre de questions
-    try:
-        questions_count = int(request.form.get('questions_count', 10))
-        if questions_count < 1 or questions_count > 50:
-            abort(400, description="questions_count must be between 1 and 50")
-    except ValueError:
-        abort(400, description="Invalid questions_count")
-        
-    try:
         # ********************************************************
         # ÉTAPE 1 : ANALYSER LE PDF
         # ********************************************************
+        print("[DEBUG] 2. ANALYSE DU PDF")
+        print("[DEBUG]   - Appel PDFAnalysisService.analysis_pdf_full_pipeline...")
+        
         analysis_result = PDFAnalysisService.analysis_pdf_full_pipeline(
             pdf_file,
             session_type,
             questions_count
         )
         
-        pdf_content = analysis_result['pdf_content']
-        theme_data = analysis_result['theme']
-        generated_questions = analysis_result['questions']
+        print(f"[DEBUG]   - Résultat analyse: {type(analysis_result)}")
+        print(f"[DEBUG]   - Keys: {analysis_result.keys() if isinstance(analysis_result, dict) else 'Not a dict'}")
+        
+        # Vérifier structure retour
+        if not isinstance(analysis_result, dict):
+            print(f"[ERROR]   ❌ analysis_result n'est pas un dict: {type(analysis_result)}")
+            abort(500, description="Invalid analysis result format")
+            
+        # Extraire les données
+        theme_data = analysis_result.get('theme_data')
+        generated_questions = analysis_result.get('generated_questions')
+        pdf_content = analysis_result.get('pdf_content', '')
+        
+        print(f"[DEBUG]   - theme_data: {theme_data is not None}")
+        print(f"[DEBUG]   - generated_questions: {len(generated_questions) if generated_questions else 0} questions")
+        print(f"[DEBUG]   - pdf_content length: {len(pdf_content)} caractères")
+        
+        if not theme_data or not generated_questions:
+            print("[ERROR]   ❌ Données manquantes dans analysis_result!")
+            abort(500, description="Incomplete analysis result")
+            
+        print("[DEBUG]   ✅ Analyse PDF OK\n")
         
         # ********************************************************
         # ÉTAPE 2 : RECHERCHER UN THÈME EXISTANT
         # ********************************************************
+        print("[DEBUG] 3. RECHERCHE THÈME EXISTANT")
         
         # Récupérer tous les thèmes de l'utilisateur
         user_themes = storage.filter_by(Theme, user_id=user_id)
+        print(f"[DEBUG]   - Thèmes utilisateur: {len(user_themes)}")
         
-        # Cinvertir en dict pour le service de similarité
+        # Convertir en dict pour le service de similarité
         themes_dict = [
             {
                 'id': t.id,
@@ -268,30 +315,47 @@ def create_session_with_pdf():
             }
             for t in user_themes
         ]
+        print(f"[DEBUG]   - themes_dict créé: {len(themes_dict)} thèmes")
         
-        # Chercher une thème correspondant (>= 40 %)
+        # Chercher un thème correspondant (>= 40 %)
+        print(f"[DEBUG]   - Recherche similarité avec keywords: {theme_data.get('keywords', [])[:3]}...")
+        
         matching_theme = SimilarityService.find_matching_theme(
             theme_data['keywords'],
             themes_dict,
             threshold=0.4
         )
         
+        print(f"[DEBUG]   - Matching theme: {matching_theme is not None}")
+        
         theme_id = None
         theme_name = theme_data['theme_name']
         
         if matching_theme:
-            # theme trouvé dans ma DB 
+            print("[DEBUG]   ✅ Thème existant trouvé!")
+            
+            # Thème trouvé dans la DB 
             theme_id = matching_theme['theme']['id']
             theme_name = matching_theme['theme']['name']
+            similarity = matching_theme['similarity']
+            
+            print(f"[DEBUG]   - Theme ID: {theme_id}")
+            print(f"[DEBUG]   - Theme name: {theme_name}")
+            print(f"[DEBUG]   - Similarité: {similarity:.2%}")
+            
             theme = storage.get(Theme, theme_id)
             
-            # Incrémenter l'usage du theme
+            # Incrémenter l'usage du thème
+            print("[DEBUG]   - Incrémentation usage...")
             theme.increment_usage()
             
             # ********************************************************
             # ÉTAPE 3 : RÉCUPÉRER LES QUESTIONS EXISTANTES
             # ********************************************************
+            print("\n[DEBUG] 4. RÉCUPÉRATION QUESTIONS EXISTANTES")
+            
             existing_questions = storage.filter_by(Question, theme_id=theme_id)
+            print(f"[DEBUG]   - Questions existantes: {len(existing_questions)}")
             
             # Convertir en dictionnaire
             questions_dict = [
@@ -304,38 +368,56 @@ def create_session_with_pdf():
                 for q in existing_questions
             ]
             
-            # Trouver les question avec minimum 40% de similarité
+            # Trouver les questions avec minimum 40% de similarité
+            print("[DEBUG]   - Recherche questions similaires...")
+            
             matching_questions = SimilarityService.find_matching_questions(
                 pdf_content,
                 questions_dict,
-                threshold= 0.4
+                threshold=0.4
             )
             
-            # Limiter au noombre demandé
+            print(f"[DEBUG]   - Questions similaires trouvées: {len(matching_questions)}")
+            
+            # Limiter au nombre demandé
             matching_questions = matching_questions[:questions_count]
+            print(f"[DEBUG]   - Questions retenues: {len(matching_questions)}")
             
             # Si pas assez de questions dans la DB, compléter avec des générées
             questions_ids = [q['question']['id'] for q in matching_questions]
+            print(f"[DEBUG]   - IDs récupérés: {len(questions_ids)}")
             
             if len(questions_ids) < questions_count:
-                # Créer les questions manquantes grace à Groq
+                print(f"[DEBUG]   ⚠️  Pas assez de questions, génération complément...")
+                
+                # Créer les questions manquantes grâce à Groq
                 remaining_count = questions_count - len(questions_ids)
+                print(f"[DEBUG]   - Questions à créer: {remaining_count}")
+                
                 new_question_ids = _create_questions_from_generated(
                     generated_questions[:remaining_count],
                     theme_id,
                     session_type 
                 )
+                
+                print(f"[DEBUG]   - Nouvelles questions créées: {len(new_question_ids)}")
                 questions_ids.extend(new_question_ids)
                 
         else:
+            print("[DEBUG]   ⚠️  Aucun thème similaire trouvé")
+            
             # ********************************************************
             # ÉTAPE 4 : CRÉER UN NOUVEAU THÈME
             # ********************************************************
+            print("\n[DEBUG] 4. CRÉATION NOUVEAU THÈME")
+            print(f"[DEBUG]   - Name: {theme_data['theme_name']}")
+            print(f"[DEBUG]   - Keywords: {theme_data['keywords'][:3] if theme_data['keywords'] else []}")
+            
             new_theme = Theme(
                 user_id=user_id,
                 name=theme_data['theme_name'],
-                description=theme_data['description'],
-                keywords=theme_data['keywords'],
+                description=theme_data.get('description', ''),
+                keywords=theme_data.get('keywords', []),
                 questions_count=0
             )
             
@@ -343,20 +425,34 @@ def create_session_with_pdf():
             storage.save()
             
             theme_id = new_theme.id
+            print(f"[DEBUG]   - Thème créé avec ID: {theme_id}")
             
             # Créer toutes les questions depuis Groq
+            print(f"[DEBUG]   - Création {len(generated_questions)} questions depuis Groq...")
+            
             questions_ids = _create_questions_from_generated(
                 generated_questions,
                 theme_id,
                 session_type
             )
             
-            # Mettre à jor le compteur 
+            print(f"[DEBUG]   - Questions créées: {len(questions_ids)}")
+            
+            # Mettre à jour le compteur 
             new_theme.questions_count = len(questions_ids)
+            storage.save()
+            
+        print(f"[DEBUG]   ✅ Total questions pour session: {len(questions_ids)}\n")
                 
         # ********************************************************
         # ÉTAPE 5 : CRÉER LA SESSION
         # ********************************************************
+        print("[DEBUG] 5. CRÉATION SESSION")
+        print(f"[DEBUG]   - user_id: {user_id}")
+        print(f"[DEBUG]   - theme_id: {theme_id}")
+        print(f"[DEBUG]   - type: {session_type}")
+        print(f"[DEBUG]   - questions_count: {len(questions_ids)}")
+        
         session = Session(
             user_id=user_id,
             theme_id=theme_id,
@@ -368,10 +464,15 @@ def create_session_with_pdf():
         storage.new(session)
         storage.save()
         
+        print(f"[DEBUG]   - Session créée avec ID: {session.id}")
+        print("[DEBUG]   ✅ Session sauvegardée\n")
+        
         # ********************************************************
         # RETOUR
         # ********************************************************
-        return jsonify({
+        print("[DEBUG] 6. RETOUR RÉPONSE")
+        
+        response_data = {
             "session": session.to_dict(),
             "theme": {
                 "id": theme_id,
@@ -380,15 +481,35 @@ def create_session_with_pdf():
             },
             "questions_count": len(questions_ids),
             "pdf_analysed": True
-        }), 201
+        }
+        
+        print(f"[DEBUG]   - Response keys: {response_data.keys()}")
+        print("\n" + "="*80)
+        print("[DEBUG] === CREATE SESSION WITH PDF - SUCCESS ===")
+        print("="*80 + "\n")
+        
+        return jsonify(response_data), 201
             
     except ValueError as e:
-        storage.rollback()
+        print("\n" + "="*80)
+        print(f"[ERROR] ❌ ValueError attrapée!")
+        print(f"[ERROR] Type: {type(e).__name__}")
+        print(f"[ERROR] Message: {str(e)}")
+        print("="*80)
+        import traceback
+        traceback.print_exc()
+        print("="*80 + "\n")
         abort(400, description=str(e))
         
     except Exception as e:
+        print("\n" + "="*80)
+        print(f"[ERROR] ❌ Exception générale attrapée!")
+        print(f"[ERROR] Type: {type(e).__name__}")
+        print(f"[ERROR] Message: {str(e)}")
+        print("="*80)
         import traceback
         traceback.print_exc()
+        print("="*80 + "\n")
         storage.rollback()
         abort(500, description=f"Error creating session: {str(e)}")
         
@@ -411,41 +532,68 @@ def _create_questions_from_generated(
     """
     from Models.tablesSchema import QuestionType, Difficulty
     
+    print(f"\n[DEBUG] _create_questions_from_generated:")
+    print(f"[DEBUG]   - Nombre questions: {len(generated_questions)}")
+    print(f"[DEBUG]   - theme_id: {theme_id}")
+    print(f"[DEBUG]   - session_type: {session_type}")
+    
     question_ids = []
     
-    for q_data in generated_questions:
-        # Créer la question
-        question = Question(
-            theme_id=theme_id,
-            type=QuestionType[session_type],
-            question_text=q_data['question'],
-            difficulty=Difficulty[q_data.get('difficulty', 'MEDIUM')],
-        )
+    for idx, q_data in enumerate(generated_questions):
+        print(f"\n[DEBUG]   Question {idx+1}/{len(generated_questions)}:")
+        print(f"[DEBUG]     - Texte: {q_data.get('question', '')[:50]}...")
         
-        storage.new(question)
-        storage.save()
-        
-        if session_type == 'QUIZ':
-            # QUIZ: 4 réponses
-            for idx, ans_data in enumerate(q_data['answers']):
+        try:
+            # Créer la question
+            question = Question(
+                theme_id=theme_id,
+                type=QuestionType[session_type],
+                question_text=q_data['question'],
+                difficulty=Difficulty[q_data.get('difficulty', 'MEDIUM').upper()],
+            )
+            
+            storage.new(question)
+            storage.save()
+            
+            print(f"[DEBUG]     - Question créée ID: {question.id}")
+            
+            if session_type == 'QUIZ':
+                # QUIZ: 4 réponses
+                print(f"[DEBUG]     - Création {len(q_data.get('answers', []))} réponses QUIZ")
+                
+                for ans_idx, ans_data in enumerate(q_data['answers']):
+                    answer = Answer(
+                        question_id=question.id,
+                        answer_text=ans_data['text'],
+                        is_correct=ans_data['is_correct'],
+                        order_position=ans_idx 
+                    )
+                    storage.new(answer)
+                    print(f"[DEBUG]       - Réponse {ans_idx+1}: {ans_data['text'][:30]}... (correct={ans_data['is_correct']})")
+            else:
+                # FLASHCARD: 1 réponse
+                print(f"[DEBUG]     - Création 1 réponse FLASHCARD")
+                
                 answer = Answer(
                     question_id=question.id,
-                    answer_text=ans_data['text'],
-                    is_correct=ans_data['is_correct'],
-                    order_position=idx 
+                    answer_text=q_data['answer'],
+                    is_correct=True,
+                    order_position=0
                 )
                 storage.new(answer)
-        else:
-            # FLASHCARD: 1 réponse
-            answer = Answer(
-                question_id=question.id,
-                answer_text=q_data['answer'],
-                is_correct=True,
-                order_position=0
-            )
-            storage.new(answer)
+                print(f"[DEBUG]       - Réponse: {q_data['answer'][:30]}...")
 
-        storage.save()
-        question_ids.append(question.id)
+            storage.save()
+            question_ids.append(question.id)
+            
+            print(f"[DEBUG]     ✅ Question {idx+1} sauvegardée")
+            
+        except Exception as e:
+            print(f"[ERROR]     ❌ Erreur création question {idx+1}:")
+            print(f"[ERROR]     {type(e).__name__}: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            raise
         
+    print(f"\n[DEBUG]   ✅ Total questions créées: {len(question_ids)}")
     return question_ids

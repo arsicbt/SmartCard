@@ -355,6 +355,6 @@ Requirements:
         
         return {
             'pdf_content': pdf_content,
-            'theme': theme_data,
-            'questions': questions
+            'theme_data': theme_data,
+            'generated_questions': questions 
         }
