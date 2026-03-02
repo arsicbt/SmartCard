@@ -1,208 +1,207 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Modal Déconnexion</title>
-
-<!-- Lucide Icons -->
-<script src="https://unpkg.com/lucide@latest"></script>
-
-<style>
-
-/* ===== Base page ===== */
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #12121a;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
-
-/* ===== Bouton pour ouvrir le modal ===== */
-.open-modal-btn {
-    padding: 1rem 2rem;
-    background: #ff6b35;
-    border: none;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-weight: bold;
-    color: white;
-    cursor: pointer;
-}
-
-/* ===== Overlay ===== */
-.logout-modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.65);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-/* Caché */
-.hidden {
-    display: none;
-}
-
-/* ===== Contenu modal ===== */
-.logout-modal-content {
-    background: linear-gradient(145deg, #1f1f2e, #2a2a3d);
-    padding: 2rem;
-    border-radius: 20px;
-    width: 90%;
-    max-width: 480px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-    animation: fadeInScale 0.25s ease;
-    color: white;
-}
-
-/* Animation */
-@keyframes fadeInScale {
-    from {
-        opacity: 0;
-        transform: scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-/* Header */
-.logout-modal-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-.logout-modal-icon {
-    width: 40px;
-    height: 40px;
-    color: #ff6b35;
-}
-
-.logout-modal-header h3 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0;
-}
-
-/* Texte */
-.logout-modal-text {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 1rem;
-    margin-bottom: 2rem;
-    line-height: 1.6;
-}
-
-/* Actions */
-.logout-modal-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
-}
-
-/* Boutons */
-.logout-modal-btn {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-/* Annuler */
-.logout-modal-btn-cancel {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-}
-
-.logout-modal-btn-cancel:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-/* Confirmer */
-.logout-modal-btn-confirm {
-    background: #ff6b35;
-    color: #fff;
-    box-shadow: 0 4px 14px rgba(255, 107, 53, 0.4);
-}
-
-.logout-modal-btn-confirm:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 22px rgba(255, 107, 53, 0.6);
-}
-
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartCards - Flashcards</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-
 <body>
-
-<button class="open-modal-btn" id="openModalBtn">
-    Ouvrir le modal
-</button>
-
-<!-- Modal -->
-<div class="logout-modal hidden" id="logoutModal">
-    <div class="logout-modal-content">
-        <div class="logout-modal-header">
-            <i data-lucide="log-out" class="logout-modal-icon"></i>
-            <h3>Confirmer la déconnexion</h3>
-        </div>
-
-        <p class="logout-modal-text">
-            Êtes-vous sûr de vouloir vous déconnecter ?
-        </p>
-
-        <div class="logout-modal-actions">
-            <button class="logout-modal-btn logout-modal-btn-cancel" id="cancelLogoutBtn">
-                Annuler
-            </button>
-
-            <button class="logout-modal-btn logout-modal-btn-confirm" id="confirmLogoutBtn">
-                Se déconnecter
-            </button>
-        </div>
+    <div class="gradient-bg">
+        <div class="gradient-circle gradient-top-right"></div>
+        <div class="gradient-circle gradient-bottom-left"></div>
     </div>
-</div>
 
-<script>
-const modal = document.getElementById("logoutModal");
-const openBtn = document.getElementById("openModalBtn");
-const cancelBtn = document.getElementById("cancelLogoutBtn");
-const confirmBtn = document.getElementById("confirmLogoutBtn");
+    <div class="app-container">
+        <!-- Header -->
+        {% include 'components/header.html' %}
+        <!-- Sidebar -->
+        {% include 'components/sidebar.html' %}
 
-openBtn.addEventListener("click", () => {
-    modal.classList.remove("hidden");
-});
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="view-container active" id="cardsView">
+                <div class="flashcard-container">
 
-cancelBtn.addEventListener("click", () => {
-    modal.classList.add("hidden");
-});
+                    <!-- Header -->
+                    <div class="flashcard-header">
+                        <div>
+                            <h2 class="flashcard-title">Flashcards</h2>
+                            <p class="flashcard-subtitle">Master your knowledge, one card at a time</p>
+                        </div>
+                        <div class="flashcard-progress-info">
+                            <div class="progress-label">Progress</div>
+                            <div class="progress-count gradient-text-orange" id="cardProgress">1 / 5</div>
+                        </div>
+                    </div>
 
-confirmBtn.addEventListener("click", () => {
-    alert("Déconnexion confirmée !");
-    modal.classList.add("hidden");
-});
+                    <!-- Progress Bar -->
+                    <div class="flashcard-progress-bar">
+                        <div class="flashcard-progress-fill" id="cardProgressBar" style="width: 20%"></div>
+                    </div>
 
-/* Fermer en cliquant sur l'overlay */
-modal.addEventListener("click", (e) => {
-    if (e.target === modal) {
-        modal.classList.add("hidden");
-    }
-});
+                    <!-- Flashcard -->
+                    <div class="flashcard-wrapper">
+                        <div class="flashcard" id="flashcard">
+                            <!-- Front -->
+                            <div class="flashcard-front">
+                                <div class="flashcard-decorative-gradient flashcard-gradient-beginner"></div>
+                                <div class="flashcard-content-wrapper">
+                                    <div class="flashcard-badges">
+                                        <span class="flashcard-category" id="cardCategory">—</span>
+                                        <span class="flashcard-difficulty flashcard-difficulty-beginner" id="cardDifficulty">—</span>
+                                    </div>
+                                    <div class="flashcard-question-wrapper">
+                                        <h3 class="flashcard-question" id="cardQuestion">Chargement…</h3>
+                                    </div>
+                                </div>
+                                <div class="flashcard-hint">
+                                    <i data-lucide="rotate-ccw"></i>
+                                    <span>Cliquez pour voir la réponse</span>
+                                </div>
+                            </div>
 
-/* Initialiser Lucide */
-lucide.createIcons();
-</script>
+                            <!-- Back -->
+                            <div class="flashcard-back">
+                                <div class="flashcard-decorative-gradient flashcard-gradient-beginner"></div>
+                                <div class="flashcard-content-wrapper">
+                                    <div class="flashcard-answer-header">
+                                        <div class="flashcard-answer-icon">
+                                            <i data-lucide="lightbulb"></i>
+                                        </div>
+                                        <span class="flashcard-answer-label">Réponse</span>
+                                    </div>
+                                    <div class="flashcard-question-wrapper">
+                                        <p class="flashcard-answer" id="cardAnswer">—</p>
+                                    </div>
+                                </div>
+                                <div class="flashcard-hint">
+                                    <i data-lucide="rotate-ccw"></i>
+                                    <span>Cliquez pour voir la question</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
+                    <!-- Controls -->
+                    <div class="flashcard-controls">
+                        <button class="flashcard-nav-btn" id="prevCardBtn" disabled>
+                            <i data-lucide="chevron-left"></i>
+                        </button>
+                        <div class="flashcard-actions">
+                            <button class="flashcard-action-btn flashcard-incorrect-btn" id="incorrectBtn">
+                                <i data-lucide="x-circle"></i>
+                                <span>À revoir</span>
+                            </button>
+                            <button class="flashcard-action-btn flashcard-correct-btn" id="correctBtn">
+                                <i data-lucide="check-circle"></i>
+                                <span>Compris !</span>
+                            </button>
+                        </div>
+                        <button class="flashcard-nav-btn" id="nextCardBtn">
+                            <i data-lucide="chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="flashcard-stats">
+                        <div class="flashcard-stat-item">
+                            <div class="flashcard-stat-value flashcard-stat-correct" id="correctCount">0</div>
+                            <div class="flashcard-stat-label">Correct</div>
+                        </div>
+                        <div class="flashcard-stat-item">
+                            <div class="flashcard-stat-value flashcard-stat-incorrect" id="incorrectCount">0</div>
+                            <div class="flashcard-stat-label">À revoir</div>
+                        </div>
+                        <div class="flashcard-stat-item">
+                            <div class="flashcard-stat-value gradient-text-orange" id="remainingCount">—</div>
+                            <div class="flashcard-stat-label">Restantes</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // ── Données injectées par Flask ──
+        const SESSION_DATA = {{ session_data | tojson }};
+        const CARDS_DATA   = {{ cards_data | tojson }};
+
+        // ── State ──
+        let currentIndex = 0;
+        let correctCount = 0;
+        let incorrectCount = 0;
+
+        // ── DOM ──
+        const flashcard     = document.getElementById('flashcard');
+        const cardQuestion  = document.getElementById('cardQuestion');
+        const cardAnswer    = document.getElementById('cardAnswer');
+        const cardCategory  = document.getElementById('cardCategory');
+        const cardDifficulty= document.getElementById('cardDifficulty');
+        const cardProgress  = document.getElementById('cardProgress');
+        const cardProgressBar = document.getElementById('cardProgressBar');
+        const prevBtn       = document.getElementById('prevCardBtn');
+        const nextBtn       = document.getElementById('nextCardBtn');
+        const correctBtn    = document.getElementById('correctBtn');
+        const incorrectBtn  = document.getElementById('incorrectBtn');
+        const correctCountEl   = document.getElementById('correctCount');
+        const incorrectCountEl = document.getElementById('incorrectCount');
+        const remainingCountEl = document.getElementById('remainingCount');
+
+        function renderCard(index) {
+            const card = CARDS_DATA[index];
+            if (!card) return;
+
+            // Reset flip
+            flashcard.classList.remove('flipped');
+
+            cardQuestion.textContent   = card.question_text;
+            cardAnswer.textContent     = card.answer_text;
+            cardCategory.textContent   = card.theme   || '—';
+            cardDifficulty.textContent = card.difficulty || '—';
+
+            const total = CARDS_DATA.length;
+            cardProgress.textContent = `${index + 1} / ${total}`;
+            cardProgressBar.style.width = `${((index + 1) / total) * 100}%`;
+
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === total - 1;
+            remainingCountEl.textContent = total - index - 1;
+        }
+
+        // Flip
+        flashcard.addEventListener('click', () => flashcard.classList.toggle('flipped'));
+
+        // Navigation
+        prevBtn.addEventListener('click', () => { if (currentIndex > 0) renderCard(--currentIndex); });
+        nextBtn.addEventListener('click', () => { if (currentIndex < CARDS_DATA.length - 1) renderCard(++currentIndex); });
+
+        // Correct / Incorrect
+        correctBtn.addEventListener('click', () => {
+            correctCount++;
+            correctCountEl.textContent = correctCount;
+            if (currentIndex < CARDS_DATA.length - 1) renderCard(++currentIndex);
+        });
+        incorrectBtn.addEventListener('click', () => {
+            incorrectCount++;
+            incorrectCountEl.textContent = incorrectCount;
+            if (currentIndex < CARDS_DATA.length - 1) renderCard(++currentIndex);
+        });
+
+        // Init
+        if (CARDS_DATA.length > 0) {
+            renderCard(0);
+            remainingCountEl.textContent = CARDS_DATA.length;
+        } else {
+            cardQuestion.textContent = "Aucune carte disponible pour cette session.";
+        }
+
+        lucide.createIcons();
+    </script>
 </body>
 </html>

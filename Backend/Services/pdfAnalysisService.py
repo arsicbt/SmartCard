@@ -137,7 +137,7 @@ Important:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are an expert educational content analyzer. Always respond with valid JSON only."  # ← Change aussi ce message
+                        "content": "You are an expert educational content analyzer. Always respond with valid JSON only."
                     },
                     {
                         "role": "user",

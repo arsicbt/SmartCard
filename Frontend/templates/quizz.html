@@ -3,9 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartCards - Quiz</title>
+    <title>SmartCards - Quizz</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <style>
+        /* Feedback visuel réponses */
+        .quiz-option.correct {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
+            border-color: #22c55e;
+            color: #22c55e;
+        }
+        
+        .quiz-option.incorrect {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1));
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+        
+        .quiz-option.correct::before {
+            content: '✓ ';
+            font-weight: bold;
+        }
+        
+        .quiz-option.incorrect::before {
+            content: '✗ ';
+            font-weight: bold;
+        }
+        
+        .quiz-option:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+        
+        /* Animation feedback */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .quiz-option.incorrect {
+            animation: shake 0.5s ease;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .quiz-option.correct {
+            animation: pulse 0.5s ease;
+        }
+        
+        /* Status messages */
+        .quiz-status.success {
+            color: #22c55e;
+            font-weight: 600;
+        }
+        
+        .quiz-status.error {
+            color: #ef4444;
+            font-weight: 600;
+        }
+    </style>
 </head>
 <body>
     <div class="gradient-bg">
@@ -95,11 +157,6 @@
                         </div>
                     </div>
 
-                    <div class="quiz-answer-details">
-                        <h3 class="quiz-details-title">Détails des réponses</h3>
-                        <div id="quizAnswersList"></div>
-                    </div>
-
                     <div class="quiz-restart-wrapper">
                         <button class="quiz-restart-btn" id="quizRestartBtn">
                             Recommencer le Quiz
@@ -113,18 +170,24 @@
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
-        // ── Données injectées par Flask ──
+        // **************************************************************
+        // DONNÉES INJECTÉES PAR FLASK
+        // **************************************************************
         const SESSION_DATA = {{ session_data | tojson }};
         const QUIZ_DATA    = {{ quiz_data | tojson }};
 
-        // ── State ──
+        // **************************************************************
+        // STATE
+        // **************************************************************
         let currentIndex   = 0;
         let score          = 0;
         let selectedAnswer = null;
         let answered       = false;
         const userAnswers  = [];
 
-        // ── DOM ──
+        // **************************************************************
+        // DOM ELEMENTS
+        // **************************************************************
         const quizProgress    = document.getElementById('quizProgress');
         const quizProgressBar = document.getElementById('quizProgressBar');
         const quizCategory    = document.getElementById('quizCategory');
@@ -134,26 +197,48 @@
         const quizNextBtn     = document.getElementById('quizNextBtn');
         const nextBtnText     = document.getElementById('nextBtnText');
 
+        // **************************************************************
+        // FONCTION: RANDOMISER LES RÉPONSES (Fisher-Yates Shuffle)
+        // **************************************************************
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // **************************************************************
+        // FONCTION: AFFICHER UNE QUESTION
+        // **************************************************************
         function renderQuestion(index) {
             const q = QUIZ_DATA[index];
             if (!q) return;
 
+            // Reset state
             answered = false;
             selectedAnswer = null;
             quizNextBtn.disabled = true;
             quizStatus.textContent = 'Sélectionnez une réponse';
+            quizStatus.className = 'quiz-status';
 
+            // Display question
             quizCategory.textContent = q.theme || '—';
             quizQuestion.textContent = q.question_text;
 
+            // Update progress
             const total = QUIZ_DATA.length;
             quizProgress.textContent = `${index + 1} / ${total}`;
             quizProgressBar.style.width = `${((index + 1) / total) * 100}%`;
             nextBtnText.textContent = index === total - 1 ? 'Terminer' : 'Suivant';
 
+            // RANDOMISER LES RÉPONSES
+            const shuffledAnswers = shuffleArray(q.answers);
+
             // Render options
             quizOptions.innerHTML = '';
-            q.answers.forEach((ans, i) => {
+            shuffledAnswers.forEach((ans, i) => {
                 const btn = document.createElement('button');
                 btn.className = 'quiz-option';
                 btn.textContent = ans.answer_text;
@@ -164,32 +249,49 @@
             });
         }
 
+        // **************************************************************
+        // FONCTION: SÉLECTIONNER UNE RÉPONSE
+        // **************************************************************
         function selectAnswer(btn, ans) {
             if (answered) return;
             answered = true;
             selectedAnswer = ans;
 
-            // Reveal correct / incorrect
+            // FEEDBACK VISUEL: Révéler correct / incorrect
             document.querySelectorAll('.quiz-option').forEach(b => {
                 b.disabled = true;
-                if (b.dataset.correct === 'True' || b.dataset.correct === true) {
+                
+                const isCorrect = b.dataset.correct === 'True' || b.dataset.correct === 'true' || b.dataset.correct === true;
+                
+                if (isCorrect) {
                     b.classList.add('correct');
                 } else if (b === btn) {
                     b.classList.add('incorrect');
                 }
             });
 
+            // MESSAGE DE STATUT
             if (ans.is_correct) {
                 score++;
                 quizStatus.textContent = '✓ Bonne réponse !';
+                quizStatus.className = 'quiz-status success';
             } else {
                 quizStatus.textContent = '✗ Mauvaise réponse';
+                quizStatus.className = 'quiz-status error';
             }
 
-            userAnswers.push({ question: QUIZ_DATA[currentIndex], selected: ans });
+            // Sauvegarder la réponse utilisateur
+            userAnswers.push({ 
+                question: QUIZ_DATA[currentIndex], 
+                selected: ans 
+            });
+
             quizNextBtn.disabled = false;
         }
 
+        // **************************************************************
+        // BOUTON SUIVANT
+        // **************************************************************
         quizNextBtn.addEventListener('click', () => {
             if (currentIndex < QUIZ_DATA.length - 1) {
                 renderQuestion(++currentIndex);
@@ -198,6 +300,9 @@
             }
         });
 
+        // **************************************************************
+        // FONCTION: AFFICHER LES RÉSULTATS + CONFETTIS (toujours)
+        // **************************************************************
         function showResults() {
             document.getElementById('quizQuestions').classList.add('hidden');
             const results = document.getElementById('quizResults');
@@ -207,6 +312,7 @@
             const pct   = total > 0 ? Math.round((score / total) * 100) : 0;
             const grade = pct >= 90 ? 'A' : pct >= 75 ? 'B' : pct >= 60 ? 'C' : pct >= 40 ? 'D' : 'F';
 
+            // Afficher score
             document.getElementById('quizScoreValue').textContent      = `${score} / ${total}`;
             document.getElementById('quizScorePercentage').textContent  = `${pct}% de réussite`;
             document.getElementById('quizScoreBar').style.width         = `${pct}%`;
@@ -214,35 +320,95 @@
             document.getElementById('quizIncorrectTotal').textContent   = total - score;
             document.getElementById('quizGrade').textContent            = grade;
 
-            // Détails
-            const list = document.getElementById('quizAnswersList');
-            list.innerHTML = '';
-            userAnswers.forEach(({ question, selected }) => {
-                const div = document.createElement('div');
-                div.className = `quiz-answer-detail ${selected.is_correct ? 'correct' : 'incorrect'}`;
-                div.innerHTML = `<p class="quiz-detail-question">${question.question_text}</p>
-                                 <p class="quiz-detail-answer">Votre réponse : ${selected.answer_text}</p>`;
-                list.appendChild(div);
-            });
+            // CONFETTIS TOUJOURS (intensité adaptée au score)
+            launchConfetti(pct);
 
-            // Sauvegarder le score via l'API
-            fetch(`/api/sessions/${SESSION_DATA.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ score: score, max_score: total })
-            });
+            // SAUVEGARDER LE SCORE VIA L'API
+            saveQuizScore(score, total);
         }
 
+        // **************************************************************
+        // FONCTION: LANCER LES CONFETTIS
+        // **************************************************************
+        function launchConfetti(pct = 50) {
+            // Durée et intensité selon le score
+            const duration    = pct >= 70 ? 4000 : 2000;
+            const particleMul = pct >= 70 ? 1 : 0.4;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+            function randomInRange(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            const interval = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                const particleCount = 50 * particleMul * (timeLeft / duration);
+
+                confetti({
+                    ...defaults,
+                    particleCount,
+                    origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+                });
+                confetti({
+                    ...defaults,
+                    particleCount,
+                    origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+                });
+            }, 250);
+        }
+
+        // **************************************************************
+        // FONCTION: SAUVEGARDER LE SCORE
+        // **************************************************************
+        async function saveQuizScore(userScore, maxScore) {
+            try {
+                const response = await fetch(`/api/sessions/${SESSION_DATA.id}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        score: userScore, 
+                        max_score: maxScore 
+                    })
+                });
+
+                if (response.ok) {
+                    console.log('✅ Score sauvegardé:', userScore, '/', maxScore);
+                } else {
+                    console.error('❌ Erreur sauvegarde score:', response.status);
+                }
+            } catch (error) {
+                console.error('❌ Erreur réseau:', error);
+            }
+        }
+
+        // **************************************************************
+        // BOUTON RECOMMENCER
+        // **************************************************************
         document.getElementById('quizRestartBtn').addEventListener('click', () => {
-            currentIndex = 0; score = 0; userAnswers.length = 0;
+            currentIndex = 0; 
+            score = 0; 
+            userAnswers.length = 0;
             document.getElementById('quizResults').classList.add('hidden');
             document.getElementById('quizQuestions').classList.remove('hidden');
             renderQuestion(0);
         });
 
-        // Init
-        if (QUIZ_DATA.length > 0) renderQuestion(0);
-        else quizQuestion.textContent = "Aucune question disponible pour cette session.";
+        // **************************************************************
+        // INITIALISATION
+        // **************************************************************
+        if (QUIZ_DATA.length > 0) {
+            renderQuestion(0);
+        } else {
+            quizQuestion.textContent = "Aucune question disponible pour cette session.";
+        }
 
         lucide.createIcons();
     </script>

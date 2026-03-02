@@ -337,7 +337,7 @@ def create_session_with_pdf():
             # Thème trouvé dans la DB 
             theme_id = matching_theme['theme']['id']
             theme_name = matching_theme['theme']['name']
-            similarity = matching_theme['similarity']
+            similarity = matching_theme['match_score']
             
             print(f"[DEBUG]   - Theme ID: {theme_id}")
             print(f"[DEBUG]   - Theme name: {theme_name}")
