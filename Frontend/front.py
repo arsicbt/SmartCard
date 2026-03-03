@@ -364,7 +364,7 @@ def quiz_page(session_id):
 
     return render_template('quizz.html',
                            session_data=session_data,
-                           quiz_data=quiz_data)
+                           cards_data=quiz_data)
 
 
 @app.route('/api/sessions/<session_id>', methods=['DELETE'])

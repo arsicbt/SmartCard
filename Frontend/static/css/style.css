@@ -839,6 +839,10 @@ button {
     overflow: hidden;
 }
 
+.flashcard-front {
+    border-radius: 1.5rem; /* forcer, au cas où */
+}
+
 .flashcard-back {
     transform: rotateY(180deg);
     border-color: rgba(255, 107, 53, 0.3);
@@ -982,7 +986,7 @@ button {
 .flashcard-controls {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     gap: 1rem;
     margin-bottom: 2rem;
 }
@@ -1031,6 +1035,7 @@ button {
 .flashcard-incorrect-btn {
     background-color: var(--card);
     border: 1px solid rgba(255, 255, 255, 0.03);
+    color: var(--muted-foreground);
 }
 
 .flashcard-incorrect-btn:hover {
@@ -1718,4 +1723,58 @@ button {
     .footer-content {
         gap: 2rem;
     }
+}
+
+/* ============================================
+   FIN SESSION FLASHCARDS
+   ============================================ */
+
+.flashcard-end-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--background);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 2rem;
+}
+
+.flashcard-end-card {
+    background: linear-gradient(to bottom right, var(--card), rgba(20,20,20,0.6));
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 1.5rem;
+    padding: 3rem;
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
+    animation: fadeIn 0.4s ease;
+}
+
+.flashcard-end-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    background: linear-gradient(to right, var(--gradient-orange), var(--gradient-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.flashcard-end-text {
+    color: var(--muted-foreground);
+    margin-bottom: 2rem;
+}
+
+.flashcard-end-btn {
+    padding: 0.75rem 2rem;
+    border-radius: 0.75rem;
+    background: linear-gradient(to right, var(--gradient-orange), var(--gradient-purple));
+    color: white;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.flashcard-end-btn:hover {
+    box-shadow: 0 20px 25px -5px rgba(255, 107, 53, 0.3);
 }

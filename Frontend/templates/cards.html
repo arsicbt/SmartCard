@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -15,12 +14,9 @@
     </div>
 
     <div class="app-container">
-        <!-- Header -->
         {% include 'components/header.html' %}
-        <!-- Sidebar -->
         {% include 'components/sidebar.html' %}
 
-        <!-- Main Content -->
         <main class="main-content">
             <div class="view-container active" id="cardsView">
                 <div class="flashcard-container">
@@ -45,7 +41,6 @@
                     <!-- Flashcard -->
                     <div class="flashcard-wrapper">
                         <div class="flashcard" id="flashcard">
-                            <!-- Front -->
                             <div class="flashcard-front">
                                 <div class="flashcard-decorative-gradient flashcard-gradient-beginner"></div>
                                 <div class="flashcard-content-wrapper">
@@ -63,7 +58,6 @@
                                 </div>
                             </div>
 
-                            <!-- Back -->
                             <div class="flashcard-back">
                                 <div class="flashcard-decorative-gradient flashcard-gradient-beginner"></div>
                                 <div class="flashcard-content-wrapper">
@@ -87,9 +81,6 @@
 
                     <!-- Controls -->
                     <div class="flashcard-controls">
-                        <button class="flashcard-nav-btn" id="prevCardBtn" disabled>
-                            <i data-lucide="chevron-left"></i>
-                        </button>
                         <div class="flashcard-actions">
                             <button class="flashcard-action-btn flashcard-incorrect-btn" id="incorrectBtn">
                                 <i data-lucide="x-circle"></i>
@@ -100,9 +91,6 @@
                                 <span>Compris !</span>
                             </button>
                         </div>
-                        <button class="flashcard-nav-btn" id="nextCardBtn">
-                            <i data-lucide="chevron-right"></i>
-                        </button>
                     </div>
 
                     <!-- Stats -->
@@ -126,18 +114,58 @@
         </main>
     </div>
 
+    <!-- MODAL FIN SESSION -->
+    <div class="flashcard-end-screen hidden" id="flashcardEndScreen">
+        <div class="flashcard-end-card" style="max-width: 380px !important; padding: 2rem 1.75rem !important;">
+        
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(to bottom right, #ff6b35, #f54272); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                <i data-lucide="trophy" style="width: 28px; height: 28px; color: white;"></i>
+            </div>
+            
+            <h2 class="flashcard-end-title" style="font-size: 1.5rem !important; margin-bottom: 0.75rem !important;">Bravo ! 🎉</h2>
+            
+            <p class="flashcard-end-text" id="endMessage" style="font-size: 0.9rem !important; margin-bottom: 1.25rem !important;">
+                Session terminée !
+            </p>
+            
+            <div style="background: rgba(255, 255, 255, 0.02); border-radius: 10px; padding: 1rem; margin: 1.25rem 0; border: 1px solid rgba(255, 255, 255, 0.04);">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.02);">
+                    <span style="color: rgba(255, 255, 255, 0.5); font-size: 0.85rem;">Maîtrisées</span>
+                    <span style="font-size: 1.2rem; font-weight: 700; background: linear-gradient(135deg, #22c55e, #16a34a); -webkit-background-clip: text; -webkit-text-fill-color: transparent;" id="finalCorrectCount">0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0;">
+                    <span style="color: rgba(255, 255, 255, 0.5); font-size: 0.85rem;">Réussite</span>
+                    <span style="font-size: 1.2rem; font-weight: 700; background: linear-gradient(135deg, #ff6b35, #f54272); -webkit-background-clip: text; -webkit-text-fill-color: transparent;" id="finalPercentage">0%</span>
+                </div>
+            </div>
+            
+            <button class="flashcard-end-btn" onclick="window.location.href='/dashboard'" style="padding: 0.75rem 1.75rem !important; font-size: 0.9rem !important;">
+                Retour au dashboard
+            </button>
+        </div>
+    </div>
+
+    <!-- CONFETTI -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
     <script>
-        // ── Données injectées par Flask ──
+        // ************************************************************
+        // DONNÉES
+        // ************************************************************
         const SESSION_DATA = {{ session_data | tojson }};
         const CARDS_DATA   = {{ cards_data | tojson }};
 
-        // ── State ──
+        // ************************************************************
+        // STATE
+        // ************************************************************
         let currentIndex = 0;
         let correctCount = 0;
         let incorrectCount = 0;
 
-        // ── DOM ──
+        // ************************************************************
+        // DOM ELEMENTS
+        // ************************************************************
         const flashcard     = document.getElementById('flashcard');
         const cardQuestion  = document.getElementById('cardQuestion');
         const cardAnswer    = document.getElementById('cardAnswer');
@@ -145,19 +173,36 @@
         const cardDifficulty= document.getElementById('cardDifficulty');
         const cardProgress  = document.getElementById('cardProgress');
         const cardProgressBar = document.getElementById('cardProgressBar');
-        const prevBtn       = document.getElementById('prevCardBtn');
-        const nextBtn       = document.getElementById('nextCardBtn');
         const correctBtn    = document.getElementById('correctBtn');
         const incorrectBtn  = document.getElementById('incorrectBtn');
         const correctCountEl   = document.getElementById('correctCount');
         const incorrectCountEl = document.getElementById('incorrectCount');
         const remainingCountEl = document.getElementById('remainingCount');
 
+        // ************************************************************
+        // ANIMATIONS CSS
+        // ************************************************************
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes modalSlideIn {
+                from { opacity: 0; transform: translateY(-30px) scale(0.95); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+            }
+        `;
+        
+        document.head.appendChild(style);
+
+        // ************************************************************
+        // FONCTION: AFFICHER UNE CARTE
+        // ************************************************************
         function renderCard(index) {
             const card = CARDS_DATA[index];
             if (!card) return;
 
-            // Reset flip
             flashcard.classList.remove('flipped');
 
             cardQuestion.textContent   = card.question_text;
@@ -169,31 +214,146 @@
             cardProgress.textContent = `${index + 1} / ${total}`;
             cardProgressBar.style.width = `${((index + 1) / total) * 100}%`;
 
-            prevBtn.disabled = index === 0;
-            nextBtn.disabled = index === total - 1;
             remainingCountEl.textContent = total - index - 1;
         }
 
-        // Flip
-        flashcard.addEventListener('click', () => flashcard.classList.toggle('flipped'));
+        // ************************************************************
+        // FONCTION: FIN DE SESSION + CONFETTIS
+        // ************************************************************
+        function endSession() {
+            // Masquer le container
+            document.querySelector('.flashcard-container').style.display = "none";
+            
+            // Afficher le modal
+            const endScreen = document.getElementById('flashcardEndScreen');
+            endScreen.classList.remove('hidden');
 
-        // Navigation
-        prevBtn.addEventListener('click', () => { if (currentIndex > 0) renderCard(--currentIndex); });
-        nextBtn.addEventListener('click', () => { if (currentIndex < CARDS_DATA.length - 1) renderCard(++currentIndex); });
+            // CALCULER LES STATS
+            const total = CARDS_DATA.length;
+            const percentage = total > 0 ? Math.round((correctCount / total) * 100) : 0;
 
-        // Correct / Incorrect
+            // AFFICHER LES STATS DANS LE MODAL
+            document.getElementById('finalCorrectCount').textContent = correctCount;
+            document.getElementById('finalTotalCount').textContent = total;
+            document.getElementById('finalPercentage').textContent = percentage + '%';
+
+            // MESSAGE MOTIVANT
+            const endMessage = document.getElementById('endMessage');
+            if (percentage >= 80) {
+                endMessage.textContent = "Excellent travail ! Tu maîtrises parfaitement ce sujet !";
+            } else if (percentage >= 60) {
+                endMessage.textContent = "Très bien joué ! Continue comme ça !";
+            } else if (percentage >= 40) {
+                endMessage.textContent = "Bon début ! Tu progresses bien !";
+            } else {
+                endMessage.textContent = "Bravo d'avoir terminé ! Chaque révision te rapproche de la maîtrise !";
+            }
+
+            // LANCER LES CONFETTIS
+            launchConfetti();
+
+            // SAUVEGARDER LE SCORE
+            saveFlashcardScore(correctCount, total);
+        }
+
+        // ************************************************************
+        // FONCTION: CONFETTIS 
+        // ************************************************************
+        function launchConfetti() {
+            const duration = 3000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
+
+            function randomInRange(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            const interval = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                const particleCount = 50 * (timeLeft / duration);
+
+                confetti({
+                    ...defaults,
+                    particleCount,
+                    origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+                });
+                confetti({
+                    ...defaults,
+                    particleCount,
+                    origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+                });
+            }, 250);
+        }
+
+        // ************************************************************
+        // FONCTION: SAUVEGARDER LE SCORE
+        // ************************************************************
+        async function saveFlashcardScore(correct, total) {
+            try {
+                const response = await fetch(`/api/sessions/${SESSION_DATA.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        score: correct, 
+                        max_score: total 
+                    })
+                });
+
+                if (response.ok) {
+                    console.log('Score flashcard sauvegardé:', correct, '/', total);
+                } else {
+                    console.error('Erreur sauvegarde score:', response.status);
+                }
+            } catch (error) {
+                console.error('Erreur réseau:', error);
+            }
+        }
+
+        // ************************************************************
+        // EVENT: FLIP CARTE
+        // ************************************************************
+        flashcard.addEventListener('click', () => {
+            flashcard.classList.toggle('flipped');
+        });
+
+        // ************************************************************
+        // EVENT: BOUTON "COMPRIS !"
+        // ************************************************************
         correctBtn.addEventListener('click', () => {
             correctCount++;
             correctCountEl.textContent = correctCount;
-            if (currentIndex < CARDS_DATA.length - 1) renderCard(++currentIndex);
+
+            if (currentIndex < CARDS_DATA.length - 1) {
+                currentIndex++;
+                renderCard(currentIndex);
+            } else {
+                endSession();
+            }
         });
+
+        // ************************************************************
+        // EVENT: BOUTON "À REVOIR"
+        // ************************************************************
         incorrectBtn.addEventListener('click', () => {
             incorrectCount++;
             incorrectCountEl.textContent = incorrectCount;
-            if (currentIndex < CARDS_DATA.length - 1) renderCard(++currentIndex);
+
+            if (currentIndex < CARDS_DATA.length - 1) {
+                currentIndex++;
+                renderCard(currentIndex);
+            } else {
+                endSession();
+            }
         });
 
-        // Init
+        // ************************************************************
+        // INITIALISATION
+        // ************************************************************
         if (CARDS_DATA.length > 0) {
             renderCard(0);
             remainingCountEl.textContent = CARDS_DATA.length;
