@@ -137,7 +137,7 @@ Important:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are an expert educational content analyzer. Always respond with valid JSON only."
+                        "content": "You are an expert educational content analyzer. Always respond with valid JSON only. Use the same language as the analyzed content for theme_name and description."
                     },
                     {
                         "role": "user",
@@ -283,7 +283,7 @@ Requirements:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are an expert educator who creates high-quality study materials. Always respond with valid JSON only."
+                        "content": "You are an expert educator who creates high-quality study materials. CRITICAL: Generate all questions and answers in the SAME LANGUAGE as the provided content. If the content is in French, write in French. If in English, write in English."
                     },
                     {
                         "role": "user",
