@@ -435,6 +435,27 @@ def inject_current_year():
     """Injecte l'année courante dans tous les templates"""
     return {'current_year': datetime.now().year}
 
+# en lien avec le modal de fin (session carte) et la sauvegarde des bonnes réponses
+@app.route('/api/sessions/<session_id>', methods=['PUT'])
+@login_required
+def proxy_update_session(session_id):
+    """Proxy pour mettre à jour le score d'une session"""
+    token = session.get('token')
+    
+    try:
+        response = requests.put(
+            f'http://localhost:5000/api/sessions/{session_id}',
+            json=request.json,
+            headers={
+                'Authorization': f'Bearer {token}',
+                'Content-Type': 'application/json'
+            }
+        )
+        return response.json(), response.status_code
+    
+    except Exception as e:
+        return {'error': str(e)}, 500
+
 # **********************************************
 # Lancement de l'application
 # **********************************************
