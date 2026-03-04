@@ -202,7 +202,7 @@
                 <div class="cards-grid">
                     {% if cards %}
                         {% for card in cards %}
-                        <a class="card-tile" href="/flashcard/{{ card.id }}">
+                        <a class="card-tile" href="/cards/{{ card.id }}">
                             <button class="card-tile-delete" onclick="deleteCard(event, '{{ card.id }}')">
                                 <i data-lucide="trash-2"></i>
                             </button>

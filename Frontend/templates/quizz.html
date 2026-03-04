@@ -3,93 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartCards - Flashcards</title>
+    <title>SmartCards - Quizz</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <style>
-        .flashcard-wrapper {
-            perspective: 1500px;
-            padding: 2rem 0;
+        /* Feedback visuel réponses */
+        .quiz-option.correct {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
+            border-color: #22c55e;
+            color: #22c55e;
         }
         
-        .flashcard {
-            transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3),
-                        0 0 0 1px rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
+        .quiz-option.incorrect {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1));
+            border-color: #ef4444;
+            color: #ef4444;
         }
         
-        .flashcard:hover {
-            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4),
-                        0 0 0 1px rgba(255, 255, 255, 0.15);
-            transform: translateY(-5px);
+        .quiz-option.correct::before {
+            content: '✓ ';
+            font-weight: bold;
         }
         
-        .flashcard.flipped {
-            transform: rotateY(180deg);
+        .quiz-option.incorrect::before {
+            content: '✗ ';
+            font-weight: bold;
         }
         
-        /* Modal amélioré */
-        .flashcard-end-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+        .quiz-option:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
         }
         
-        .flashcard-end-screen:not(.hidden) {
-            opacity: 1;
+        /* Animation feedback */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
         }
         
-        .flashcard-end-card {
-            background: linear-gradient(135deg, #1a1a1f 0%, #252530 100%);
-            border-radius: 24px;
-            padding: 3rem 2.5rem;
-            max-width: 500px;
-            width: 90%;
-            text-align: center;
-            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            animation: modalSlideIn 0.5s ease;
-        }
-        
-        @keyframes modalSlideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-30px) scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-        
-        .flashcard-end-icon {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ff6b35, #f54272);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.5rem;
-            animation: pulse 2s infinite;
-        }
-        
-        .flashcard-end-icon svg {
-            width: 40px;
-            height: 40px;
-            color: white;
+        .quiz-option.incorrect {
+            animation: shake 0.5s ease;
         }
         
         @keyframes pulse {
@@ -97,75 +53,19 @@
             50% { transform: scale(1.05); }
         }
         
-        .flashcard-end-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 1rem;
+        .quiz-option.correct {
+            animation: pulse 0.5s ease;
         }
         
-        .flashcard-end-stats {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 1.5rem;
-            margin: 2rem 0;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .flashcard-end-stat-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        
-        .flashcard-end-stat-row:last-child {
-            border-bottom: none;
-        }
-        
-        .flashcard-end-stat-label {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.95rem;
-        }
-        
-        .flashcard-end-stat-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #ff6b35, #f54272);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .flashcard-end-stat-value.success {
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .flashcard-end-message {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin-bottom: 2rem;
-        }
-        
-        .flashcard-end-btn {
-            background: linear-gradient(135deg, #ff6b35, #f54272);
-            color: white;
-            border: none;
-            padding: 1rem 2.5rem;
-            border-radius: 12px;
-            font-size: 1rem;
+        /* Status messages */
+        .quiz-status.success {
+            color: #22c55e;
             font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            width: 100%;
         }
         
-        .flashcard-end-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(249, 115, 34, 0.3);
+        .quiz-status.error {
+            color: #ef4444;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -176,246 +76,266 @@
     </div>
 
     <div class="app-container">
+        <!-- Header -->
         {% include 'components/header.html' %}
+        <!-- Sidebar -->
         {% include 'components/sidebar.html' %}
 
+        <!-- Main Content -->
         <main class="main-content">
-            <div class="view-container active" id="cardsView">
-                <div class="flashcard-container">
+            <div class="view-container active" id="quizView">
 
-                    <!-- Header -->
-                    <div class="flashcard-header">
+                <!-- Quiz Questions -->
+                <div class="quiz-container" id="quizQuestions">
+                    <div class="quiz-header">
                         <div>
-                            <h2 class="flashcard-title">Flashcards</h2>
-                            <p class="flashcard-subtitle">Master your knowledge, one card at a time</p>
+                            <h2 class="quiz-title">Quizz</h2>
+                            <p class="quiz-subtitle">Testez vos connaissances</p>
                         </div>
-                        <div class="flashcard-progress-info">
-                            <div class="progress-label">Progress</div>
-                            <div class="progress-count gradient-text-orange" id="cardProgress">1 / 5</div>
+                        <div class="quiz-progress-info">
+                            <div class="progress-label">Question</div>
+                            <div class="progress-count gradient-text-orange" id="quizProgress">1 / 5</div>
                         </div>
                     </div>
 
-                    <!-- Progress Bar -->
-                    <div class="flashcard-progress-bar">
-                        <div class="flashcard-progress-fill" id="cardProgressBar" style="width: 20%"></div>
+                    <div class="quiz-progress-bar">
+                        <div class="quiz-progress-fill" id="quizProgressBar" style="width: 20%"></div>
                     </div>
 
-                    <!-- Flashcard -->
-                    <div class="flashcard-wrapper">
-                        <div class="flashcard" id="flashcard">
-                            <div class="flashcard-front">
-                                <div class="flashcard-decorative-gradient flashcard-gradient-beginner"></div>
-                                <div class="flashcard-content-wrapper">
-                                    <div class="flashcard-badges">
-                                        <span class="flashcard-category" id="cardCategory">—</span>
-                                        <span class="flashcard-difficulty flashcard-difficulty-beginner" id="cardDifficulty">—</span>
-                                    </div>
-                                    <div class="flashcard-question-wrapper">
-                                        <h3 class="flashcard-question" id="cardQuestion">Chargement…</h3>
-                                    </div>
-                                </div>
-                                <div class="flashcard-hint">
-                                    <i data-lucide="rotate-ccw"></i>
-                                    <span>Cliquez pour voir la réponse</span>
-                                </div>
+                    <div class="quiz-question-card">
+                        <div class="quiz-question-category" id="quizCategory">—</div>
+                        <div class="quiz-question-header">
+                            <div class="quiz-question-icon">
+                                <i data-lucide="brain"></i>
                             </div>
-
-                            <div class="flashcard-back">
-                                <div class="flashcard-decorative-gradient flashcard-gradient-beginner"></div>
-                                <div class="flashcard-content-wrapper">
-                                    <div class="flashcard-answer-header">
-                                        <div class="flashcard-answer-icon">
-                                            <i data-lucide="lightbulb"></i>
-                                        </div>
-                                        <span class="flashcard-answer-label">Réponse</span>
-                                    </div>
-                                    <div class="flashcard-question-wrapper">
-                                        <p class="flashcard-answer" id="cardAnswer">—</p>
-                                    </div>
-                                </div>
-                                <div class="flashcard-hint">
-                                    <i data-lucide="rotate-ccw"></i>
-                                    <span>Cliquez pour voir la question</span>
-                                </div>
-                            </div>
+                            <h3 class="quiz-question-text" id="quizQuestion">Chargement…</h3>
                         </div>
+                        <div class="quiz-options" id="quizOptions"></div>
                     </div>
 
-                    <!-- Controls (sans boutons prev/next) -->
-                    <div class="flashcard-controls">
-                        <div class="flashcard-actions">
-                            <button class="flashcard-action-btn flashcard-incorrect-btn" id="incorrectBtn">
-                                <i data-lucide="x-circle"></i>
-                                <span>À revoir</span>
-                            </button>
-                            <button class="flashcard-action-btn flashcard-correct-btn" id="correctBtn">
-                                <i data-lucide="check-circle"></i>
-                                <span>Compris !</span>
-                            </button>
-                        </div>
+                    <div class="quiz-controls">
+                        <div class="quiz-status" id="quizStatus">Sélectionnez une réponse</div>
+                        <button class="quiz-next-btn" id="quizNextBtn" disabled>
+                            <span id="nextBtnText">Suivant</span>
+                            <i data-lucide="arrow-right"></i>
+                        </button>
                     </div>
-
-                    <!-- Stats -->
-                    <div class="flashcard-stats">
-                        <div class="flashcard-stat-item">
-                            <div class="flashcard-stat-value flashcard-stat-correct" id="correctCount">0</div>
-                            <div class="flashcard-stat-label">Correct</div>
-                        </div>
-                        <div class="flashcard-stat-item">
-                            <div class="flashcard-stat-value flashcard-stat-incorrect" id="incorrectCount">0</div>
-                            <div class="flashcard-stat-label">À revoir</div>
-                        </div>
-                        <div class="flashcard-stat-item">
-                            <div class="flashcard-stat-value gradient-text-orange" id="remainingCount">—</div>
-                            <div class="flashcard-stat-label">Restantes</div>
-                        </div>
-                    </div>
-
                 </div>
+
+                <!-- Quiz Results -->
+                <div class="quiz-results hidden" id="quizResults">
+                    <div class="quiz-results-header">
+                        <div class="quiz-results-icon">
+                            <i data-lucide="trophy"></i>
+                        </div>
+                        <h2 class="quiz-results-title">Quiz Terminé !</h2>
+                        <p class="quiz-results-subtitle">Voici vos résultats</p>
+                    </div>
+
+                    <div class="quiz-results-card">
+                        <div class="quiz-results-score">
+                            <div class="quiz-score-value gradient-text-orange" id="quizScoreValue">0 / 5</div>
+                            <div class="quiz-score-percentage" id="quizScorePercentage">0% de réussite</div>
+                            <div class="quiz-score-progress">
+                                <div class="quiz-score-progress-bar" id="quizScoreBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="quiz-results-breakdown">
+                            <div class="quiz-breakdown-item">
+                                <div class="quiz-breakdown-value quiz-breakdown-correct" id="quizCorrectTotal">0</div>
+                                <div class="quiz-breakdown-label">Correctes</div>
+                            </div>
+                            <div class="quiz-breakdown-item">
+                                <div class="quiz-breakdown-value quiz-breakdown-incorrect" id="quizIncorrectTotal">5</div>
+                                <div class="quiz-breakdown-label">Incorrectes</div>
+                            </div>
+                            <div class="quiz-breakdown-item">
+                                <div class="quiz-breakdown-value gradient-text-orange" id="quizGrade">C</div>
+                                <div class="quiz-breakdown-label">Note</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quiz-restart-wrapper">
+                        <button class="quiz-restart-btn" id="quizRestartBtn">
+                            Recommencer le Quiz
+                        </button>
+                    </div>
+                </div>
+
             </div>
         </main>
     </div>
 
-    <!-- MODAL FIN SESSION AMÉLIORÉ -->
-    <div class="flashcard-end-screen hidden" id="flashcardEndScreen">
-        <div class="flashcard-end-card">
-            <div class="flashcard-end-icon">
-                <i data-lucide="trophy"></i>
-            </div>
-            
-            <h2 class="flashcard-end-title">Bravo ! 🎉</h2>
-            
-            <p class="flashcard-end-message" id="endMessage">
-                Tu as terminé toutes les cartes de cette session !
-            </p>
-            
-            <!-- STATS MOTIVANTES -->
-            <div class="flashcard-end-stats">
-                <div class="flashcard-end-stat-row">
-                    <span class="flashcard-end-stat-label">Cartes maîtrisées</span>
-                    <span class="flashcard-end-stat-value success" id="finalCorrectCount">0</span>
-                </div>
-                <div class="flashcard-end-stat-row">
-                    <span class="flashcard-end-stat-label">Total de cartes</span>
-                    <span class="flashcard-end-stat-value" id="finalTotalCount">0</span>
-                </div>
-                <div class="flashcard-end-stat-row">
-                    <span class="flashcard-end-stat-label">Taux de réussite</span>
-                    <span class="flashcard-end-stat-value success" id="finalPercentage">0%</span>
-                </div>
-            </div>
-            
-            <button class="flashcard-end-btn" onclick="window.location.href='/dashboard'">
-                Retour au dashboard
-            </button>
-        </div>
-    </div>
-
-    <!-- CONFETTI LIBRARY -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-
     <script>
-        // ********************************************************
-        // DONNÉES
-        // ********************************************************
+        // **************************************************************
+        // DONNÉES INJECTÉES PAR FLASK
+        // **************************************************************
         const SESSION_DATA = {{ session_data | tojson }};
-        const CARDS_DATA   = {{ cards_data | tojson }};
+        const QUIZ_DATA    = {{ quiz_data | tojson }};
 
-        // ********************************************************
+        // **************************************************************
         // STATE
-        // ********************************************************
-        let currentIndex = 0;
-        let correctCount = 0;
-        let incorrectCount = 0;
+        // **************************************************************
+        let currentIndex   = 0;
+        let score          = 0;
+        let selectedAnswer = null;
+        let answered       = false;
+        const userAnswers  = [];
 
-        // ********************************************************
+        // **************************************************************
         // DOM ELEMENTS
-        // ********************************************************
-        const flashcard     = document.getElementById('flashcard');
-        const cardQuestion  = document.getElementById('cardQuestion');
-        const cardAnswer    = document.getElementById('cardAnswer');
-        const cardCategory  = document.getElementById('cardCategory');
-        const cardDifficulty= document.getElementById('cardDifficulty');
-        const cardProgress  = document.getElementById('cardProgress');
-        const cardProgressBar = document.getElementById('cardProgressBar');
-        const correctBtn    = document.getElementById('correctBtn');
-        const incorrectBtn  = document.getElementById('incorrectBtn');
-        const correctCountEl   = document.getElementById('correctCount');
-        const incorrectCountEl = document.getElementById('incorrectCount');
-        const remainingCountEl = document.getElementById('remainingCount');
+        // **************************************************************
+        const quizProgress    = document.getElementById('quizProgress');
+        const quizProgressBar = document.getElementById('quizProgressBar');
+        const quizCategory    = document.getElementById('quizCategory');
+        const quizQuestion    = document.getElementById('quizQuestion');
+        const quizOptions     = document.getElementById('quizOptions');
+        const quizStatus      = document.getElementById('quizStatus');
+        const quizNextBtn     = document.getElementById('quizNextBtn');
+        const nextBtnText     = document.getElementById('nextBtnText');
 
-        // ********************************************************
-        // FONCTION: AFFICHER UNE CARTE
-        // ********************************************************
-        function renderCard(index) {
-            const card = CARDS_DATA[index];
-            if (!card) return;
+        // **************************************************************
+        // FONCTION: RANDOMISER LES RÉPONSES (Fisher-Yates Shuffle)
+        // **************************************************************
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
 
-            // Reset flip
-            flashcard.classList.remove('flipped');
+        // **************************************************************
+        // FONCTION: AFFICHER UNE QUESTION
+        // **************************************************************
+        function renderQuestion(index) {
+            const q = QUIZ_DATA[index];
+            if (!q) return;
 
-            // Display content
-            cardQuestion.textContent   = card.question_text;
-            cardAnswer.textContent     = card.answer_text;
-            cardCategory.textContent   = card.theme   || '—';
-            cardDifficulty.textContent = card.difficulty || '—';
+            // Reset state
+            answered = false;
+            selectedAnswer = null;
+            quizNextBtn.disabled = true;
+            quizStatus.textContent = 'Sélectionnez une réponse';
+            quizStatus.className = 'quiz-status';
+
+            // Display question
+            quizCategory.textContent = q.theme || '—';
+            quizQuestion.textContent = q.question_text;
 
             // Update progress
-            const total = CARDS_DATA.length;
-            cardProgress.textContent = `${index + 1} / ${total}`;
-            cardProgressBar.style.width = `${((index + 1) / total) * 100}%`;
+            const total = QUIZ_DATA.length;
+            quizProgress.textContent = `${index + 1} / ${total}`;
+            quizProgressBar.style.width = `${((index + 1) / total) * 100}%`;
+            nextBtnText.textContent = index === total - 1 ? 'Terminer' : 'Suivant';
 
-            // Update remaining
-            remainingCountEl.textContent = total - index - 1;
+            // RANDOMISER LES RÉPONSES
+            const shuffledAnswers = shuffleArray(q.answers);
+
+            // Render options
+            quizOptions.innerHTML = '';
+            shuffledAnswers.forEach((ans, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-option';
+                btn.textContent = ans.answer_text;
+                btn.dataset.index = i;
+                btn.dataset.correct = ans.is_correct;
+                btn.addEventListener('click', () => selectAnswer(btn, ans));
+                quizOptions.appendChild(btn);
+            });
         }
 
-        // ********************************************************
-        // FONCTION: FIN DE SESSION + CONFETTIS 
-        // ********************************************************
-        function endSession() {
-            // Masquer le container
-            document.querySelector('.flashcard-container').style.display = "none";
-            
-            // Afficher le modal
-            const endScreen = document.getElementById('flashcardEndScreen');
-            endScreen.classList.remove('hidden');
+        // **************************************************************
+        // FONCTION: SÉLECTIONNER UNE RÉPONSE
+        // **************************************************************
+        function selectAnswer(btn, ans) {
+            if (answered) return;
+            answered = true;
+            selectedAnswer = ans;
 
-            // CALCULER LES STATS
-            const total = CARDS_DATA.length;
-            const percentage = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+            // FEEDBACK VISUEL: Révéler correct / incorrect
+            document.querySelectorAll('.quiz-option').forEach(b => {
+                b.disabled = true;
+                
+                const isCorrect = b.dataset.correct === 'True' || b.dataset.correct === 'true' || b.dataset.correct === true;
+                
+                if (isCorrect) {
+                    b.classList.add('correct');
+                } else if (b === btn) {
+                    b.classList.add('incorrect');
+                }
+            });
 
-            // AFFICHER LES STATS DANS LE MODAL
-            document.getElementById('finalCorrectCount').textContent = correctCount;
-            document.getElementById('finalTotalCount').textContent = total;
-            document.getElementById('finalPercentage').textContent = percentage + '%';
-
-            // MESSAGE MOTIVANT
-            const endMessage = document.getElementById('endMessage');
-            if (percentage >= 80) {
-                endMessage.textContent = "Excellent travail ! Tu maîtrises parfaitement ce sujet !";
-            } else if (percentage >= 60) {
-                endMessage.textContent = "Très bien joué ! Continue comme ça !";
-            } else if (percentage >= 40) {
-                endMessage.textContent = "Bon début ! Tu progresses bien !";
+            // MESSAGE DE STATUT
+            if (ans.is_correct) {
+                score++;
+                quizStatus.textContent = '✓ Bonne réponse !';
+                quizStatus.className = 'quiz-status success';
             } else {
-                endMessage.textContent = "Bravo d'avoir terminé ! Chaque révision te rapproche de la maîtrise !";
+                quizStatus.textContent = '✗ Mauvaise réponse';
+                quizStatus.className = 'quiz-status error';
             }
 
-            // LANCER LES CONFETTIS
-            launchConfetti();
+            // Sauvegarder la réponse utilisateur
+            userAnswers.push({ 
+                question: QUIZ_DATA[currentIndex], 
+                selected: ans 
+            });
 
-            // SAUVEGARDER LE SCORE 
-            saveFlashcardScore(correctCount, total);
+            quizNextBtn.disabled = false;
         }
 
-        // ********************************************************
-        // FONCTION: CONFETTIS
-        // ********************************************************
-        function launchConfetti() {
-            const duration = 3000; // 3 secondes
+        // **************************************************************
+        // BOUTON SUIVANT
+        // **************************************************************
+        quizNextBtn.addEventListener('click', () => {
+            if (currentIndex < QUIZ_DATA.length - 1) {
+                renderQuestion(++currentIndex);
+            } else {
+                showResults();
+            }
+        });
+
+        // **************************************************************
+        // FONCTION: AFFICHER LES RÉSULTATS + CONFETTIS (toujours)
+        // **************************************************************
+        function showResults() {
+            document.getElementById('quizQuestions').classList.add('hidden');
+            const results = document.getElementById('quizResults');
+            results.classList.remove('hidden');
+
+            const total = QUIZ_DATA.length;
+            const pct   = total > 0 ? Math.round((score / total) * 100) : 0;
+            const grade = pct >= 90 ? 'A' : pct >= 75 ? 'B' : pct >= 60 ? 'C' : pct >= 40 ? 'D' : 'F';
+
+            // Afficher score
+            document.getElementById('quizScoreValue').textContent      = `${score} / ${total}`;
+            document.getElementById('quizScorePercentage').textContent  = `${pct}% de réussite`;
+            document.getElementById('quizScoreBar').style.width         = `${pct}%`;
+            document.getElementById('quizCorrectTotal').textContent     = score;
+            document.getElementById('quizIncorrectTotal').textContent   = total - score;
+            document.getElementById('quizGrade').textContent            = grade;
+
+            // CONFETTIS TOUJOURS (intensité adaptée au score)
+            launchConfetti(pct);
+
+            // SAUVEGARDER LE SCORE VIA L'API
+            saveQuizScore(score, total);
+        }
+
+        // **************************************************************
+        // FONCTION: LANCER LES CONFETTIS
+        // **************************************************************
+        function launchConfetti(pct = 50) {
+            // Durée et intensité selon le score
+            const duration    = pct >= 70 ? 4000 : 2000;
+            const particleMul = pct >= 70 ? 1 : 0.4;
             const animationEnd = Date.now() + duration;
-            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
 
             function randomInRange(min, max) {
                 return Math.random() * (max - min) + min;
@@ -428,9 +348,8 @@
                     return clearInterval(interval);
                 }
 
-                const particleCount = 50 * (timeLeft / duration);
+                const particleCount = 50 * particleMul * (timeLeft / duration);
 
-                // Confetti depuis 2 points (gauche + droite)
                 confetti({
                     ...defaults,
                     particleCount,
@@ -444,22 +363,24 @@
             }, 250);
         }
 
-        // ********************************************************
+        // **************************************************************
         // FONCTION: SAUVEGARDER LE SCORE
-        // ********************************************************
-        async function saveFlashcardScore(correct, total) {
+        // **************************************************************
+        async function saveQuizScore(userScore, maxScore) {
             try {
                 const response = await fetch(`/api/sessions/${SESSION_DATA.id}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({ 
-                        score: correct, 
-                        max_score: total 
+                        score: userScore, 
+                        max_score: maxScore 
                     })
                 });
 
                 if (response.ok) {
-                    console.log('✅ Score flashcard sauvegardé:', correct, '/', total);
+                    console.log('✅ Score sauvegardé:', userScore, '/', maxScore);
                 } else {
                     console.error('❌ Erreur sauvegarde score:', response.status);
                 }
@@ -468,51 +389,25 @@
             }
         }
 
-        // ********************************************************
-        // EVENT: FLIP CARTE
-        // ********************************************************
-        flashcard.addEventListener('click', () => {
-            flashcard.classList.toggle('flipped');
+        // **************************************************************
+        // BOUTON RECOMMENCER
+        // **************************************************************
+        document.getElementById('quizRestartBtn').addEventListener('click', () => {
+            currentIndex = 0; 
+            score = 0; 
+            userAnswers.length = 0;
+            document.getElementById('quizResults').classList.add('hidden');
+            document.getElementById('quizQuestions').classList.remove('hidden');
+            renderQuestion(0);
         });
 
-        // ********************************************************
-        // EVENT: BOUTON "COMPRIS !"
-        // ********************************************************
-        correctBtn.addEventListener('click', () => {
-            correctCount++;
-            correctCountEl.textContent = correctCount;
-
-            if (currentIndex < CARDS_DATA.length - 1) {
-                currentIndex++;
-                renderCard(currentIndex);
-            } else {
-                endSession();
-            }
-        });
-
-        // ********************************************************
-        // EVENT: BOUTON "À REVOIR"
-        // ********************************************************
-        incorrectBtn.addEventListener('click', () => {
-            incorrectCount++;
-            incorrectCountEl.textContent = incorrectCount;
-
-            if (currentIndex < CARDS_DATA.length - 1) {
-                currentIndex++;
-                renderCard(currentIndex);
-            } else {
-                endSession();
-            }
-        });
-
-        // ********************************************************
+        // **************************************************************
         // INITIALISATION
-        // ********************************************************
-        if (CARDS_DATA.length > 0) {
-            renderCard(0);
-            remainingCountEl.textContent = CARDS_DATA.length;
+        // **************************************************************
+        if (QUIZ_DATA.length > 0) {
+            renderQuestion(0);
         } else {
-            cardQuestion.textContent = "Aucune carte disponible pour cette session.";
+            quizQuestion.textContent = "Aucune question disponible pour cette session.";
         }
 
         lucide.createIcons();

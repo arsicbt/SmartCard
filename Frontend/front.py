@@ -71,9 +71,6 @@ def login_required(f):
     return decorated_function
 
 
-# **********************************************
-# Routes Frontend
-# **********************************************
 @app.route('/')
 def index():
     """Page d'accueil - redirige vers dashboard si connecté"""
@@ -236,10 +233,9 @@ def card_list():
             theme_name = 'Sans thème'
             
             if theme_id:
-                # Optionnel : récupérer le nom du thème depuis l'API
-                # success_theme, theme_data, _ = make_api_request(f'/themes/{theme_id}', token=token)
-                # if success_theme:
-                #     theme_name = theme_data.get('name', 'Sans thème')
+                success_theme, theme_data, _ = make_api_request(f'/themes/{theme_id}', token=token)
+                if success_theme:
+                    theme_name = theme_data.get('name', 'Sans thème')
                 pass
             
             cards.append({
@@ -364,7 +360,7 @@ def quiz_page(session_id):
 
     return render_template('quizz.html',
                            session_data=session_data,
-                           cards_data=quiz_data)
+                           quiz_data=quiz_data)
 
 
 @app.route('/api/sessions/<session_id>', methods=['DELETE'])
@@ -392,7 +388,7 @@ def proxy_delete_session(session_id):
 
 
 # **********************************************
-# Routes d'authentification (proxy vers API)
+# Routes d'authentification
 # **********************************************
 @app.route('/auth/login', methods=['POST'])
 def auth_login():
@@ -402,8 +398,12 @@ def auth_login():
             'http://localhost:5000/api/auth/login',
             json=request.json
         )
-        
+    
         data = response.json()
+        
+        if not data:
+            flash('Votre session a expiré, veuillez vous reconnecter', 'warning')
+            return redirect(url_for('login'))
         
         if response.status_code == 200:
             session['user'] = data.get('user')

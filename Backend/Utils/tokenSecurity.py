@@ -13,7 +13,7 @@ class TokenManager:
 
     def generate_tokens(self, user_id: str, email: str):
         """
-        Crée un access token (30min) et un refresh token (7j)
+        Crée un access token (1h) et un refresh token (7j)
         """
         now = datetime.utcnow()
         
@@ -22,7 +22,7 @@ class TokenManager:
             'user_id': user_id,
             'email': email,
             'type': 'access',
-            'exp': now + timedelta(minutes=30),
+            'exp': now + timedelta(minutes=60),
             'iat': now
         }, self.secret_key, algorithm=self.algorithm)
         
