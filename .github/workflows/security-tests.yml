@@ -1,37 +1,44 @@
-name: Security Tests
+name: CI SmartCard
 
-# les tests se lancent à chaque push / pull requests 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
 
-# machine virtuelle Linux pour exécuter tes tests
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. récupérer mon code
       - name: Télécharger le code
         uses: actions/checkout@v4
 
-      # 2. installer les dépendances
-      - name: Installer les dépendances
-        run: npm install
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-      # 3. exécuter les tests
-      - name: Lancer les tests
-        run: npm test
+      - name: Installer dépendances Python
+        run: |
+          pip install pytest flake8 bandit
 
-      # détecter vulnérabilités et dépendances dangereuses
-      - name: Scan sécurité
-        run: npm audit --audit-level=high
+      - name: Qualité du code Python
+        run: flake8 .
 
-      # Semgrep pour détecter des bugs critiques
-      # 1. injections
-      # 2. erreurs de sécurité
-      # 3. patterns dangereux
-      - name: Scan code
-        uses: returntocorp/semgrep-action@v1
+      - name: Tests Python
+        run: pytest
+
+      - name: Scan sécurité Python
+        run: bandit -r .
+
+      - name: Installer Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Installer ESLint
+        run: npm install eslint
+
+      - name: Analyse JavaScript
+        run: npx eslint .
