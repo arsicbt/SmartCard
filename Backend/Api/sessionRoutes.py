@@ -4,7 +4,6 @@ sessionRoutes.py — Routes HTTP pour les sessions
 
 from flask import Blueprint, jsonify, request, abort
 from Models.sessionModel import Session
-from Models.tablesSchema import SessionType
 from Models.userModel import User
 from Models.themeModel import Theme
 from Models.questionModel import Question

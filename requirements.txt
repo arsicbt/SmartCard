@@ -25,3 +25,11 @@ pytest-flask==1.3.0
 
 # Front
 requests
+
+# Automatisation des tests - Back
+pytest
+flake8
+bandit
+
+# Automatisation des tests - Front
+eslint
