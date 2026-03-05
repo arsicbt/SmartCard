@@ -1,0 +1,33 @@
+name: OWASP Security Scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Télécharger le code
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Installer outils sécurité
+        run: |
+          pip install bandit semgrep
+
+      - name: Scan sécurité Python
+        run: bandit -r .
+
+      - name: Scan OWASP Top 10
+        run: semgrep --config=p/owasp-top-ten .
+
+      - name: Scan secrets exposés
+        uses: gitleaks/gitleaks-action@v2
