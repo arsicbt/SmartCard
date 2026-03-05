@@ -1,0 +1,30 @@
+name: CI SmartCard
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Télécharger le code
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Installer dépendances Python
+        run: |
+          pip install pytest bandit
+
+      - name: Lancer les tests Python
+        run: pytest
+
+      - name: Scan sécurité Python
+        run: bandit -r .
