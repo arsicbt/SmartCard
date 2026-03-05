@@ -1,0 +1,39 @@
+name: Security Tests
+
+# les tests se lancent à chaque push / pull requests 
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+# machine virtuelle Linux pour exécuter tes tests
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+# 1. récupérer mon code
+# 2. installer les dépendances
+# 3. exécuter les tests
+steps:
+  - name: Télécharger le code
+    uses: actions/checkout@v4
+
+  - name: Installer les dépendances
+    run: npm install
+
+  - name: Lancer les tests
+    run: npm test
+
+  # détecter vulnérabilités et dépendances dangereuses
+  - name: Scan sécurité
+    run: npm audit --audit-level=high
+
+  # Semgrep pour détecter des bugs critiques
+  # 1. injections
+  # 2. erreurs de sécurité
+  # 3. patterns dangereux
+  - name: Scan code
+    uses: returntocorp/semgrep-action@v1
+
+  
