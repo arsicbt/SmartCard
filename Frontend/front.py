@@ -25,7 +25,7 @@ def make_api_request(endpoint, method='GET', data=None, token=None):
     url = f'{API_URL}{endpoint}'
 
     try:
-        response = requests.request(method, url, json=data, headers=headers)
+        response = requests.request(method, url, json=data, headers=headers, timeout=5)
         
         if response.status_code == 401:
             refresh_token = session.get('refresh_token')
@@ -33,14 +33,15 @@ def make_api_request(endpoint, method='GET', data=None, token=None):
             if refresh_token:
                 refresh_response = requests.post(
                     f'{API_URL}/auth/refresh',
-                    json={'refresh_token': refresh_token}
+                    json={'refresh_token': refresh_token},
+                    timeout=5
                 )
                 
                 if refresh_response.status_code == 200:
                     new_token = refresh_response.json().get('access_token')
                     session['token'] = new_token
                     headers['Authorization'] = f'Bearer {new_token}'
-                    response = requests.request(method, url, json=data, headers=headers)
+                    response = requests.request(method, url, json=data, headers=headers, timeout=5)
                 else:
                     session.clear()
                     raise Unauthorized()
@@ -298,7 +299,8 @@ def proxy_create_session_with_pdf():
             f'{API_URL}/sessions/create-with-pdf',
             files=files,
             data=data,
-            headers=headers
+            headers=headers,
+            timeout=5
         )
 
         return response.json(), response.status_code
@@ -375,7 +377,8 @@ def proxy_delete_session(session_id):
             headers={
                 'Authorization': f'Bearer {token}',
                 'Content-Type': 'application/json'
-            }
+            },
+            timeout=5
         )
         
         if response.status_code == 200:
@@ -396,7 +399,8 @@ def auth_login():
     try:
         response = requests.post(
             'http://localhost:5000/api/auth/login',
-            json=request.json
+            json=request.json,
+            timeout=5
         )
     
         data = response.json()
@@ -449,7 +453,8 @@ def proxy_update_session(session_id):
             headers={
                 'Authorization': f'Bearer {token}',
                 'Content-Type': 'application/json'
-            }
+            },
+            timeout=5
         )
         return response.json(), response.status_code
     
@@ -460,4 +465,4 @@ def proxy_update_session(session_id):
 # Lancement de l'application
 # **********************************************
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=3000, debug=True)
+    app.run(host='127.0.0.1', port=3000, debug=False)
