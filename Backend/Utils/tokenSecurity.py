@@ -22,7 +22,7 @@ class TokenManager:
             'user_id': user_id,
             'email': email,
             'type': 'access',
-            'exp': now + timedelta(minutes=60),
+            'exp': now + timedelta(minutes=30),
             'iat': now
         }, self.secret_key, algorithm=self.algorithm)
         
