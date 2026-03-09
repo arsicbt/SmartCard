@@ -1,3 +1,5 @@
+"""authentication paths"""
+
 from flask import Blueprint, request, jsonify, make_response
 from Utils.passwordSecurity import PasswordManager
 from Utils.tokenSecurity import token_manager
@@ -14,7 +16,7 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 # ********************************************************
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    """Authentifie un utilisateur et retourne un JWT"""
+    """Authentifie un utilisateur et retourne un JWT."""
     if not request.json:
         return jsonify({'error': 'Not a JSON'}), 400
 
@@ -54,7 +56,7 @@ def login():
         refresh_token,
         httponly=True,
         samesite='Strict',
-        secure=False,  # True en prod (HTTPS)
+        secure=False,
         max_age=7 * 24 * 3600  # 7 jours
     )
 
@@ -67,7 +69,7 @@ def login():
 
 @auth_bp.route('/refresh', methods=['POST'])
 def refresh():
-    """Génère un nouvel access token depuis le refresh token"""
+    """Génère un nouvel access token depuis le refresh token."""
 
     # Récupérer le refresh token depuis le cookie OU le body JSON
     refresh_token = (
@@ -102,7 +104,7 @@ def refresh():
 
 @auth_bp.route('/logout', methods=['POST'])
 def logout():
-    """Supprime les cookies JWT"""
+    """Supprime les cookies JWT."""
     response = make_response(jsonify({'message': 'Déconnexion réussie'}))
     response.delete_cookie('access_token')
     response.delete_cookie('refresh_token')
@@ -115,7 +117,7 @@ def logout():
 @auth_bp.route('/me', methods=['GET'])
 @auth_required
 def me():
-    """Retourne l'utilisateur connecté"""
+    """Retourne l'utilisateur connecté."""
     return jsonify(request.current_user.to_dict()), 200
 
 
@@ -125,7 +127,7 @@ def me():
 @auth_bp.route('/admin', methods=['POST'])
 @admin_required
 def create_admin():
-    """Crée un utilisateur admin (réservé aux admins)"""
+    """Crée un utilisateur admin (réservé aux admins)."""
     if not request.json:
         return jsonify({'error': 'Not a JSON'}), 400
 

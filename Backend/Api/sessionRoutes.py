@@ -1,6 +1,4 @@
-"""
-sessionRoutes.py — Routes HTTP pour les sessions
-"""
+"""session paths."""
 
 from flask import Blueprint, jsonify, request, abort
 from Models.sessionModel import Session
@@ -23,7 +21,7 @@ session_bp = Blueprint("sessions", __name__, url_prefix="/api/sessions")
 @admin_required
 def get_user_sessions(user_id):
     """
-    Récupère les sessions d'un utilisateur
+    Récupère les sessions d'un utilisateur.
     """
     user = storage.get(User, user_id)
     if not user:
@@ -40,7 +38,7 @@ def get_user_sessions(user_id):
 @admin_required
 def get_session(session_id):
     """
-    Récupère une session en passant par son ID
+    Récupère une session en passant par son ID.
     """
     session = storage.get(Session, session_id)
 
@@ -57,7 +55,7 @@ def get_session(session_id):
 @auth_required
 def create_session():
     """
-    Crée une nouvelle session
+    Crée une nouvelle session.
     """
     if not request.is_json:
         abort(400, description="Not a JSON")
@@ -122,7 +120,7 @@ def create_session():
 @session_bp.route('/<session_id>', methods=['PUT'])
 @auth_required
 def update_session(session_id):
-    """Met à jour une session (ex: compléter avec score)"""
+    """Met à jour une session (ex: compléter avec score)."""
 
     session = storage.get(Session, session_id)
     if not session:
@@ -152,7 +150,7 @@ def update_session(session_id):
 @auth_required
 def delete_session(session_id):
     """
-    Supprime une session
+    Supprime une session.
     """
     session_obj = storage.get(Session, session_id)
     if not session_obj:
@@ -176,17 +174,17 @@ def delete_session(session_id):
 @auth_required
 def create_session_with_pdf():
     """
-    Crée une session en analysant un PDF
+    Crée une session en analysant un PDF.
 
     Flow:
-    1. User choisit le type de session (QUIZ ou FLASHCARD)
-    2. Upload du PDF
-    3. Analyse automatique du PDF par Groq → extraction du thème
-    4. Recherche de thème existant avec ≥40% de correspondance
-    5. Si thème trouvé : récupérer questions existantes avec ≥40% de similarité
-    6. Si pas assez de questions : générer avec Groq
-    7. Transformer les questions selon le type (Quiz/Cards)
-    8. Créer la session avec les questions
+    1. User choisit le type de session (QUIZ ou FLASHCARD).
+    2. Upload du PDF.
+    3. Analyse automatique du PDF par Groq → extraction du thème.
+    4. Recherche de thème existant avec ≥40% de correspondance.
+    5. Si thème trouvé : récupérer questions existantes avec ≥40% de similarité.
+    6. Si pas assez de questions : générer avec Groq.
+    7. Transformer les questions selon le type (Quiz/Cards).
+    8. Créer la session avec les questions.
     """
 
     print("\n" + "=" * 80)
@@ -513,15 +511,15 @@ def _create_questions_from_generated(
     session_type: str
 ) -> list:
     """
-    Crée des objets Question et Answer depuis les questions générées par Groq
+    Crée des objets Question et Answer depuis les questions générées par Groq.
 
     Args:
-        generated_questions: Questions générées par Groq
-        theme_id: ID du thème
-        session_type: QUIZ ou FLASHCARD
+        generated_questions: Questions générées par Groq.
+        theme_id: ID du thème.
+        session_type: QUIZ ou FLASHCARD.
 
     Returns:
-        Liste des IDs des questions créées
+        Liste des IDs des questions créées.
     """
     from Models.tablesSchema import QuestionType, Difficulty
 
