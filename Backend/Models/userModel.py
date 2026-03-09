@@ -18,7 +18,7 @@ from typing import Optional, Tuple
 class User(BaseModel):
     """
     Modèle Utilisateur
-    
+
     Colonnes :
         - first_name : Prénom
         - last_name : Nom de famille
@@ -29,14 +29,14 @@ class User(BaseModel):
         - is_admin : Privilèges administrateur
         - verification_token : Token de vérification email
         - last_login_at : Dernière connexion
-    
+
     Relations :
         - themes : Liste des thèmes créés
         - sessions : Liste des sessions d'étude
     """
-    
+
     __tablename__ = 'users'
-    
+
     # ********************************************************
     # COLONNES SPÉCIFIQUES
     # ********************************************************
@@ -45,19 +45,19 @@ class User(BaseModel):
     email = Column(String(255), unique=True, nullable=False, index=True)
     password = Column(String(255), nullable=False)  # Hash bcrypt
     name = Column(String(100), nullable=True)
-    
+
     # Vérification email
     is_verified = Column(Boolean, default=False, nullable=False)
     is_admin = Column(Boolean, default=False, nullable=False)
     verification_token = Column(String(255), nullable=True)
     last_login_at = Column(String, nullable=True)
-    
+
     # ********************************************************
     # RELATIONS SQLALCHEMY
     # ********************************************************
     themes = relationship('Theme', back_populates='user', cascade='all, delete-orphan')
     sessions = relationship('Session', back_populates='user', cascade='all, delete-orphan')
-    
+
     # ********************************************************
     # INDEX
     # ********************************************************
@@ -66,7 +66,7 @@ class User(BaseModel):
         Index('idx_users_deleted', 'deleted_at'),
         Index('idx_users_admin', 'is_admin'),
     )
-    
+
     # ********************************************************
     # VALIDATION AVEC UTILS
     # ********************************************************
@@ -81,12 +81,12 @@ class User(BaseModel):
     ) -> Tuple[Optional['User'], Optional[str]]:
         """
         Valide les données et crée un utilisateur
-        
+
         Utilise Utils pour :
         - Valider email (InputValidator)
         - Valider password (InputValidator)
         - Hasher password (PasswordManager)
-        
+
         Args:
             first_name: Prénom
             last_name: Nom
@@ -94,7 +94,7 @@ class User(BaseModel):
             password: Mot de passe en clair
             is_admin: Privilege administrateur
             name: Pseudo optionnel
-        
+
         Returns:
             Tuple (User créé, message d'erreur)
         """
@@ -102,21 +102,21 @@ class User(BaseModel):
         is_valid_email, email_error = InputValidator.validate_email(email)
         if not is_valid_email:
             return None, email_error
-        
+
         # Validation password avec Utils
         is_valid_pwd, pwd_error = InputValidator.validate_password(password)
         if not is_valid_pwd:
             return None, pwd_error
-        
+
         # Sanitize inputs avec Utils
         first_name = InputValidator.sanitize_string(first_name)
         last_name = InputValidator.sanitize_string(last_name)
         if name:
             name = InputValidator.sanitize_string(name)
-        
+
         # Hash password avec Utils
         password_hash = PasswordManager.hash_password(password)
-        
+
         # Créer l'utilisateur
         user = User(
             first_name=first_name,
@@ -127,27 +127,27 @@ class User(BaseModel):
             is_verified=False,
             is_admin=is_admin
         )
-        
+
         return user, None
-    
+
     def verify_password(self, password: str) -> bool:
         """
         Vérifie un mot de passe avec Utils
-        
+
         Args:
             password: Mot de passe en clair à vérifier
-        
+
         Returns:
             True si le mot de passe correspond
         """
         return PasswordManager.verify_password(password, self.password)
-    
+
     def update_last_login(self) -> None:
         """Met à jour la date de dernière connexion"""
         from datetime import datetime
         self.last_login_at = datetime.utcnow()
         self.update_timestamp()
-    
+
     # ********************************************************
     # REPRÉSENTATION
     # ********************************************************

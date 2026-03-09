@@ -17,7 +17,7 @@ from groq import Groq
 from io import BytesIO
 from dotenv import load_dotenv
 
-load_dotenv() 
+load_dotenv()
 
 # Configuration Groq
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
@@ -29,22 +29,22 @@ groq_client = Groq(api_key=GROQ_API_KEY)
 
 class PDFAnalysisService:
     """Service pour analyser des PDFs et générer du contenu éducatif"""
-    
+
     # ********************************************************
     # EXTRACTION DE TEXTE
     # ********************************************************
-    
+
     @staticmethod
     def extract_text_from_pdf(pdf_file) -> str:
         """
         Extrait le texte d'un fichier PDF
-        
+
         Args:
             pdf_file: Fichier PDF (FileStorage Flask ou BytesIO)
-        
+
         Returns:
             Texte extrait du PDF
-        
+
         Raises:
             ValueError: Si le PDF est invalide ou vide
         """
@@ -54,49 +54,48 @@ class PDFAnalysisService:
                 pdf_bytes = BytesIO(pdf_file.read())
             else:
                 pdf_bytes = pdf_file
-            
+
             # Lire le PDF
             pdf_reader = PyPDF2.PdfReader(pdf_bytes)
-            
+
             if len(pdf_reader.pages) == 0:
                 raise ValueError("PDF is empty")
-            
+
             # Extraire le texte de toutes les pages
             text_content = []
             for page in pdf_reader.pages:
                 page_text = page.extract_text()
                 if page_text:
                     text_content.append(page_text)
-                    
+
             full_text = "\n\n".join(text_content)
-            
+
             if not full_text.strip():
                 raise ValueError("No text could be extracted from PDF")
-            
+
             return full_text.strip()
-            
-        except Execption as e:
+
+        except Exception as e:
             raise ValueError(f"Error extracting PDF text: {str(e)}")
-        
-        
+
     # ********************************************************
     # ANALYSE DU THÈME PAR GROQ
     # ********************************************************
-    
+
     @staticmethod
     def analyze_theme_with_groq(pdf_content: str) -> Dict[str, any]:
         """
         Analyse le contenu du PDF avec Groq pour déduire le thème
-        
+
         Args:
             pdf_content: Contenu textuel du PDF
-        
+
         Returns:
             Dict avec:
                 - theme_name: Nom du thème déduit
                 - keywords: Liste de mots-clés (max 10)
                 - description: Description courte du thème
-        
+
         Example:
             {
                 "theme_name": "Python Programming Basics",
@@ -104,10 +103,10 @@ class PDFAnalysisService:
                 "description": "Introduction to Python programming fundamentals"
             }
         """
-        
+
         # limiter le contenue à 4000 caractere pour le MVP
         content_sample = pdf_content[:4000] if len(pdf_content) > 4000 else pdf_content
-        
+
         prompt = f"""Analyze the following educational content and extract the main theme.
 
 CONTENT:
@@ -144,8 +143,8 @@ Important:
                         "content": prompt
                     }
                 ],
-                temperature=0.3,  
-                max_tokens=500   
+                temperature=0.3,
+                max_tokens=500
 
             )
 
@@ -157,25 +156,24 @@ Important:
             result_text = re.sub(r'```\s*', '', result_text)
 
             # Parser le JSON
-            theme_data = json.loads(result_text) 
+            theme_data = json.loads(result_text)
 
             # Valider la structure
             required_keys = ['theme_name', 'keywords', 'description']
             if not all(key in theme_data for key in required_keys):
                 raise ValueError("Invalid response structure from Groq")
 
-            return theme_data  
+            return theme_data
 
         except json.JSONDecodeError as e:
             raise ValueError(f"Failed to parse Groq response as JSON: {str(e)}")
         except Exception as e:
             raise ValueError(f"Error analyzing theme with Groq: {str(e)}")
 
-   
     # ********************************************************
     # GÉNÉRATION DE QUESTIONS/RÉPONSES
     # ********************************************************
-    
+
     @staticmethod
     def generate_questions_from_pdf(
         pdf_content: str,
@@ -184,15 +182,15 @@ Important:
     ) -> List[Dict[str, any]]:
         """
         Génère des questions à partir du contenu PDF
-        
+
         Args:
             pdf_content: Contenu du PDF
             session_type: "QUIZ" ou "FLASHCARD"
             count: Nombre de questions à générer (défaut 10)
-        
+
         Returns:
             Liste de questions avec leurs réponses
-            
+
         Format QUIZ:
         [
             {
@@ -207,7 +205,7 @@ Important:
                 "difficulty": "EASY"
             }
         ]
-        
+
         Format FLASHCARD:
         [
             {
@@ -219,7 +217,7 @@ Important:
         """
         # Limiter le contenu
         content_sample = pdf_content[:6000] if len(pdf_content) > 6000 else pdf_content
-        
+
         if session_type == "QUIZ":
             prompt = f"""Based on the following educational content, generate {count} multiple-choice quiz questions.
 
@@ -251,7 +249,7 @@ Requirements:
 - Make wrong answers plausible but clearly incorrect
 - Explanations should be 1-2 sentences
 - Return ONLY the JSON, no other text"""
-        
+
         else:  # FLASHCARD
             prompt = f"""Based on the following educational content, generate {count} flashcard-style questions.
 
@@ -276,7 +274,7 @@ Requirements:
 - Questions should be clear and specific
 - Answers should be concise but complete (2-4 sentences max)
 - Return ONLY the JSON, no other text"""
-        
+
         try:
             response = groq_client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
@@ -293,33 +291,32 @@ Requirements:
                 temperature=0.7,
                 max_tokens=3000
             )
-            
+
             # Extraire la réponse
             result_text = response.choices[0].message.content.strip()
-            
+
             # Nettoyer la réponse
             result_text = re.sub(r'```json\s*', '', result_text)
             result_text = re.sub(r'```\s*', '', result_text)
-            
+
             # Parser le JSON
             questions_data = json.loads(result_text)
-            
+
             # Valider
             if 'questions' not in questions_data or not isinstance(questions_data['questions'], list):
                 raise ValueError("Invalid questions structure")
-            
+
             return questions_data['questions']
-        
+
         except json.JSONDecodeError as e:
             raise ValueError(f"Failed to parse Groq response as JSON: {str(e)}")
         except Exception as e:
             raise ValueError(f"Error generating questions with Groq: {str(e)}")
-    
 
     # ********************************************************
     # PIPELINE COMPLET
     # ********************************************************
-    
+
     @staticmethod
     def analysis_pdf_full_pipeline(
         pdf_file,
@@ -328,12 +325,12 @@ Requirements:
     ) -> Dict[str, any]:
         """
         Pipeline complet d'analyse PDF
-        
+
         Args:
             pdf_file: Fichier PDF
             session_type: "QUIZ" ou "FLASHCARD"
             questions_count: Nombre de questions à générer
-        
+
         Returns:
             Dict contenant:
                 - pdf_content: Contenu textuel extrait
@@ -342,19 +339,19 @@ Requirements:
         """
         # Etape 1: Extraire le texte
         pdf_content = PDFAnalysisService.extract_text_from_pdf(pdf_file)
-        
+
         # Etape 2: Analyser le theme
         theme_data = PDFAnalysisService.analyze_theme_with_groq(pdf_content)
-        
+
         # Etape 3: Générer les questions
         questions = PDFAnalysisService.generate_questions_from_pdf(
             pdf_content,
             session_type,
             questions_count
         )
-        
+
         return {
             'pdf_content': pdf_content,
             'theme_data': theme_data,
-            'generated_questions': questions 
+            'generated_questions': questions
         }

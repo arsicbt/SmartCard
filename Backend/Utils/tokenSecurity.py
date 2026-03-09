@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Optional
 import os
 
+
 class TokenManager:
     """Gestion des tokens JWT"""
 
@@ -16,16 +17,16 @@ class TokenManager:
         Crée un access token (1h) et un refresh token (7j)
         """
         now = datetime.utcnow()
-        
+
         # Access token (court)
         access_token = jwt.encode({
             'user_id': user_id,
             'email': email,
             'type': 'access',
-            'exp': now + timedelta(minutes=60),
+            'exp': now + timedelta(minutes=30),
             'iat': now
         }, self.secret_key, algorithm=self.algorithm)
-        
+
         # Refresh token (long)
         refresh_token = jwt.encode({
             'user_id': user_id,
@@ -34,9 +35,9 @@ class TokenManager:
             'exp': now + timedelta(days=7),
             'iat': now
         }, self.refresh_secret, algorithm=self.algorithm)
-        
+
         return access_token, refresh_token
-    
+
     def decode_access_token(self, token):
         """Décode l'access token"""
         try:

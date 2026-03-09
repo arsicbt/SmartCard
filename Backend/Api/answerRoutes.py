@@ -1,3 +1,5 @@
+"""Routes API REST pour la gestion des réponses (Answer)."""
+
 from flask import Blueprint, jsonify, request, abort
 from Persistence.DBStorage import storage
 from Models.answerModel import Answer
@@ -14,26 +16,26 @@ answer_bp = Blueprint("answers", __name__, url_prefix="/api/answers")
 @answer_bp.route("/<answer_id>", methods=["GET"])
 @admin_required
 def get_answer(answer_id):
-    """Récupère une réponse par ID"""
+    """Récupère une réponse par son identifiant."""
     answer = storage.get(Answer, answer_id)
-    
+
     if not answer:
         abort(404, description="Answer not found")
-        
+
     return jsonify(answer.to_dict()), 200
 
 
 # ************************************************
-# GET ALL ANSWERS FOR A QUESTION 
+# GET ALL ANSWERS FOR A QUESTION
 # ************************************************
 @answer_bp.route("/question/<question_id>", methods=["GET"])
 @admin_required
 def get_question_answers(question_id):
-    """Récupère les réponses d'une question"""
+    """Récupère toutes les réponses associées à une question."""
     question = storage.get(Question, question_id)
     if not question:
         abort(404, description="Question not found")
-    
+
     answers = storage.filter_by(Answer, question_id=question_id)
     return jsonify([a.to_dict() for a in answers]), 200
 
@@ -44,24 +46,21 @@ def get_question_answers(question_id):
 @answer_bp.route("/", methods=["POST"])
 @auth_required
 def create_answer():
-    """Crée une nouvelle réponse"""
-    
+    """Crée une nouvelle réponse pour une question existante."""
     if not request.is_json:
         abort(400, description="Not a JSON")
-    
+
     data = request.get_json()
-    
+
     required_fields = ['answer_text', 'question_id']
     for field in required_fields:
         if field not in data:
             abort(400, description=f"Missing {field}")
-    
 
-    # Vérifier que la question existe
     question = storage.get(Question, data['question_id'])
     if not question:
         abort(404, description="Question not found")
-    
+
     answer = Answer(
         answer_text=data["answer_text"],
         is_correct=data.get("is_correct", False),
@@ -75,18 +74,17 @@ def create_answer():
 
 
 # ************************************************
-# DELETE ASNWER
+# DELETE ANSWER
 # ************************************************
 @answer_bp.route("/<answer_id>", methods=["DELETE"])
 @admin_required
 def delete_answer(answer_id):
-    """Supprime une réponse"""
-    
+    """Supprime une réponse par son identifiant."""
     answer = storage.get(Answer, answer_id)
     if not answer:
         abort(404, description="Answer not found")
-    
+
     storage.delete(answer)
     storage.save()
-    
+
     return jsonify({}), 200

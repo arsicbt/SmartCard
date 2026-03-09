@@ -1,15 +1,14 @@
+from Api.authRoutes import auth_bp
+from Api.sessionRoutes import session_bp
+from Api.answerRoutes import answer_bp
+from Api.questionRoutes import question_bp
+from Api.themeRoutes import theme_bp
+from Api.userRoutes import users_bp
 from flask import Flask
 from flask_cors import CORS
 from dotenv import load_dotenv
 
 load_dotenv()
-
-from Api.userRoutes import users_bp
-from Api.themeRoutes import theme_bp
-from Api.questionRoutes import question_bp
-from Api.answerRoutes import answer_bp
-from Api.sessionRoutes import session_bp
-from Api.authRoutes import auth_bp
 
 
 app = Flask(__name__)

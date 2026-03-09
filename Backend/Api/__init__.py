@@ -1,3 +1,5 @@
+"""Package des routes API REST de SmartCard."""
+
 from .userRoutes import users_bp
 from .themeRoutes import theme_bp
 from .questionRoutes import question_bp

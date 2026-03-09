@@ -1,3 +1,5 @@
+"""themes paths."""
+
 from flask import Blueprint, jsonify, request, abort
 from Persistence.DBStorage import storage
 from Models.themeModel import Theme

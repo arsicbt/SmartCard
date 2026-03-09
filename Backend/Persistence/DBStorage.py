@@ -9,7 +9,7 @@ SÉCURITÉ :
 - Validation des entrées
 """
 
-from sqlalchemy import create_engine, and_
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from contextlib import contextmanager
 from typing import Optional, List, Dict, Type, Any
@@ -79,7 +79,7 @@ class DBStorage:
         Récupère tous les objets d'une classe
         
         Args:
-            cls: Classe à récupérer (User, Document...) ou None pour toutes
+            cls: Classe à récupérer (User, Theme...) ou None pour toutes
             include_deleted: Inclure objets soft-deleted
             
         Returns:
@@ -227,7 +227,7 @@ class DBStorage:
             Liste d'objets
             
         Exemple:
-            storage.filter_by(Flashcard, user_id='abc', theme_id='xyz')
+            storage.filter_by(Question, theme_id='xyz')
         """
         query = self.__session.query(cls)
         
@@ -248,7 +248,7 @@ class DBStorage:
         
         Exemple:
             storage.count(User)  # Nombre total users
-            storage.count(Flashcard, theme_id='abc')  # Flashcards d'un thème
+            storage.count(Question, theme_id='abc')  # Questions d'un thème
         """
         query = self.__session.query(cls)
         
@@ -264,55 +264,34 @@ class DBStorage:
     # ********************************************************
     # MÉTHODES SPÉCIFIQUES MÉTIER
     # ********************************************************
-    
+
     def get_user_themes(self, user_id: str) -> List[Theme]:
-        """Récupère tous les thèmes d'un utilisateur"""
+        """Récupère tous les thèmes d'un utilisateur."""
         return self.filter_by(Theme, user_id=user_id)
-    
-    def get_theme_flashcards(self, theme_id: str) ->  "List[Flashcard]":
-        """Récupère toutes les flashcards d'un thème"""
-        return self.filter_by(Flashcard, theme_id=theme_id)
-    
-    def get_flashcards_to_review(self, user_id: str, limit: int = 20) ->  "List[Flashcard]":
-        """
-        Récupère les flashcards à réviser (spaced repetition)
-        
-        Args:
-            user_id: ID utilisateur
-            limit: Nombre max de cards
-        """
-        now = datetime.utcnow()
-        
-        # Flashcards où next_review_at <= maintenant
-        query = self.__session.query(Flashcard).join(Document).filter(
-            and_(
-                Document.user_id == user_id,
-                Flashcard.deleted_at.is_(None),
-                Flashcard.next_review_at <= now
-            )
-        ).order_by(Flashcard.next_review_at).limit(limit)
-        
-        return query.all()
-    
+
+    def get_theme_questions(self, theme_id: str) -> List[Question]:
+        """Récupère toutes les questions d'un thème."""
+        return self.filter_by(Question, theme_id=theme_id)
+
+    def get_session_answers(self, session_id: str) -> List[Answer]:
+        """Récupère toutes les réponses d'une session."""
+        return self.filter_by(Answer, session_id=session_id)
+
+    def get_user_sessions(self, user_id: str) -> List[Session]:
+        """Récupère toutes les sessions d'un utilisateur."""
+        return self.filter_by(Session, user_id=user_id)
+
     def get_user_stats(self, user_id: str) -> Dict[str, int]:
         """
-        Statistiques utilisateur
-        
+        Retourne les statistiques d'un utilisateur.
+
         Returns:
-            {
-                'total_themes': int,
-                'total_flashcards': int,
-                'total_quizzes': int,
-                'flashcards_reviewed': int
-            }
+            Dict contenant le nombre de thèmes, questions et sessions.
         """
         return {
             'total_themes': self.count(Theme, user_id=user_id),
-            'total_documents': self.count(Document, user_id=user_id),
-            'total_quizzes': self.count(Quiz, user_id=user_id),
-            'total_flashcards': self.__session.query(Flashcard).join(Document).filter(
-                Document.user_id == user_id
-            ).count()
+            'total_questions': self.count(Question),
+            'total_sessions': self.count(Session, user_id=user_id),
         }
     
     # ********************************************************
