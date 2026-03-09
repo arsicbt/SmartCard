@@ -29,19 +29,21 @@ class Config:
 
 class DevelopmentConfig(Config):
     """Configuration pour l'environnement de développement."""
+
     DEBUG = True
     TESTING = False
 
 
 class ProductionConfig(Config):
     """Configuration pour l'environnement de production."""
+
     DEBUG = False
     TESTING = False
 
     # En prod, les secrets DOIVENT être définis
     @classmethod
     def validate(cls):
-        """Valide que les secrets de production sont correctement configurés."""
+        """Vérifie que les secrets de production sont correctement configurés."""
         required = ['SECRET_KEY', 'JWT_SECRET_KEY', 'DATABASE_URL']
         for key in required:
             if getattr(cls, key).startswith('dev-') or 'CHANGE' in getattr(cls, key):
