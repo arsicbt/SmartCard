@@ -75,7 +75,7 @@ class PDFAnalysisService:
 
             return full_text.strip()
 
-        except Execption as e:
+        except Exception as e:
             raise ValueError(f"Error extracting PDF text: {str(e)}")
 
     # ********************************************************

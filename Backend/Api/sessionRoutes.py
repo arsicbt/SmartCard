@@ -562,8 +562,7 @@ def _create_questions_from_generated(
                         order_position=ans_idx
                     )
                     storage.new(answer)
-                    print(f"[DEBUG]       - Réponse {ans_idx +
-                                                     1}: {ans_data['text'][:30]}... (correct={ans_data['is_correct']})")
+                    print(f"[DEBUG] - Réponse {ans_idx + 1}: {ans_data['text'][:30]}... (correct={ans_data['is_correct']})")
             else:
                 # FLASHCARD: 1 réponse
                 print(f"[DEBUG]     - Création 1 réponse FLASHCARD")
