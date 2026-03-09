@@ -16,6 +16,7 @@ theme_bp = Blueprint("themes", __name__, url_prefix="/api/themes")
 @theme_bp.route("/", methods=["GET"])
 @admin_required
 def get_themes():
+    """Retourne la liste de tous les thèmes."""
     themes = storage.all(Theme)
     return jsonify([t.to_dict() for t in themes.values()]), 200
 
@@ -26,6 +27,7 @@ def get_themes():
 @theme_bp.route("/<theme_id>", methods=["GET"])
 @admin_required
 def get_theme(theme_id):
+    """Retourne un thème par son identifiant."""
     theme = storage.get(Theme, theme_id)
     if not theme:
         abort(404, description="Theme not found")
@@ -38,6 +40,7 @@ def get_theme(theme_id):
 @theme_bp.route("/", methods=["POST"])
 @auth_required
 def create_theme():
+    """Crée un nouveau thème pour un utilisateur."""
     if not request.is_json:
         abort(400, description="Not a JSON")
 
@@ -71,6 +74,7 @@ def create_theme():
 @theme_bp.route("/<theme_id>", methods=["PUT"])
 @auth_required
 def update_theme(theme_id):
+    """Met à jour les données d'un thème existant."""
     theme = storage.get(Theme, theme_id)
     if not theme:
         abort(404)
@@ -96,6 +100,7 @@ def update_theme(theme_id):
 @theme_bp.route("/<theme_id>", methods=["DELETE"])
 @admin_required
 def delete_theme(theme_id):
+    """Supprime un thème par son identifiant."""
     theme = storage.get(Theme, theme_id)
     if not theme:
         abort(404)

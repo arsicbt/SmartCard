@@ -20,9 +20,7 @@ session_bp = Blueprint("sessions", __name__, url_prefix="/api/sessions")
 @session_bp.route('/user/<user_id>', methods=['GET'])
 @admin_required
 def get_user_sessions(user_id):
-    """
-    Récupère les sessions d'un utilisateur.
-    """
+    """Récupère les sessions d'un utilisateur."""
     user = storage.get(User, user_id)
     if not user:
         abort(404, description="User not found")
@@ -37,9 +35,7 @@ def get_user_sessions(user_id):
 @session_bp.route('/<session_id>', methods=['GET'])
 @admin_required
 def get_session(session_id):
-    """
-    Récupère une session en passant par son ID.
-    """
+    """Récupère une session en passant par son ID."""
     session = storage.get(Session, session_id)
 
     if not session:
@@ -54,9 +50,7 @@ def get_session(session_id):
 @session_bp.route('/', methods=['POST'])
 @auth_required
 def create_session():
-    """
-    Crée une nouvelle session.
-    """
+    """Crée une nouvelle session."""
     if not request.is_json:
         abort(400, description="Not a JSON")
 
@@ -121,7 +115,6 @@ def create_session():
 @auth_required
 def update_session(session_id):
     """Met à jour une session (ex: compléter avec score)."""
-
     session = storage.get(Session, session_id)
     if not session:
         abort(404, description="Session not found")
@@ -149,9 +142,7 @@ def update_session(session_id):
 @session_bp.route('/<session_id>', methods=['DELETE'])
 @auth_required
 def delete_session(session_id):
-    """
-    Supprime une session.
-    """
+    """Supprime une session."""
     session_obj = storage.get(Session, session_id)
     if not session_obj:
         abort(404, description="Session not found")
@@ -186,7 +177,6 @@ def create_session_with_pdf():
     7. Transformer les questions selon le type (Quiz/Cards).
     8. Créer la session avec les questions.
     """
-
     print("\n" + "=" * 80)
     print("[DEBUG] === CREATE SESSION WITH PDF - START ===")
     print("=" * 80)
@@ -379,7 +369,7 @@ def create_session_with_pdf():
             print(f"[DEBUG]   - IDs récupérés: {len(questions_ids)}")
 
             if len(questions_ids) < questions_count:
-                print(f"[DEBUG]   ⚠️  Pas assez de questions, génération complément...")
+                print("[DEBUG]   ⚠️  Pas assez de questions, génération complément...")
 
                 # Créer les questions manquantes grâce à Groq
                 remaining_count = questions_count - len(questions_ids)
@@ -483,7 +473,7 @@ def create_session_with_pdf():
 
     except ValueError as e:
         print("\n" + "=" * 80)
-        print(f"[ERROR] ❌ ValueError attrapée!")
+        print("[ERROR] ❌ ValueError attrapée!")
         print(f"[ERROR] Type: {type(e).__name__}")
         print(f"[ERROR] Message: {str(e)}")
         print("=" * 80)
@@ -494,7 +484,7 @@ def create_session_with_pdf():
 
     except Exception as e:
         print("\n" + "=" * 80)
-        print(f"[ERROR] ❌ Exception générale attrapée!")
+        print("[ERROR] ❌ Exception générale attrapée!")
         print(f"[ERROR] Type: {type(e).__name__}")
         print(f"[ERROR] Message: {str(e)}")
         print("=" * 80)
@@ -523,7 +513,7 @@ def _create_questions_from_generated(
     """
     from Models.tablesSchema import QuestionType, Difficulty
 
-    print(f"\n[DEBUG] _create_questions_from_generated:")
+    print("\n[DEBUG] _create_questions_from_generated:")
     print(f"[DEBUG]   - Nombre questions: {len(generated_questions)}")
     print(f"[DEBUG]   - theme_id: {theme_id}")
     print(f"[DEBUG]   - session_type: {session_type}")
@@ -563,7 +553,7 @@ def _create_questions_from_generated(
                     print(f"[DEBUG] - Réponse {ans_idx + 1}: {ans_data['text'][:30]}... (correct={ans_data['is_correct']})")
             else:
                 # FLASHCARD: 1 réponse
-                print(f"[DEBUG]     - Création 1 réponse FLASHCARD")
+                print("[DEBUG]     - Création 1 réponse FLASHCARD")
 
                 answer = Answer(
                     question_id=question.id,

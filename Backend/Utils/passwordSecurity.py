@@ -1,5 +1,5 @@
+"""Module de gestion sécurisée des mots de passe avec bcrypt."""
 import bcrypt
-from typing import Optional
 
 
 class PasswordManager:

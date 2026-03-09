@@ -1,3 +1,4 @@
+"""Point d'entrée principal de l'application Flask SmartCard."""
 from Api.authRoutes import auth_bp
 from Api.sessionRoutes import session_bp
 from Api.answerRoutes import answer_bp

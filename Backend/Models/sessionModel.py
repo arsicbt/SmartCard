@@ -12,7 +12,6 @@ from sqlalchemy.orm import relationship
 from Models.baseModel import BaseModel
 from Models.tablesSchema import SessionType
 from datetime import datetime
-from typing import List
 
 
 class Session(BaseModel):
@@ -145,6 +144,7 @@ class Session(BaseModel):
     # ********************************************************
 
     def __repr__(self) -> str:
+        """Retourne une représentation lisible de la session."""
         status = "completed" if self.is_completed() else "in_progress"
         score_str = f"{self.score}/{self.max_score}" if self.score is not None else "N/A"
         return f"<Session(id={self.id[:8] if self.id else 'None'}, type={self.type.value if self.type else 'None'}, score={score_str}, status={status})>"

@@ -1,3 +1,4 @@
+"""Service d'authentification pour SmartCard."""
 from Models.userModel import User
 from Utils.passwordSecurity import PasswordManager
 from Utils.tokenSecurity import TokenManager
@@ -6,12 +7,12 @@ from typing import Optional, Dict, Tuple
 
 
 class AuthService:
-    """Service gérant l'authentification"""
+    """Service gérant l'authentification."""
 
     def __init__(self, storage):
         """
         Args:
-            storage: Instance de FileStorage ou DBStorage
+            storage: Instance de FileStorage ou DBStorage.
         """
         self.storage = storage
 

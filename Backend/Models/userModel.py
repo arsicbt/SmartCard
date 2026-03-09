@@ -143,7 +143,7 @@ class User(BaseModel):
         return PasswordManager.verify_password(password, self.password)
 
     def update_last_login(self) -> None:
-        """Met à jour la date de dernière connexion"""
+        """Met à jour la date de dernière connexion."""
         from datetime import datetime
         self.last_login_at = datetime.utcnow()
         self.update_timestamp()
@@ -152,4 +152,5 @@ class User(BaseModel):
     # REPRÉSENTATION
     # ********************************************************
     def __repr__(self) -> str:
+        """Retourne une représentation lisible de l'utilisateur."""
         return f"<User(id={self.id[:8] if self.id else 'None'}, email={self.email})>"

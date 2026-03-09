@@ -28,6 +28,7 @@ class QuestionType(enum.Enum):
     - QUIZ : QCM avec choix multiples.
     - FLASHCARD : Carte recto/verso.
     """
+
     QUIZ = 'quiz'
     FLASHCARD = 'flashcard'
 
@@ -40,6 +41,7 @@ class Difficulty(enum.Enum):
     - MEDIUM : Moyen.
     - HARD : Difficile.
     """
+
     EASY = 'easy'
     MEDIUM = 'medium'
     HARD = 'hard'
@@ -52,5 +54,6 @@ class SessionType(enum.Enum):
     - QUIZ : Session de quiz.
     - FLASHCARD : Session de révision flashcards.
     """
+
     QUIZ = 'quiz'
     FLASHCARD = 'flashcard'

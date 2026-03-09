@@ -1,3 +1,4 @@
+"""Configuration centralisée de l'application SmartCard."""
 import os
 from dotenv import load_dotenv
 
@@ -5,7 +6,7 @@ load_dotenv()  # Charge les variables depuis .env
 
 
 class Config:
-    """Configuration centralisée de l'application"""
+    """Configuration centralisée de l'application."""
 
     # SÉCURITÉ : JAMAIS de valeurs en dur en production
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-CHANGE-IN-PROD')
@@ -27,19 +28,20 @@ class Config:
 
 
 class DevelopmentConfig(Config):
-    """Config pour développement"""
+    """Configuration pour l'environnement de développement."""
     DEBUG = True
     TESTING = False
 
 
 class ProductionConfig(Config):
-    """Config pour production"""
+    """Configuration pour l'environnement de production."""
     DEBUG = False
     TESTING = False
 
     # En prod, les secrets DOIVENT être définis
     @classmethod
     def validate(cls):
+        """Valide que les secrets de production sont correctement configurés."""
         required = ['SECRET_KEY', 'JWT_SECRET_KEY', 'DATABASE_URL']
         for key in required:
             if getattr(cls, key).startswith('dev-') or 'CHANGE' in getattr(cls, key):
