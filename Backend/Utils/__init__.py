@@ -1,3 +1,5 @@
+"""Module utils."""
+
 from .authVerification import auth_required, admin_required
 from .tokenSecurity import TokenManager
 from .passwordSecurity import PasswordManager

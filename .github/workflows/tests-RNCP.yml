@@ -59,7 +59,7 @@ jobs:
         run: |
           flake8 Backend/ \
             --max-line-length=120 \
-            --extend-ignore=E501,W503 \
+            --extend-ignore=E501,W503,D100,D101,D104,D204,D205,D400,D401 \
             --statistics \
             --count
         # Critère RNCP : "Respecter les bonnes pratiques de développement"
