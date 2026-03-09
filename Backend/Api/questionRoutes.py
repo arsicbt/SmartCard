@@ -53,8 +53,6 @@ def create_question():
         if field not in data:
             abort(400, description=f"Missing {field}")
 
-    theme = storage.get(Theme, data["theme_id"])
-
     question = Question(
         question_text=data["question_text"],
         theme_id=data["theme_id"],

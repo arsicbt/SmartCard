@@ -1,3 +1,7 @@
+"""
+API module initialization 
+"""
+
 from .userRoutes import users_bp
 from .themeRoutes import theme_bp
 from .questionRoutes import question_bp
