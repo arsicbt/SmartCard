@@ -1,90 +1,80 @@
-"""Routes API REST pour la gestion des réponses (Answer)."""
+"""
+Answer Model - Modèle réponse
 
-from flask import Blueprint, jsonify, request, abort
-from Persistence.DBStorage import storage
-from Models.answerModel import Answer
-from Utils.authVerification import auth_required, admin_required
-from Models.questionModel import Question
+Hérite de BaseModel et ajoute :
+- Colonnes spécifiques (answer_text, is_correct, order_position)
+- Relations SQLAlchemy
+"""
 
-
-answer_bp = Blueprint("answers", __name__, url_prefix="/api/answers")
-
-
-# ************************************************
-# GET ANSWER BY ID
-# ************************************************
-@answer_bp.route("/<answer_id>", methods=["GET"])
-@admin_required
-def get_answer(answer_id):
-    """Récupère une réponse par son identifiant."""
-    answer = storage.get(Answer, answer_id)
-
-    if not answer:
-        abort(404, description="Answer not found")
-
-    return jsonify(answer.to_dict()), 200
+from sqlalchemy import Column, String, Text, Boolean, Integer, ForeignKey, Index
+from sqlalchemy.orm import relationship
+from Models.baseModel import BaseModel
 
 
-# ************************************************
-# GET ALL ANSWERS FOR A QUESTION
-# ************************************************
-@answer_bp.route("/question/<question_id>", methods=["GET"])
-@admin_required
-def get_question_answers(question_id):
-    """Récupère toutes les réponses associées à une question."""
-    question = storage.get(Question, question_id)
-    if not question:
-        abort(404, description="Question not found")
+class Answer(BaseModel):
+    """
+    Modèle Réponse
 
-    answers = storage.filter_by(Answer, question_id=question_id)
-    return jsonify([a.to_dict() for a in answers]), 200
+    Une réponse est liée à une question.
+    - Pour un QUIZ : 4 réponses (1 correcte, 3 fausses)
+    - Pour une FLASHCARD : 1 réponse (la réponse du verso)
 
+    Colonnes :
+        - question_id : ID de la question (FK)
+        - answer_text : Texte de la réponse
+        - is_correct : Réponse correcte ou non
+        - order_position : Ordre d'affichage (pour les quiz)
 
-# ************************************************
-# CREATE ANSWER
-# ************************************************
-@answer_bp.route("/", methods=["POST"])
-@auth_required
-def create_answer():
-    """Crée une nouvelle réponse pour une question existante."""
-    if not request.is_json:
-        abort(400, description="Not a JSON")
+    Relations :
+        - question : Question parente
+    """
 
-    data = request.get_json()
+    __tablename__ = 'answers'
 
-    required_fields = ['answer_text', 'question_id']
-    for field in required_fields:
-        if field not in data:
-            abort(400, description=f"Missing {field}")
+    # ********************************************************
+    # COLONNES SPÉCIFIQUES
+    # ********************************************************
 
-    question = storage.get(Question, data['question_id'])
-    if not question:
-        abort(404, description="Question not found")
+    question_id = Column(String(60), ForeignKey('questions.id', ondelete='CASCADE'), nullable=False)
+    answer_text = Column(Text, nullable=False)
+    is_correct = Column(Boolean, default=False, nullable=False)
+    order_position = Column(Integer, default=0)
 
-    answer = Answer(
-        answer_text=data["answer_text"],
-        is_correct=data.get("is_correct", False),
-        question_id=data["question_id"]
+    # ********************************************************
+    # RELATIONS SQLALCHEMY
+    # ********************************************************
+
+    question = relationship('Question', back_populates='answers')
+
+    # ********************************************************
+    # INDEX
+    # ********************************************************
+
+    __table_args__ = (
+        Index('idx_answers_question', 'question_id'),
+        Index('idx_answers_correct', 'is_correct'),
     )
 
-    storage.new(answer)
-    storage.save()
+    # ********************************************************
+    # LOGIQUE MÉTIER
+    # ********************************************************
 
-    return jsonify(answer.to_dict()), 201
+    def mark_as_correct(self) -> None:
+        """Marque cette réponse comme correcte."""
+        self.is_correct = True
+        self.update_timestamp()
 
+    def mark_as_incorrect(self) -> None:
+        """Marque cette réponse comme incorrecte."""
+        self.is_correct = False
+        self.update_timestamp()
 
-# ************************************************
-# DELETE ANSWER
-# ************************************************
-@answer_bp.route("/<answer_id>", methods=["DELETE"])
-@admin_required
-def delete_answer(answer_id):
-    """Supprime une réponse par son identifiant."""
-    answer = storage.get(Answer, answer_id)
-    if not answer:
-        abort(404, description="Answer not found")
+    # ********************************************************
+    # REPRÉSENTATION
+    # ********************************************************
 
-    storage.delete(answer)
-    storage.save()
-
-    return jsonify({}), 200
+    def __repr__(self) -> str:
+        """Retourne une représentation lisible de la réponse."""
+        correct_symbol = "✓" if self.is_correct else "✗"
+        text_preview = self.answer_text[:30] + '...' if len(self.answer_text) > 30 else self.answer_text
+        return f"<Answer(id={self.id[:8] if self.id else 'None'}, text='{text_preview}', correct={correct_symbol})>"

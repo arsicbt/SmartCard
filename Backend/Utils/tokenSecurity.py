@@ -1,6 +1,6 @@
+"""Module de gestion des tokens JWT pour l'authentification."""
 import jwt
 from datetime import datetime, timedelta
-from typing import Dict, Optional
 import os
 
 
@@ -8,14 +8,13 @@ class TokenManager:
     """Gestion des tokens JWT"""
 
     def __init__(self, secret_key):
+        """Initialise le gestionnaire avec la clé secrète JWT."""
         self.secret_key = secret_key
         self.refresh_secret = secret_key + "_refresh"
         self.algorithm = 'HS256'
 
     def generate_tokens(self, user_id: str, email: str):
-        """
-        Crée un access token (1h) et un refresh token (7j)
-        """
+        """Crée un access token (30min) et un refresh token (7j)."""
         now = datetime.utcnow()
 
         # Access token (court)

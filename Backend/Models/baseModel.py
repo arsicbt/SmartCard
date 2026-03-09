@@ -102,9 +102,9 @@ class BaseModel(Base):
         return self.deleted_at is not None
 
     def update_timestamp(self) -> None:
-        """Met à jour le timestamp de modification"""
+        """Met à jour le timestamp de modification."""
         self.updated_at = datetime.utcnow()
 
     def __repr__(self) -> str:
-        """Représentation en chaîne de caractères"""
+        """Représentation en chaîne de caractères."""
         return f"<{self.__class__.__name__}(id={self.id[:8] if self.id else 'None'})>"

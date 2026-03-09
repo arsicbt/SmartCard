@@ -16,6 +16,7 @@ question_bp = Blueprint("questions", __name__, url_prefix="/api/questions")
 @question_bp.route("/", methods=["GET"])
 @admin_required
 def get_questions():
+    """Retourne la liste de toutes les questions."""
     questions = storage.all(Question)
     return jsonify([q.to_dict() for q in questions.values()]), 200
 
@@ -26,6 +27,7 @@ def get_questions():
 @question_bp.route("/<question_id>", methods=["GET"])
 @admin_required
 def get_question(question_id):
+    """Retourne une question par son identifiant."""
     question = storage.get(Question, question_id)
 
     if not question:
@@ -40,6 +42,7 @@ def get_question(question_id):
 @question_bp.route("/", methods=["POST"])
 @auth_required
 def create_question():
+    """Crée une nouvelle question liée à un thème."""
     if not request.is_json:
         abort(400, description="Not a JSON")
 
@@ -70,6 +73,7 @@ def create_question():
 @question_bp.route("/<question_id>", methods=["PUT"])
 @auth_required
 def update_question(question_id):
+    """Met à jour les données d'une question existante."""
     question = storage.get(Question, question_id)
     if not question:
         abort(404)
@@ -92,6 +96,7 @@ def update_question(question_id):
 @question_bp.route("/<question_id>", methods=["DELETE"])
 @admin_required
 def delete_question(question_id):
+    """Supprime une question par son identifiant."""
     question = storage.get(Question, question_id)
     if not question:
         abort(404)

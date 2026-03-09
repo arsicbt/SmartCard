@@ -1,4 +1,4 @@
-"""authentication paths"""
+"""Routes d'authentification de l'API SmartCard."""
 
 from flask import Blueprint, request, jsonify, make_response
 from Utils.passwordSecurity import PasswordManager
@@ -70,7 +70,6 @@ def login():
 @auth_bp.route('/refresh', methods=['POST'])
 def refresh():
     """Génère un nouvel access token depuis le refresh token."""
-
     # Récupérer le refresh token depuis le cookie OU le body JSON
     refresh_token = (
         request.cookies.get('refresh_token')

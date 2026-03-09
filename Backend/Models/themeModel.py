@@ -131,7 +131,7 @@ class Theme(BaseModel):
         return False
 
     def increment_usage(self) -> None:
-        """Incrémente le compteur d'utilisation"""
+        """Incrémente le compteur d'utilisation."""
         self.times_used += 1
         self.update_timestamp()
 
@@ -139,4 +139,5 @@ class Theme(BaseModel):
     # REPRÉSENTATION
     # ********************************************************
     def __repr__(self) -> str:
+        """Retourne une représentation lisible du thème."""
         return f"<Theme(id={self.id[:8] if self.id else 'None'}, name={self.name}, questions={self.questions_count})>"

@@ -10,7 +10,6 @@ Gère :
 from Models.questionModel import Question
 from Models.answerModel import Answer
 from Models.sessionModel import Session
-from Models.themeModel import Theme
 from Models.tablesSchema import QuestionType, Difficulty, SessionType
 from typing import Optional, List, Dict, Tuple
 import random
@@ -60,13 +59,13 @@ class QuizzService:
         # Valider le type
         try:
             q_type = QuestionType.QUIZ if question_type.lower() == 'quiz' else QuestionType.FLASHCARD
-        except BaseException:
+        except Exception:
             return None, "Type de question invalide (quiz ou flashcard)"
 
         # Valider la difficulté
         try:
             diff = Difficulty[difficulty.upper()]
-        except BaseException:
+        except Exception:
             return None, "Difficulté invalide (easy, medium ou hard)"
 
         # Créer la question

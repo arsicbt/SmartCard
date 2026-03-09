@@ -11,10 +11,9 @@ Utilise une approche simple mais efficace basée sur :
 """
 
 
-from typing import List, Set, Dict
+from typing import List, Dict
 import re
 from collections import Counter
-import math
 
 
 class SimilarityService:
@@ -24,10 +23,10 @@ class SimilarityService:
     STOP_WORDS = {
         # Français
         'le', 'la', 'les', 'un', 'une', 'des', 'de', 'du', 'et', 'ou', 'mais',
-        'donc', 'or', 'ni', 'car', 'ce', 'ces', 'mon', 'ton', 'son', 'ma', 'ta',
+        'donc', 'ni', 'car', 'ce', 'ces', 'mon', 'ton', 'son', 'ma', 'ta',
         'sa', 'mes', 'tes', 'ses', 'notre', 'votre', 'leur', 'nos', 'vos', 'leurs',
         'qui', 'que', 'quoi', 'dont', 'où', 'dans', 'sur', 'sous', 'avec', 'sans',
-        'pour', 'par', 'est', 'sont', 'être', 'avoir', 'il', 'elle', 'on', 'nous',
+        'pour', 'par', 'est', 'sont', 'être', 'avoir', 'il', 'elle', 'nous',
         'vous', 'ils', 'elles', 'je', 'tu', 'à', 'au', 'aux', 'en', 'y', 'plus',
         # Anglais
         'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',

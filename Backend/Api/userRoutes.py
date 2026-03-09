@@ -92,9 +92,7 @@ def create_user():
 @users_bp.route('/<user_id>', methods=['PUT'])
 @auth_required
 def update_user(user_id):
-    """
-    Mets à jour les données utilisateurs.
-    """
+    """Met à jour les données d'un utilisateur."""
     user = storage.get(User, user_id)
     if not user:
         abort(404)
@@ -122,10 +120,7 @@ def update_user(user_id):
 @users_bp.route('/<user_id>', methods=['DELETE'])
 @admin_required
 def delete_user(user_id):
-    """
-    Supprime (soft delete) l'utilisateur.
-    """
-
+    """Supprime (soft delete) l'utilisateur."""
     user = storage.get(User, user_id)
 
     if not user:

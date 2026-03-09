@@ -118,5 +118,6 @@ class Question(BaseModel):
     # ********************************************************
 
     def __repr__(self) -> str:
+        """Retourne une représentation lisible de la question."""
         text_preview = self.question_text[:50] + '...' if len(self.question_text) > 50 else self.question_text
         return f"<Question(id={self.id[:8] if self.id else 'None'}, type={self.type.value if self.type else 'None'}, text='{text_preview}')>"
