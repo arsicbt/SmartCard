@@ -17,9 +17,7 @@ class AuthService:
         self.storage = storage
 
     def register(self, email: str, password: str, name: str) -> Tuple[bool, Optional[Dict], Optional[str]]:
-        """
-        Enregistre un nouvel utilisateur
-
+        """Enregistre un nouvel utilisateur.
 
         Processus sécurisé :
         1. Validation des entrées
@@ -72,8 +70,7 @@ class AuthService:
         }, None
 
     def login(self, email: str, password: str) -> Tuple[bool, Optional[Dict], Optional[str]]:
-        """
-        Connecte un utilisateur
+        """Connecte un utilisateur.
 
         Processus :
         1. Validation email

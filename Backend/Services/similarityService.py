@@ -43,8 +43,7 @@ class SimilarityService:
 
     @staticmethod
     def preprocess_text(text: str) -> List[str]:
-        """
-        Prétraite un texte : lowercase, tokenize, remove stop words.
+        """Prétraite un texte : lowercase, tokenize, remove stop words.
 
         Args:
             text: Texte à traiter
@@ -62,17 +61,16 @@ class SimilarityService:
         words = text.split()
 
         # Filtrer les stops words et mots trop coruts
-        word = [
+        filtered_words = [
             w for w in words
             if w not in SimilarityService.STOP_WORDS and len(w) > 2
         ]
 
-        return words
+        return filtered_words
 
     @staticmethod
     def extract_keywords(text: str, top_n: int = 20) -> List[str]:
-        """
-        Extrait les mots-clés les plus importants d'un texte.
+        """Extrait les mots-clés les plus importants d'un texte.
 
         Utilise la fréquence des mots comme métrique simple
 
@@ -83,7 +81,7 @@ class SimilarityService:
         Returns:
             Liste des top_n mots-clés
         """
-        words = SimilarityService.preprocess_text(text).
+        words = SimilarityService.preprocess_text(text)
 
         if not words:
             return []
@@ -102,8 +100,7 @@ class SimilarityService:
 
     @staticmethod
     def calculate_text_similarity(text1: str, text2: str) -> float:
-        """
-        Calcule la similarité entre deux textes.
+        """Calcule la similarité entre deux textes.
 
         Utilise le coefficient de Jaccard sur les mots-clés
 
@@ -141,8 +138,7 @@ class SimilarityService:
         text_keywords: List[str],
         target_keywords: List[str]
     ) -> float:
-        """
-        Calcule le chevauchement entre deux listes de mots-clés.
+        """Calcule le chevauchement entre deux listes de mots-clés.
 
         Args:
             text_keywords: Mots-clés du texte source
@@ -178,8 +174,7 @@ class SimilarityService:
         questions: List[Dict],
         threshold: float = 0.4
     ) -> List[Dict]:
-        """
-        Trouve les questions qui correspondent au contenu du PDF.
+        """Trouve les questions qui correspondent au contenu du PDF.
 
         Args:
             pdf_content: Contenu du PDF
@@ -234,8 +229,7 @@ class SimilarityService:
         themes: List[Dict],
         threshold: float = 0.4
     ) -> Dict:
-        """
-        Trouve le thème qui correspond le mieux aux mots-clés du PDF.
+        """Trouve le thème qui correspond le mieux aux mots-clés du PDF.
 
         Args:
             pdf_keywords: Mots-clés extraits du PDF
@@ -249,7 +243,7 @@ class SimilarityService:
                 'match_score': 0.65
             }
         """
-        best_match = None.
+        best_match = None
 
         best_score = 0.0
 

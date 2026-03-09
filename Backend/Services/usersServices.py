@@ -14,8 +14,7 @@ from typing import Optional, Dict, Tuple
 
 
 class UserService:
-    """
-    Service de gestion des utilisateurs
+    """Service de gestion des utilisateurs.
 
     Logique métier PURE (pas de dépendances HTTP)
     """
@@ -38,8 +37,7 @@ class UserService:
         password: str,
         name: Optional[str] = None
     ) -> Tuple[Optional[User], Optional[str]]:
-        """
-        Crée un nouvel utilisateur
+        """Crée un nouvel utilisateur.
 
         Utilise :
         - InputValidator pour validation email/password
@@ -82,8 +80,7 @@ class UserService:
     # READ
     # ********************************************************
     def get_user_by_id(self, user_id: str) -> Optional[User]:
-        """
-        Récupère un utilisateur par son ID
+        """Récupère un utilisateur par son ID.
 
         Args:
             user_id: ID de l'utilisateur
@@ -97,8 +94,7 @@ class UserService:
         return None
 
     def get_user_by_email(self, email: str) -> Optional[User]:
-        """
-        Récupère un utilisateur par son email
+        """Récupère un utilisateur par son email.
 
         Args:
             email: Email de l'utilisateur
@@ -112,8 +108,7 @@ class UserService:
         return None
 
     def get_all_users(self, include_deleted: bool = False) -> list[User]:
-        """
-        Récupère tous les utilisateurs
+        """Récupère tous les utilisateurs.
 
         Args:
             include_deleted: Inclure les utilisateurs supprimés
@@ -137,8 +132,7 @@ class UserService:
         user_id: str,
         data: Dict[str, any]
     ) -> Tuple[Optional[User], Optional[str]]:
-        """
-        Met à jour un utilisateur
+        """Met à jour un utilisateur.
 
         Args:
             user_id: ID de l'utilisateur
@@ -182,8 +176,7 @@ class UserService:
         old_password: str,
         new_password: str
     ) -> Tuple[bool, Optional[str]]:
-        """
-        Change le mot de passe d'un utilisateur
+        """Change le mot de passe d'un utilisateur.
 
         Args:
             user_id: ID de l'utilisateur
@@ -221,8 +214,7 @@ class UserService:
         user_id: str,
         hard_delete: bool = False
     ) -> Tuple[bool, Optional[str]]:
-        """
-        Supprime un utilisateur
+        """Supprime un utilisateur.
 
         Args:
             user_id: ID de l'utilisateur
@@ -248,8 +240,7 @@ class UserService:
         email: str,
         password: str
     ) -> Tuple[Optional[User], Optional[str]]:
-        """
-        Authentifie un utilisateur
+        """Authentifie un utilisateur.
 
         Args:
             email: Email

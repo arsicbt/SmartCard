@@ -15,8 +15,7 @@ import uuid
 
 
 class BaseModel(Base):
-    """
-    Classe de base pour tous les modèles
+    """Classe de base pour tous les modèles.
 
     Hérite de Base SQLAlchemy et fournit les colonnes/méthodes communes.
     Tous les autres modèles (User, Theme, etc.) héritent de BaseModel.
@@ -50,8 +49,7 @@ class BaseModel(Base):
     # ********************************************************
 
     def to_dict(self, include_private: bool = False) -> Dict[str, Any]:
-        """
-        Sérialise le modèle en dictionnaire
+        """Sérialise le modèle en dictionnaire.
 
         Args:
             include_private: Inclure les champs privés (ex: password)
@@ -83,18 +81,16 @@ class BaseModel(Base):
         return data
 
     def soft_delete(self) -> None:
-        """
-        Suppression logique (soft delete)
+        """Suppression logique (soft delete)
 
-        Marque l'objet comme supprimé sans le retirer de la BDD.
-        Permet de conserver l'historique et les relations.
+        Marque l'objet comme supprimé sans le retirer de la BDD. Permet
+        de conserver l'historique et les relations.
         """
         self.deleted_at = datetime.utcnow()
         self.updated_at = datetime.utcnow()
 
     def is_deleted(self) -> bool:
-        """
-        Vérifie si l'objet est supprimé
+        """Vérifie si l'objet est supprimé.
 
         Returns:
             True si l'objet a été soft-deleted

@@ -14,8 +14,7 @@ from typing import List
 
 
 class Theme(BaseModel):
-    """
-    Modèle Thème
+    """Modèle Thème.
 
     Un thème regroupe des questions sur un sujet particulier.
 
@@ -66,8 +65,7 @@ class Theme(BaseModel):
     # LOGIQUE MÉTIER - KEYWORDS MATCHING
     # *******************************************************
     def matches_keywords(self, search_keywords: List[str], threshold: float = 0.5) -> bool:
-        """
-        Vérifie si les mots-clés de recherche correspondent au thème
+        """Vérifie si les mots-clés de recherche correspondent au thème.
 
         Utilisé pour détecter si un document correspond à un thème existant.
 
@@ -102,8 +100,7 @@ class Theme(BaseModel):
         return match_ratio >= threshold
 
     def add_keyword(self, keyword: str) -> None:
-        """
-        Ajoute un mot-clé au thème
+        """Ajoute un mot-clé au thème.
 
         Args:
             keyword: Mot-clé à ajouter
@@ -114,8 +111,7 @@ class Theme(BaseModel):
             self.update_timestamp()
 
     def remove_keyword(self, keyword: str) -> bool:
-        """
-        Retire un mot-clé du thème
+        """Retire un mot-clé du thème.
 
         Args:
             keyword: Mot-clé à retirer

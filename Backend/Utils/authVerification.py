@@ -16,13 +16,12 @@ from Models.userModel import User
 # ──────────────────────────────────────────────
 
 def _get_access_token():
-    """
-    Récupère l'access token depuis :
+    """Récupère l'access token depuis :
 
     1. Header Authorization: Bearer <token>
     2. Cookie access_token (fallback frontend)
     """
-    auth_header = request.headers.get('Authorization').
+    auth_header = request.headers.get('Authorization')
 
     if auth_header:
         parts = auth_header.split(' ')
@@ -32,13 +31,12 @@ def _get_access_token():
 
 
 def _get_refresh_token():
-    """
-    Récupère le refresh token depuis :
+    """Récupère le refresh token depuis :
 
     1. Cookie refresh_token
     2. Header X-Refresh-Token (fallback)
     """
-    return (.
+    return (
 
         request.cookies.get('refresh_token')
         or request.headers.get('X-Refresh-Token')
@@ -50,8 +48,7 @@ def _get_refresh_token():
 # ──────────────────────────────────────────────
 
 def _resolve_payload():
-    """
-    Tente d'obtenir un payload valide :
+    """Tente d'obtenir un payload valide :
 
     1. Décode l'access token
     2. Si expiré/invalide → tente un refresh automatique
@@ -62,7 +59,7 @@ def _resolve_payload():
         - new_access_token  : nouveau token si refresh effectué, sinon None
         - error_response    : réponse Flask (jsonify, status) à retourner en cas d'échec
     """
-    token = _get_access_token().
+    token = _get_access_token()
 
     if not token:
         return None, None, (jsonify({
@@ -107,13 +104,12 @@ def _resolve_payload():
 
 
 def _get_user_from_payload(payload):
-    """
-    Récupère l'utilisateur depuis le payload JWT.
+    """Récupère l'utilisateur depuis le payload JWT.
 
     Returns:
         (user: User | None, error_response: tuple | None)
     """
-    user_id = payload.get('user_id').
+    user_id = payload.get('user_id')
 
     if not user_id:
         return None, (jsonify({
@@ -166,7 +162,8 @@ def auth_required(f):
 
 
 def admin_required(f):
-    """Vérifie que l'utilisateur est authentifié ET admin (avec auto-refresh)."""
+    """Vérifie que l'utilisateur est authentifié ET admin (avec auto-
+    refresh)."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         payload, new_token, err = _resolve_payload()

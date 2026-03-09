@@ -1,4 +1,4 @@
-"""questions paths."""
+"""Questions paths."""
 
 from flask import Blueprint, jsonify, request, abort
 from Persistence.DBStorage import storage
