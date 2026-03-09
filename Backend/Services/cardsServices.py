@@ -6,4 +6,3 @@ class CardsServices(coreServices):
     super().read()
     super().update()
     super().delete()
- 

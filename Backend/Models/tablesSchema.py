@@ -24,7 +24,7 @@ Base = declarative_base()
 class QuestionType(enum.Enum):
     """
     Type de question
-    
+
     - QUIZ : QCM avec choix multiples
     - FLASHCARD : Carte recto/verso
     """
@@ -35,7 +35,7 @@ class QuestionType(enum.Enum):
 class Difficulty(enum.Enum):
     """
     Niveau de difficulté d'une question
-    
+
     - EASY : Facile
     - MEDIUM : Moyen
     - HARD : Difficile
@@ -48,7 +48,7 @@ class Difficulty(enum.Enum):
 class SessionType(enum.Enum):
     """
     Type de session d'étude
-    
+
     - QUIZ : Session de quiz
     - FLASHCARD : Session de révision flashcards
     """

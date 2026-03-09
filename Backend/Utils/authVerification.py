@@ -89,7 +89,7 @@ def _resolve_payload():
         }), 401)
 
     user_id = refresh_payload.get('user_id')
-    email   = refresh_payload.get('email')
+    email = refresh_payload.get('email')
     if not user_id or not email:
         return None, None, (jsonify({
             'error': 'Refresh token invalide',

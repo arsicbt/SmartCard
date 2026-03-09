@@ -22,7 +22,6 @@ def get_users():
     return jsonify([user.to_dict() for user in users.values()])
 
 
-
 # ************************************************
 # GET BY ID
 # ************************************************
@@ -31,12 +30,11 @@ def get_users():
 def get_user_by_id(user_id):
     """Recupere l'utilisateur via son id"""
     user = storage.get(User, user_id)
-    
+
     if not user:
         abort(404)
-    
-    return jsonify(user.to_dict())
 
+    return jsonify(user.to_dict())
 
 
 # ************************************************
@@ -47,16 +45,15 @@ def create_user():
     """Crée un nouvel utilisateur"""
     if not request.json:
         abort(400, description="Not a JSON")
-        
+
     if 'email' not in request.json:
         abort(400, description="Missing email")
-        
+
     if 'password' not in request.json:
         abort(400, description="Missing password")
-    
-    
+
     data = request.json
-    
+
     is_valid, error = InputValidator.validate_email(data['email'])
     if not is_valid:
         abort(400, description=error)
@@ -69,7 +66,7 @@ def create_user():
         abort(400, description="Email already exists")
 
     hashed = PasswordManager.hash_password(data['password'])
-    
+
     try:
         user = User(
             first_name=data['first_name'],
@@ -78,15 +75,14 @@ def create_user():
             password=hashed,
             name=data['name']
         )
-        
+
         storage.new(user)
         storage.save()
-    
+
         return jsonify(user.to_dict()), 201
-    
+
     except Exception as e:
         abort(400, description=str(e))
-
 
 
 # ************************************************
@@ -101,23 +97,22 @@ def update_user(user_id):
     user = storage.get(User, user_id)
     if not user:
         abort(404)
-        
-    if not request.json: 
+
+    if not request.json:
         abort(400, description="Not a JSON")
-        
+
     data = request.json
-          
+
     ignored_keys = ['id', 'created_at', 'updated_at', 'deleted_at', 'password_hash']
-    
+
     for k, v in data.items():
         if k not in ignored_keys and hasattr(user, k):
             setattr(user, k, v)
-            
+
     user.update_timestamp()
     storage.save()
-    
-    return jsonify(user.to_dict())
 
+    return jsonify(user.to_dict())
 
 
 # ************************************************
@@ -127,15 +122,15 @@ def update_user(user_id):
 @admin_required
 def delete_user(user_id):
     """
-    Supprime (soft delete) l'utilisateur 
+    Supprime (soft delete) l'utilisateur
     """
 
     user = storage.get(User, user_id)
-    
+
     if not user:
         abort(404)
-        
+
     storage.delete(user)
     storage.save()
-    
+
     return jsonify({}, 200)

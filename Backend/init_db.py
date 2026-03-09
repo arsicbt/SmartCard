@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from Models.tablesSchema import Base 
+from Models.tablesSchema import Base
 
 from Models.userModel import User
 from Models.themeModel import Theme

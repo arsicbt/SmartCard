@@ -1,6 +1,7 @@
 import bcrypt
 from typing import Optional
 
+
 class PasswordManager:
     """Gestion sécurisée des mots de passe"""
 
@@ -8,15 +9,15 @@ class PasswordManager:
     def hash_password(password: str) -> str:
         """
         Hash un mot de passe avec bcrypt
-        
+
         Pourquoi bcrypt ?
         - Lent par design (résiste au brute-force)
         - Ajoute automatiquement un "salt" (rend chaque hash unique)
         - Standard industrie
-        
+
         Args:
             password: Mot de passe en clair
-            
+
         Returns:
             Hash sécurisé (stockable en DB)
         """
@@ -29,11 +30,11 @@ class PasswordManager:
     def verify_password(password: str, hashed: str) -> bool:
         """
         Vérifie si un mot de passe correspond au hash
-        
+
         Args:
             password: Mot de passe fourni par l'utilisateur
             hashed: Hash stocké en DB
-            
+
         Returns:
             True si le mot de passe est correct
         """
