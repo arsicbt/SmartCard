@@ -1,5 +1,5 @@
 """
-pdfAnalysisService.py - Service d'analyse de PDF avec Groq
+pdfAnalysisService.py - Service d'analyse de PDF avec Groq.
 
 Ce service gère :
 1. Extraction du texte depuis un PDF
@@ -7,10 +7,9 @@ Ce service gère :
 3. Génération de questions/réponses basées sur le PDF
 4. Transformation en Quiz ou Cards selon le type de session
 """
-
 import os
 import re
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 import PyPDF2
 import json
 from groq import Groq
@@ -28,7 +27,7 @@ groq_client = Groq(api_key=GROQ_API_KEY)
 
 
 class PDFAnalysisService:
-    """Service pour analyser des PDFs et générer du contenu éducatif"""
+    """Service pour analyser des PDFs et générer du contenu éducatif."""
 
     # ********************************************************
     # EXTRACTION DE TEXTE
@@ -37,7 +36,8 @@ class PDFAnalysisService:
     @staticmethod
     def extract_text_from_pdf(pdf_file) -> str:
         """
-        Extrait le texte d'un fichier PDF
+
+        Extrait le texte d'un fichier PDF.
 
         Args:
             pdf_file: Fichier PDF (FileStorage Flask ou BytesIO)
@@ -49,6 +49,7 @@ class PDFAnalysisService:
             ValueError: Si le PDF est invalide ou vide
         """
         try:
+
             # Convertir en BytesIO si nécessaire
             if hasattr(pdf_file, 'read'):
                 pdf_bytes = BytesIO(pdf_file.read())
@@ -85,7 +86,7 @@ class PDFAnalysisService:
     @staticmethod
     def analyze_theme_with_groq(pdf_content: str) -> Dict[str, any]:
         """
-        Analyse le contenu du PDF avec Groq pour déduire le thème
+        Analyse le contenu du PDF avec Groq pour déduire le thème.
 
         Args:
             pdf_content: Contenu textuel du PDF
@@ -103,7 +104,6 @@ class PDFAnalysisService:
                 "description": "Introduction to Python programming fundamentals"
             }
         """
-
         # limiter le contenue à 4000 caractere pour le MVP
         content_sample = pdf_content[:4000] if len(pdf_content) > 4000 else pdf_content
 
@@ -181,7 +181,7 @@ Important:
         count: int = 10
     ) -> List[Dict[str, any]]:
         """
-        Génère des questions à partir du contenu PDF
+        Génère des questions à partir du contenu PDF.
 
         Args:
             pdf_content: Contenu du PDF
@@ -215,7 +215,8 @@ Important:
             }
         ]
         """
-        # Limiter le contenu
+        # Limiter le contenu.
+
         content_sample = pdf_content[:6000] if len(pdf_content) > 6000 else pdf_content
 
         if session_type == "QUIZ":
@@ -324,7 +325,7 @@ Requirements:
         questions_count: int = 10
     ) -> Dict[str, any]:
         """
-        Pipeline complet d'analyse PDF
+        Pipeline complet d'analyse PDF.
 
         Args:
             pdf_file: Fichier PDF
@@ -337,7 +338,8 @@ Requirements:
                 - theme: Données du thème (name, keywords, description)
                 - questions: Liste des questions générées
         """
-        # Etape 1: Extraire le texte
+        # Etape 1: Extraire le texte.
+
         pdf_content = PDFAnalysisService.extract_text_from_pdf(pdf_file)
 
         # Etape 2: Analyser le theme

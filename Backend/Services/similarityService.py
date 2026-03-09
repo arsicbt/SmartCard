@@ -1,5 +1,5 @@
 """
-similarityService.py - Service de calcul de similarité entre contenus
+similarityService.py - Service de calcul de similarité entre contenus.
 
 Ce service calcule la correspondance entre :
 - Le contenu d'un PDF et des questions existantes
@@ -17,7 +17,7 @@ from collections import Counter
 
 
 class SimilarityService:
-    """Service pour calculer la similarité entre textes et questions"""
+    """Service pour calculer la similarité entre textes et questions."""
 
     # Indicateur qu'il va y avoir un mot à traiter (francais/anglais)
     STOP_WORDS = {
@@ -44,7 +44,7 @@ class SimilarityService:
     @staticmethod
     def preprocess_text(text: str) -> List[str]:
         """
-        Prétraite un texte : lowercase, tokenize, remove stop words
+        Prétraite un texte : lowercase, tokenize, remove stop words.
 
         Args:
             text: Texte à traiter
@@ -52,7 +52,6 @@ class SimilarityService:
         Returns:
             Liste de mots pertinents
         """
-
         # Lowercase
         text = text.lower()
 
@@ -73,7 +72,7 @@ class SimilarityService:
     @staticmethod
     def extract_keywords(text: str, top_n: int = 20) -> List[str]:
         """
-        Extrait les mots-clés les plus importants d'un texte
+        Extrait les mots-clés les plus importants d'un texte.
 
         Utilise la fréquence des mots comme métrique simple
 
@@ -84,7 +83,7 @@ class SimilarityService:
         Returns:
             Liste des top_n mots-clés
         """
-        words = SimilarityService.preprocess_text(text)
+        words = SimilarityService.preprocess_text(text).
 
         if not words:
             return []
@@ -104,7 +103,7 @@ class SimilarityService:
     @staticmethod
     def calculate_text_similarity(text1: str, text2: str) -> float:
         """
-        Calcule la similarité entre deux textes
+        Calcule la similarité entre deux textes.
 
         Utilise le coefficient de Jaccard sur les mots-clés
 
@@ -118,7 +117,6 @@ class SimilarityService:
         Formula:
             Jaccard = |A ∩ B| / |A ∪ B|
         """
-
         # Extraire les mots_clés
         keywords1 = set(SimilarityService.extract_keywords(text1, top_n=30))
         keywords2 = set(SimilarityService.extract_keywords(text2, top_n=30))
@@ -144,7 +142,7 @@ class SimilarityService:
         target_keywords: List[str]
     ) -> float:
         """
-        Calcule le chevauchement entre deux listes de mots-clés
+        Calcule le chevauchement entre deux listes de mots-clés.
 
         Args:
             text_keywords: Mots-clés du texte source
@@ -154,6 +152,7 @@ class SimilarityService:
             Score entre 0.0 et 1.0
         """
         if not text_keywords or not target_keywords:
+
             return 0.0
 
         set1 = set(k.lower().strip() for k in text_keywords)
@@ -180,7 +179,7 @@ class SimilarityService:
         threshold: float = 0.4
     ) -> List[Dict]:
         """
-        Trouve les questions qui correspondent au contenu du PDF
+        Trouve les questions qui correspondent au contenu du PDF.
 
         Args:
             pdf_content: Contenu du PDF
@@ -197,8 +196,9 @@ class SimilarityService:
                 ...
             ]
         """
-        # Extraire les mots-clés du PDF
-        pdf_keywords = SimilarityService.extract_keywords(pdf_content, top_n=50)
+        # Extraire les mots-clés du PDF.
+
+        _pdf_keywords = SimilarityService.extract_keywords(pdf_content, top_n=50)
 
         matching_questions = []
 
@@ -235,7 +235,7 @@ class SimilarityService:
         threshold: float = 0.4
     ) -> Dict:
         """
-        Trouve le thème qui correspond le mieux aux mots-clés du PDF
+        Trouve le thème qui correspond le mieux aux mots-clés du PDF.
 
         Args:
             pdf_keywords: Mots-clés extraits du PDF
@@ -249,7 +249,8 @@ class SimilarityService:
                 'match_score': 0.65
             }
         """
-        best_match = None
+        best_match = None.
+
         best_score = 0.0
 
         for theme in themes:
