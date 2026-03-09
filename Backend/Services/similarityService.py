@@ -191,10 +191,6 @@ class SimilarityService:
                 ...
             ]
         """
-        # Extraire les mots-clés du PDF.
-
-        _pdf_keywords = SimilarityService.extract_keywords(pdf_content, top_n=50)
-
         matching_questions = []
 
         for question in questions:
