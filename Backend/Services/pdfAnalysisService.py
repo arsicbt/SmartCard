@@ -35,9 +35,7 @@ class PDFAnalysisService:
 
     @staticmethod
     def extract_text_from_pdf(pdf_file) -> str:
-        """
-
-        Extrait le texte d'un fichier PDF.
+        """Extrait le texte d'un fichier PDF.
 
         Args:
             pdf_file: Fichier PDF (FileStorage Flask ou BytesIO)
@@ -85,8 +83,7 @@ class PDFAnalysisService:
 
     @staticmethod
     def analyze_theme_with_groq(pdf_content: str) -> Dict[str, any]:
-        """
-        Analyse le contenu du PDF avec Groq pour déduire le thème.
+        """Analyse le contenu du PDF avec Groq pour déduire le thème.
 
         Args:
             pdf_content: Contenu textuel du PDF
@@ -180,8 +177,7 @@ Important:
         session_type: str,
         count: int = 10
     ) -> List[Dict[str, any]]:
-        """
-        Génère des questions à partir du contenu PDF.
+        """Génère des questions à partir du contenu PDF.
 
         Args:
             pdf_content: Contenu du PDF
@@ -324,8 +320,7 @@ Requirements:
         session_type: str,
         questions_count: int = 10
     ) -> Dict[str, any]:
-        """
-        Pipeline complet d'analyse PDF.
+        """Pipeline complet d'analyse PDF.
 
         Args:
             pdf_file: Fichier PDF

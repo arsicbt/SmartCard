@@ -1,4 +1,4 @@
-"""Module pour les Tests"""
+"""Module pour les Tests."""
 
 from .userModel import User
 from .themeModel import Theme

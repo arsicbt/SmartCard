@@ -3,15 +3,14 @@ from typing import Optional, Tuple
 
 
 class InputValidator:
-    """Validation et sanitization des entrées utilisateur"""
+    """Validation et sanitization des entrées utilisateur."""
 
     # Regex pour email valide
     EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
 
     @staticmethod
     def validate_email(email: str) -> Tuple[bool, Optional[str]]:
-        """
-        Valide un email
+        """Valide un email.
 
         Pourquoi ?
         - Empêche les injections via email
@@ -36,8 +35,7 @@ class InputValidator:
 
     @staticmethod
     def validate_password(password: str) -> Tuple[bool, Optional[str]]:
-        """
-        Valide un mot de passe
+        """Valide un mot de passe.
 
         Règles de sécurité :
         - Min 8 caractères (résistance brute-force)
@@ -71,8 +69,7 @@ class InputValidator:
 
     @staticmethod
     def sanitize_string(text: str, max_length: int = 500) -> str:
-        """
-        Nettoie une chaîne de caractères
+        """Nettoie une chaîne de caractères.
 
         Protection contre :
         - XSS (scripts malveillants)

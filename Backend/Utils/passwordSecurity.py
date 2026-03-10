@@ -3,12 +3,11 @@ import bcrypt
 
 
 class PasswordManager:
-    """Gestion sécurisée des mots de passe"""
+    """Gestion sécurisée des mots de passe."""
 
     @staticmethod
     def hash_password(password: str) -> str:
-        """
-        Hash un mot de passe avec bcrypt
+        """Hash un mot de passe avec bcrypt.
 
         Pourquoi bcrypt ?
         - Lent par design (résiste au brute-force)
@@ -28,8 +27,7 @@ class PasswordManager:
 
     @staticmethod
     def verify_password(password: str, hashed: str) -> bool:
-        """
-        Vérifie si un mot de passe correspond au hash
+        """Vérifie si un mot de passe correspond au hash.
 
         Args:
             password: Mot de passe fourni par l'utilisateur

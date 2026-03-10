@@ -15,8 +15,7 @@ from datetime import datetime
 
 
 class Session(BaseModel):
-    """
-    Modèle Session
+    """Modèle Session.
 
     Une session représente une séance d'étude (quiz ou flashcards).
 
@@ -81,8 +80,7 @@ class Session(BaseModel):
     # ********************************************************
 
     def complete_session(self, score: int, max_score: int) -> None:
-        """
-        Termine la session et enregistre le score
+        """Termine la session et enregistre le score.
 
         Args:
             score: Score obtenu
@@ -94,8 +92,7 @@ class Session(BaseModel):
         self.update_timestamp()
 
     def get_success_rate(self) -> float:
-        """
-        Calcule le taux de réussite de la session
+        """Calcule le taux de réussite de la session.
 
         Returns:
             Taux de réussite en pourcentage (0-100)
@@ -107,8 +104,7 @@ class Session(BaseModel):
         return (self.score / self.max_score) * 100
 
     def is_completed(self) -> bool:
-        """
-        Vérifie si la session est terminée
+        """Vérifie si la session est terminée.
 
         Returns:
             True si completed_at est défini
@@ -116,8 +112,7 @@ class Session(BaseModel):
         return self.completed_at is not None
 
     def get_duration_seconds(self) -> int:
-        """
-        Calcule la durée de la session en secondes
+        """Calcule la durée de la session en secondes.
 
         Returns:
             Durée en secondes, ou 0 si pas terminée
@@ -129,8 +124,7 @@ class Session(BaseModel):
         return int(duration.total_seconds())
 
     def add_question_id(self, question_id: str) -> None:
-        """
-        Ajoute un ID de question à la session
+        """Ajoute un ID de question à la session.
 
         Args:
             question_id: ID de la question

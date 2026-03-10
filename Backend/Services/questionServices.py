@@ -16,8 +16,7 @@ import random
 
 
 class QuizzService:
-    """
-    Service de gestion des quiz et flashcards
+    """Service de gestion des quiz et flashcards.
 
     Logique métier PURE (pas de dépendances HTTP)
     """
@@ -39,8 +38,7 @@ class QuizzService:
         question_type: str = 'quiz',
         difficulty: str = 'medium'
     ) -> Tuple[Optional[Question], Optional[str]]:
-        """
-        Crée une nouvelle question
+        """Crée une nouvelle question.
 
         Args:
             theme_id: ID du thème
@@ -91,8 +89,7 @@ class QuizzService:
         answer_text: str,
         is_correct: bool = False
     ) -> Tuple[Optional[Answer], Optional[str]]:
-        """
-        Ajoute une réponse à une question
+        """Ajoute une réponse à une question.
 
         Args:
             question_id: ID de la question
@@ -128,8 +125,7 @@ class QuizzService:
         theme_id: str,
         questions_count: int = 10
     ) -> Tuple[Optional[Session], List[Question], Optional[str]]:
-        """
-        Crée une session de quiz
+        """Crée une session de quiz.
 
         Sélectionne aléatoirement des questions du thème.
 
@@ -181,8 +177,7 @@ class QuizzService:
         theme_id: str,
         cards_count: int = 15
     ) -> Tuple[Optional[Session], List[Question], Optional[str]]:
-        """
-        Crée une session de flashcards
+        """Crée une session de flashcards.
 
         Args:
             user_id: ID de l'utilisateur
@@ -234,8 +229,7 @@ class QuizzService:
         session_id: str,
         answers: Dict[str, str]  # {question_id: answer_id}
     ) -> Tuple[Optional[Session], Optional[Dict], Optional[str]]:
-        """
-        Soumet un quiz terminé et calcule le score
+        """Soumet un quiz terminé et calcule le score.
 
         Args:
             session_id: ID de la session
@@ -301,8 +295,7 @@ class QuizzService:
     # STATISTIQUES
     # ********************************************************
     def get_user_stats(self, user_id: str) -> Dict:
-        """
-        Récupère les statistiques d'un utilisateur
+        """Récupère les statistiques d'un utilisateur.
 
         Args:
             user_id: ID de l'utilisateur

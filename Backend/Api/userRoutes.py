@@ -1,4 +1,4 @@
-"""users paths."""
+"""Users paths."""
 
 from flask import Blueprint, jsonify, request, abort
 from Utils.passwordSecurity import PasswordManager

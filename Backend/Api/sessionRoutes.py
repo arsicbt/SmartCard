@@ -1,4 +1,4 @@
-"""session paths."""
+"""Session paths."""
 
 from flask import Blueprint, jsonify, request, abort
 from Models.sessionModel import Session
@@ -164,8 +164,7 @@ def delete_session(session_id):
 @session_bp.route('/create-with-pdf', methods=['POST'])
 @auth_required
 def create_session_with_pdf():
-    """
-    Crée une session en analysant un PDF.
+    """Crée une session en analysant un PDF.
 
     Flow:
     1. User choisit le type de session (QUIZ ou FLASHCARD).
@@ -500,8 +499,8 @@ def _create_questions_from_generated(
     theme_id: str,
     session_type: str
 ) -> list:
-    """
-    Crée des objets Question et Answer depuis les questions générées par Groq.
+    """Crée des objets Question et Answer depuis les questions générées par
+    Groq.
 
     Args:
         generated_questions: Questions générées par Groq.

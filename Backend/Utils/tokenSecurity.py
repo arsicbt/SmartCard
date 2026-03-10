@@ -5,7 +5,7 @@ import os
 
 
 class TokenManager:
-    """Gestion des tokens JWT"""
+    """Gestion des tokens JWT."""
 
     def __init__(self, secret_key):
         """Initialise le gestionnaire avec la clé secrète JWT."""
@@ -38,7 +38,7 @@ class TokenManager:
         return access_token, refresh_token
 
     def decode_access_token(self, token):
-        """Décode l'access token"""
+        """Décode l'access token."""
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
             if payload.get('type') != 'access':
@@ -50,7 +50,7 @@ class TokenManager:
             return None
 
     def decode_refresh_token(self, token):
-        """Décode le refresh token"""
+        """Décode le refresh token."""
         try:
             payload = jwt.decode(token, self.refresh_secret, algorithms=[self.algorithm])
             if payload.get('type') != 'refresh':

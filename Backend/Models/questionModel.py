@@ -14,8 +14,7 @@ from Models.tablesSchema import QuestionType, Difficulty
 
 
 class Question(BaseModel):
-    """
-    Modèle Question
+    """Modèle Question.
 
     Une question peut être un quiz (QCM) ou une flashcard (recto/verso).
 
@@ -73,8 +72,7 @@ class Question(BaseModel):
     # ********************************************************
 
     def is_quiz(self) -> bool:
-        """
-        Vérifie si c'est une question de quiz
+        """Vérifie si c'est une question de quiz.
 
         Returns:
             True si type == QUIZ
@@ -82,8 +80,7 @@ class Question(BaseModel):
         return self.type == QuestionType.QUIZ
 
     def is_flashcard(self) -> bool:
-        """
-        Vérifie si c'est une flashcard
+        """Vérifie si c'est une flashcard.
 
         Returns:
             True si type == FLASHCARD
@@ -91,8 +88,7 @@ class Question(BaseModel):
         return self.type == QuestionType.FLASHCARD
 
     def get_success_rate(self) -> float:
-        """
-        Calcule le taux de réussite de cette question
+        """Calcule le taux de réussite de cette question.
 
         Returns:
             Taux de réussite en pourcentage (0-100)
@@ -102,8 +98,7 @@ class Question(BaseModel):
         return (self.times_correct / self.times_used) * 100
 
     def increment_usage(self, is_correct: bool = False) -> None:
-        """
-        Incrémente les statistiques d'utilisation
+        """Incrémente les statistiques d'utilisation.
 
         Args:
             is_correct: La réponse était-elle correcte ?

@@ -16,8 +16,7 @@ from typing import Optional, Tuple
 
 
 class User(BaseModel):
-    """
-    Modèle Utilisateur
+    """Modèle Utilisateur.
 
     Colonnes :
         - first_name : Prénom
@@ -79,8 +78,7 @@ class User(BaseModel):
         name: Optional[str] = None,
         is_admin: bool = False
     ) -> Tuple[Optional['User'], Optional[str]]:
-        """
-        Valide les données et crée un utilisateur
+        """Valide les données et crée un utilisateur.
 
         Utilise Utils pour :
         - Valider email (InputValidator)
@@ -131,8 +129,7 @@ class User(BaseModel):
         return user, None
 
     def verify_password(self, password: str) -> bool:
-        """
-        Vérifie un mot de passe avec Utils
+        """Vérifie un mot de passe avec Utils.
 
         Args:
             password: Mot de passe en clair à vérifier

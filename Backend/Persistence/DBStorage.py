@@ -1,6 +1,5 @@
-"""
-Couche d'abstraction pour accès sécurisé à la base de données
-Compatible avec le pattern HBNB
+"""Couche d'abstraction pour accès sécurisé à la base de données Compatible
+avec le pattern HBNB.
 
 SÉCURITÉ :
 - Requêtes préparées (protection injection SQL)
@@ -26,8 +25,7 @@ from Models.sessionModel import Session
 
 
 class DBStorage:
-    """
-    Gestionnaire de stockage base de données
+    """Gestionnaire de stockage base de données.
 
     Pattern Repository : interface unifiée pour toutes les opérations DB
     Architecture HBNB (Holberton School)
@@ -46,7 +44,7 @@ class DBStorage:
     }
 
     def __init__(self):
-        """Initialise la connexion à la base de données"""
+        """Initialise la connexion à la base de données."""
         database_url = os.getenv('DATABASE_URL', 'sqlite:///smartcard.db')
 
         # Configuration selon le type de DB
@@ -75,8 +73,7 @@ class DBStorage:
         self.__session = scoped_session(session_factory)
 
     def all(self, cls: Type[Base] = None, include_deleted: bool = False) -> Dict[str, Any]:
-        """
-        Récupère tous les objets d'une classe
+        """Récupère tous les objets d'une classe.
 
         Args:
             cls: Classe à récupérer (User, Theme...) ou None pour toutes
@@ -109,8 +106,7 @@ class DBStorage:
         return objects
 
     def new(self, obj: Base):
-        """
-        Ajoute un nouvel objet à la session
+        """Ajoute un nouvel objet à la session.
 
         Args:
             obj: Instance de modèle à ajouter
@@ -118,8 +114,7 @@ class DBStorage:
         self.__session.add(obj)
 
     def save(self):
-        """
-        Commit les changements dans la base de données
+        """Commit les changements dans la base de données.
 
         SÉCURITÉ : Gestion automatique des transactions
         """
@@ -130,12 +125,11 @@ class DBStorage:
             raise e
 
     def rollback(self):
-        """Annule les changements non sauvegardés"""
+        """Annule les changements non sauvegardés."""
         self.__session.rollback()
 
     def delete(self, obj: Base = None, hard_delete: bool = False):
-        """
-        Supprime un objet (soft delete par défaut)
+        """Supprime un objet (soft delete par défaut)
 
         Args:
             obj: Objet à supprimer
@@ -156,14 +150,14 @@ class DBStorage:
                 self.__session.add(obj)
 
     def reload(self):
-        """Recharge la session depuis la base de données"""
+        """Recharge la session depuis la base de données."""
         Base.metadata.create_all(self.__engine)
         self.__session = scoped_session(
             sessionmaker(bind=self.__engine, expire_on_commit=False)
         )
 
     def close(self):
-        """Ferme la session"""
+        """Ferme la session."""
         self.__session.remove()
 
     # ********************************************************
@@ -171,8 +165,7 @@ class DBStorage:
     # ********************************************************
 
     def get(self, cls: Type[Base], id: str, include_deleted: bool = False) -> Optional[Base]:
-        """
-        Récupère un objet par son ID
+        """Récupère un objet par son ID.
 
         Args:
             cls: Classe du modèle
@@ -193,8 +186,7 @@ class DBStorage:
         return query.first()
 
     def get_by_email(self, cls: Type[Base], email: str, include_deleted: bool = False) -> Optional[Base]:
-        """
-        Récupère un objet par email (User principalement)
+        """Récupère un objet par email (User principalement)
 
         SÉCURITÉ : Requête préparée (protection injection SQL)
         """
@@ -215,8 +207,7 @@ class DBStorage:
         return query.first()
 
     def filter_by(self, cls: Type[Base], include_deleted: bool = False, **filters) -> List[Base]:
-        """
-        Filtre les objets selon critères
+        """Filtre les objets selon critères.
 
         Args:
             cls: Classe du modèle
@@ -243,8 +234,7 @@ class DBStorage:
         return query.all()
 
     def count(self, cls: Type[Base], include_deleted: bool = False, **filters) -> int:
-        """
-        Compte les objets selon critères
+        """Compte les objets selon critères.
 
         Exemple:
             storage.count(User)  # Nombre total users
@@ -282,8 +272,7 @@ class DBStorage:
         return self.filter_by(Session, user_id=user_id)
 
     def get_user_stats(self, user_id: str) -> Dict[str, int]:
-        """
-        Retourne les statistiques d'un utilisateur.
+        """Retourne les statistiques d'un utilisateur.
 
         Returns:
             Dict contenant le nombre de thèmes, questions et sessions.
@@ -300,8 +289,7 @@ class DBStorage:
 
     @contextmanager
     def transaction(self):
-        """
-        Context manager pour transactions sécurisées
+        """Context manager pour transactions sécurisées.
 
         Usage:
             with storage.transaction():
