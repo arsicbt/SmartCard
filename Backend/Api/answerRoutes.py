@@ -12,7 +12,8 @@ from Models.baseModel import BaseModel
 
 
 class Answer(BaseModel):
-    """Modèle Réponse.
+    """
+    Modèle Réponse
 
     Une réponse est liée à une question.
     - Pour un QUIZ : 4 réponses (1 correcte, 3 fausses)
