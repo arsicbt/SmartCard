@@ -1,6 +1,7 @@
 """Session paths."""
 
 from flask import Blueprint, jsonify, request, abort
+import json
 from Models.sessionModel import Session
 from Models.userModel import User
 from Models.themeModel import Theme
@@ -18,7 +19,7 @@ session_bp = Blueprint("sessions", __name__, url_prefix="/api/sessions")
 # GET SESSIONS BY USER ID
 # ************************************************
 @session_bp.route('/user/<user_id>', methods=['GET'])
-@admin_required
+@auth_required
 def get_user_sessions(user_id):
     """Récupère les sessions d'un utilisateur."""
     user = storage.get(User, user_id)
@@ -33,7 +34,7 @@ def get_user_sessions(user_id):
 # GET SESSION BY ID
 # ************************************************
 @session_bp.route('/<session_id>', methods=['GET'])
-@admin_required
+@auth_required
 def get_session(session_id):
     """Récupère une session en passant par son ID."""
     session = storage.get(Session, session_id)
@@ -290,7 +291,7 @@ def create_session_with_pdf():
             {
                 'id': t.id,
                 'name': t.name,
-                'keywords': t.keywords,
+                'keywords': json.loads(t.keywords) if isinstance(t.keywords, str) else (t.keywords or []),
                 'description': t.description
             }
             for t in user_themes
@@ -300,6 +301,8 @@ def create_session_with_pdf():
         # Chercher un thème correspondant (>= 40 %)
         print(f"[DEBUG]   - Recherche similarité avec keywords: {theme_data.get('keywords', [])[:3]}...")
 
+        matching_theme = None
+        
         matching_theme = SimilarityService.find_matching_theme(
             theme_data['keywords'],
             themes_dict,
@@ -348,34 +351,49 @@ def create_session_with_pdf():
                 for q in existing_questions
             ]
 
-            # Trouver les questions avec minimum 40% de similarité
+            # Comparer les questions générées par Groq aux questions existantes en DB
             print("[DEBUG]   - Recherche questions similaires...")
 
-            matching_questions = SimilarityService.find_matching_questions(
-                pdf_content,
-                questions_dict,
-                threshold=0.4
-            )
+            matching_ids = set()
+            for generated_q in generated_questions:
+                generated_text = generated_q.get('question', '')
+                for existing_q in questions_dict:
+                    similarity = SimilarityService.calculate_text_similarity(
+                        generated_text,
+                        existing_q['question_text']
+                    )
+                    if similarity >= 0.4:
+                        matching_ids.add(existing_q['id'])
+                        break  # une question générée = un match max
 
-            print(f"[DEBUG]   - Questions similaires trouvées: {len(matching_questions)}")
+            print(f"[DEBUG]   - Questions similaires trouvées: {len(matching_ids)}")
 
             # Limiter au nombre demandé
-            matching_questions = matching_questions[:questions_count]
-            print(f"[DEBUG]   - Questions retenues: {len(matching_questions)}")
-
-            # Si pas assez de questions dans la DB, compléter avec des générées
-            questions_ids = [q['question']['id'] for q in matching_questions]
+            questions_ids = list(matching_ids)[:questions_count]
+            print(f"[DEBUG]   - Questions retenues: {len(questions_ids)}")
             print(f"[DEBUG]   - IDs récupérés: {len(questions_ids)}")
 
             if len(questions_ids) < questions_count:
                 print("[DEBUG]   ⚠️  Pas assez de questions, génération complément...")
 
-                # Créer les questions manquantes grâce à Groq
+                # Filtrer les questions générées non matchées pour éviter les doublons
                 remaining_count = questions_count - len(questions_ids)
                 print(f"[DEBUG]   - Questions à créer: {remaining_count}")
 
+                # Ne créer que les questions qui n'ont pas matché
+                unmatched_generated = [
+                    q for q in generated_questions
+                    if not any(
+                        SimilarityService.calculate_text_similarity(
+                            q.get('question', ''),
+                            existing_q['question_text']
+                        ) >= 0.4
+                        for existing_q in questions_dict
+                    )
+                ]
+
                 new_question_ids = _create_questions_from_generated(
-                    generated_questions[:remaining_count],
+                    unmatched_generated[:remaining_count],
                     theme_id,
                     session_type
                 )

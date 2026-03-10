@@ -29,14 +29,16 @@ def make_api_request(endpoint, method='GET', data=None, token=None):
         
         if response.status_code == 401:
             refresh_token = session.get('refresh_token')
-            
+
             if refresh_token:
+                # Le backend attend le refresh_token dans un cookie httpOnly
+                print(f"🌺DEBUG : {refresh_token}")
                 refresh_response = requests.post(
                     f'{API_URL}/auth/refresh',
-                    json={'refresh_token': refresh_token},
+                    cookies={'refresh_token': refresh_token},
                     timeout=5
                 )
-                
+
                 if refresh_response.status_code == 200:
                     new_token = refresh_response.json().get('access_token')
                     session['token'] = new_token
@@ -213,7 +215,6 @@ def quizzes_page():
 @login_required
 def card_list():
     """Page listant toutes les sessions flashcard de l'utilisateur"""
-    from datetime import datetime, timedelta
     
     user = session.get('user')
     token = session.get('token')
@@ -295,13 +296,50 @@ def proxy_create_session_with_pdf():
         data    = {'session_type': session_type, 'user_id': user.get('id')}
         headers = {'Authorization': f'Bearer {token}'}
 
+        if not pdf_file:
+            print(f"DEBUG: no pdf file, {pdf_file}")
+            
+        if not session_type:
+            print(f"DEBUG: no session type detected {session_type}")
+        
+        if not files:
+            print(f"DEBUG: no file detected/parse {files}")
+            
+        if not data:
+            print(f"DEBUG: no data parse {data}")
+            
+        if not headers: 
+            print(f"DEBUG: no header {headers}")
+        
         response = requests.post(
             f'{API_URL}/sessions/create-with-pdf',
             files=files,
             data=data,
             headers=headers,
-            timeout=5
+            timeout=60
         )
+        
+        if response.status_code == 401:
+            refresh_token = session.get('refresh_token')
+            if refresh_token:
+                refresh_response = requests.post(
+                    f'{API_URL}/auth/refresh',
+                    cookies={'refresh_token': refresh_token},
+                    timeout=5
+                )
+        
+                if refresh_response.status_code == 200:
+                    new_token = refresh_response.json().get('access_token')
+                    session['token'] = new_token
+                    headers['Authorization'] = f'Bearer {new_token}'
+                    # Rejouer la requête avec le nouveau token
+                    response = requests.post(
+                        f'{API_URL}/sessions/create-with-pdf',
+                            files=files, data=data, headers=headers, timeout=5
+                    )
+                else:
+                    session.clear()
+                    return {'error': 'Session expirée'}, 401
 
         return response.json(), response.status_code
 
@@ -411,8 +449,12 @@ def auth_login():
         
         if response.status_code == 200:
             session['user'] = data.get('user')
-            session['token'] = data.get('token') 
-            session['refresh_token'] = data.get('refresh_token') 
+            session['token'] = data.get('token')
+            # Le refresh_token est dans un cookie httpOnly côté backend
+            # On le transfère en session Flask pour pouvoir le renvoyer au refresh
+            refresh_token = response.cookies.get('refresh_token')
+            if refresh_token:
+                session['refresh_token'] = refresh_token
         
         return data, response.status_code
     except Exception as e:
