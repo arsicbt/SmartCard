@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, session, request
+from flask import Flask, render_template, redirect, url_for, session, request, flash
 from functools import wraps
 import requests
 import os
@@ -77,9 +77,7 @@ def login_required(f):
 @app.route('/')
 def index():
     """Page d'accueil - redirige vers dashboard si connecté"""
-    if 'user' in session:
-        return redirect(url_for('dashboard'))
-    return redirect(url_for('login'))
+    return render_template('index.html')
 
 
 @app.route('/login')
@@ -454,12 +452,118 @@ def auth_login():
             # On le transfère en session Flask pour pouvoir le renvoyer au refresh
             refresh_token = response.cookies.get('refresh_token')
             if refresh_token:
-                session['refresh_token'] = refresh_token
-        
+              session['refresh_token'] = refresh_token
+
         return data, response.status_code
     except Exception as e:
         return {'error': str(e)}, 500
 
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    """Page d'inscription"""
+    
+    # Si déjà connecté, rediriger vers dashboard
+    if 'token' in session and 'user' in session:
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'GET':
+        # Afficher le formulaire d'inscription
+        return render_template('register.html')
+    
+    # POST : Traiter l'inscription
+    try:
+        data = request.form
+        
+        # Récupérer les données du formulaire
+        email = data.get('email', '').strip()
+        password = data.get('password', '').strip()
+        confirm_password = data.get('confirm_password', '').strip()
+        first_name = data.get('first_name', '').strip()
+        last_name = data.get('last_name', '').strip()
+        
+        # Validation côté serveur
+        errors = []
+        
+        if not email:
+            errors.append("L'email est requis")
+        elif '@' not in email:
+            errors.append("Email invalide")
+        
+        if not password:
+            errors.append("Le mot de passe est requis")
+        elif len(password) < 8:
+            errors.append("Le mot de passe doit contenir au moins 8 caractères")
+        
+        if password != confirm_password:
+            errors.append("Les mots de passe ne correspondent pas")
+        
+        if not first_name:
+            errors.append("Le prénom est requis")
+        
+        if not last_name:
+            errors.append("Le nom est requis")
+        
+        # Si erreurs, réafficher le formulaire
+        if errors:
+            return render_template('register.html', 
+                                 errors=errors,
+                                 email=email,
+                                 first_name=first_name,
+                                 last_name=last_name)
+        
+        # Appel API pour créer le compte
+        response = requests.post(
+            f'{API_URL}/auth/register',
+            json={
+                'email': email,
+                'password': password,
+                'first_name': first_name,
+                'last_name': last_name
+            },
+            timeout=10
+        )
+        
+        if response.status_code == 201:
+            # Inscription réussie
+            flash('Compte créé avec succès ! Vous pouvez vous connecter.', 'success')
+            return redirect(url_for('login'))
+        
+        elif response.status_code == 409:
+            # Email déjà utilisé
+            return render_template('register.html',
+                                 errors=["Cet email est déjà utilisé"],
+                                 email=email,
+                                 first_name=first_name,
+                                 last_name=last_name)
+        
+        else:
+            try:
+                error_data = response.json()
+                error_msg = error_data.get('message', error_data.get('description', 'Erreur lors de la création du compte'))
+            except Exception:
+                error_msg = f"Erreur serveur (code {response.status_code})"
+    
+            return render_template('register.html',
+                         errors=[error_msg],
+                         email=email,
+                         first_name=first_name,
+                         last_name=last_name)
+    
+    except requests.exceptions.Timeout:
+        return render_template('register.html',
+                             errors=["Le serveur met trop de temps à répondre"],
+                             email=email,
+                             first_name=first_name,
+                             last_name=last_name)
+    
+    except Exception as e:
+        print(f"[ERROR] Erreur inscription: {str(e)}")
+        return render_template('register.html',
+                             errors=["Erreur serveur, veuillez réessayer"],
+                             email=email,
+                             first_name=first_name,
+                             last_name=last_name)      
 
 @app.route('/logout')
 def logout():
@@ -502,6 +606,13 @@ def proxy_update_session(session_id):
     
     except Exception as e:
         return {'error': str(e)}, 500
+
+# **********************************************
+# Slide de présentation
+# **********************************************
+@app.route("/presentation")
+def presentation():
+    return render_template("presentation.html")
 
 # **********************************************
 # Lancement de l'application

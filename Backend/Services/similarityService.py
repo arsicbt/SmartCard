@@ -107,14 +107,8 @@ class SimilarityService:
             # Supprimer ponctuation
             text = ''.join(c if c.isalnum() or c.isspace() else ' ' for c in text)
             words = set(text.split())
-            # Supprimer stopwords basiques
-            stopwords = {
-                'the', 'a', 'an', 'is', 'it', 'of', 'to', 'in', 'and', 'or',
-                'that', 'this', 'what', 'how', 'does', 'can', 'be', 'are',
-                'with', 'for', 'on', 'at', 'by', 'from', 'which', 'when',
-                'where', 'who', 'why', 'do', 'not', 'between', 'used', 'use'
-            }
-            return words - stopwords
+            
+            return words - SimilarityService.STOP_WORDS
 
         set1 = tokenize(text1)
         set2 = tokenize(text2)

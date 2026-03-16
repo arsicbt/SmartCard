@@ -29,7 +29,7 @@ def get_answer(answer_id):
 # GET ALL ANSWERS FOR A QUESTION
 # ************************************************
 @answer_bp.route("/question/<question_id>", methods=["GET"])
-@admin_required
+@auth_required
 def get_question_answers(question_id):
     """Récupère toutes les réponses associées à une question."""
     question = storage.get(Question, question_id)

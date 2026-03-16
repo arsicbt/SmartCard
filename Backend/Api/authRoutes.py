@@ -65,8 +65,6 @@ def login():
 # ********************************************************
 # REFRESH TOKEN
 # ********************************************************
-
-
 @auth_bp.route('/refresh', methods=['POST'])
 def refresh():
     """Génère un nouvel access token depuis le refresh token."""
@@ -99,8 +97,6 @@ def refresh():
 # ********************************************************
 # LOGOUT
 # ********************************************************
-
-
 @auth_bp.route('/logout', methods=['POST'])
 def logout():
     """Supprime les cookies JWT."""
@@ -109,6 +105,36 @@ def logout():
     response.delete_cookie('refresh_token')
     return response, 200
 
+# ********************************************************
+# REGISTER
+# ********************************************************
+@auth_bp.route('/register', methods=['POST'])
+def register():
+    if not request.json:
+        return jsonify({'error': 'Not a JSON'}), 400
+
+    data = request.json
+    for field in ['email', 'password', 'first_name', 'last_name']:
+        if field not in data:
+            return jsonify({'error': f'Missing {field}'}), 400
+
+    if storage.filter_by(User, email=data['email']):
+        return jsonify({'error': 'Email déjà utilisé'}), 409
+
+    user, error = User.validate_and_create(
+        first_name=data['first_name'],
+        last_name=data['last_name'],
+        email=data['email'],
+        password=data['password']
+    )
+
+    if error:
+        return jsonify({'error': error}), 400
+
+    storage.new(user)
+    storage.save()
+
+    return jsonify(user.to_dict()), 201
 
 # ********************************************************
 # USER CONNECTÉ
@@ -118,7 +144,7 @@ def logout():
 def me():
     """Retourne l'utilisateur connecté."""
     return jsonify(request.current_user.to_dict()), 200
-
+    
 
 # ********************************************************
 # CRÉER UN ADMIN
