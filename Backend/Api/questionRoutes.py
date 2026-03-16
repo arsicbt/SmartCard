@@ -14,7 +14,7 @@ question_bp = Blueprint("questions", __name__, url_prefix="/api/questions")
 # # GET ALL QUESTIONS
 # ************************************************
 @question_bp.route("/", methods=["GET"])
-@admin_required
+@auth_required
 def get_questions():
     """Retourne la liste de toutes les questions."""
     questions = storage.all(Question)
@@ -25,7 +25,7 @@ def get_questions():
 # GET QUESTION BY ID
 # ************************************************
 @question_bp.route("/<question_id>", methods=["GET"])
-@admin_required
+@auth_required
 def get_question(question_id):
     """Retourne une question par son identifiant."""
     question = storage.get(Question, question_id)

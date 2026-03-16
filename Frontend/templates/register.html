@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription - SmartCards</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <!-- Gradient Background -->
+    <div class="gradient-bg">
+        <div class="gradient-circle gradient-top-right"></div>
+        <div class="gradient-circle gradient-bottom-left"></div>
+    </div>
+
+    <!-- Register Container -->
+    <div class="auth-container">
+        <div class="auth-card">
+            <!-- Logo & Title -->
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <div class="auth-logo-icon">
+                        <i data-lucide="book-open"></i>
+                    </div>
+                    <h1 class="auth-logo-text">SmartCards</h1>
+                </div>
+                <h2 class="auth-title">Créer un compte</h2>
+                <p class="auth-subtitle">Rejoignez SmartCards pour réviser plus efficacement</p>
+            </div>
+
+            <!-- Error Messages -->
+            {% if errors %}
+            <div class="auth-error">
+                <div class="auth-error-icon">
+                    <i data-lucide="alert-circle"></i>
+                </div>
+                <div class="auth-error-content">
+                    {% for error in errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Register Form -->
+            <form method="POST" action="/register" class="auth-form" id="registerForm">
+                <!-- First Name & Last Name (Grid 2 colonnes) -->
+                <div class="auth-form-row">
+                    <div class="auth-form-group">
+                        <label for="first_name" class="auth-label">
+                            <i data-lucide="user"></i>
+                            <span>Prénom</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="first_name" 
+                            name="first_name" 
+                            class="auth-input"
+                            placeholder="Jean"
+                            value="{{ first_name or '' }}"
+                            required
+                            autocomplete="given-name"
+                        >
+                    </div>
+
+                    <div class="auth-form-group">
+                        <label for="last_name" class="auth-label">
+                            <i data-lucide="user"></i>
+                            <span>Nom</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="last_name" 
+                            name="last_name" 
+                            class="auth-input"
+                            placeholder="Dupont"
+                            value="{{ last_name or '' }}"
+                            required
+                            autocomplete="family-name"
+                        >
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div class="auth-form-group">
+                    <label for="email" class="auth-label">
+                        <i data-lucide="mail"></i>
+                        <span>Email</span>
+                    </label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        class="auth-input"
+                        placeholder="jean.dupont@example.com"
+                        value="{{ email or '' }}"
+                        required
+                        autocomplete="email"
+                    >
+                </div>
+
+                <!-- Password -->
+                <div class="auth-form-group">
+                    <label for="password" class="auth-label">
+                        <i data-lucide="lock"></i>
+                        <span>Mot de passe</span>
+                    </label>
+                    <div class="auth-input-wrapper">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            class="auth-input"
+                            placeholder="••••••••"
+                            required
+                            minlength="8"
+                            autocomplete="new-password"
+                        >
+                        <button type="button" class="auth-toggle-password" id="togglePassword">
+                            <i data-lucide="eye"></i>
+                        </button>
+                    </div>
+                    <p class="auth-hint">Minimum 8 caractères</p>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="auth-form-group">
+                    <label for="confirm_password" class="auth-label">
+                        <i data-lucide="lock"></i>
+                        <span>Confirmer le mot de passe</span>
+                    </label>
+                    <div class="auth-input-wrapper">
+                        <input 
+                            type="password" 
+                            id="confirm_password" 
+                            name="confirm_password" 
+                            class="auth-input"
+                            placeholder="••••••••"
+                            required
+                            minlength="8"
+                            autocomplete="new-password"
+                        >
+                        <button type="button" class="auth-toggle-password" id="toggleConfirmPassword">
+                            <i data-lucide="eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Password Strength Indicator -->
+                <div class="password-strength" id="passwordStrength" style="display: none;">
+                    <div class="password-strength-label">Force du mot de passe</div>
+                    <div class="password-strength-bar">
+                        <div class="password-strength-fill" id="passwordStrengthFill"></div>
+                    </div>
+                    <div class="password-strength-text" id="passwordStrengthText"></div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="auth-submit-btn" id="submitBtn">
+                    <i data-lucide="user-plus"></i>
+                    <span>Créer mon compte</span>
+                </button>
+            </form>
+
+            <!-- Login Link -->
+            <div class="auth-footer">
+                <p class="auth-footer-text">
+                    Vous avez déjà un compte ?
+                    <a href="/login" class="auth-footer-link">Se connecter</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Toggle password visibility
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+        const confirmPasswordInput = document.getElementById('confirm_password');
+
+        togglePassword.addEventListener('click', () => {
+            const type = passwordInput.type === 'password' ? 'text' : 'password';
+            passwordInput.type = type;
+            
+            const icon = togglePassword.querySelector('i');
+            icon.setAttribute('data-lucide', type === 'password' ? 'eye' : 'eye-off');
+            lucide.createIcons();
+        });
+
+        toggleConfirmPassword.addEventListener('click', () => {
+            const type = confirmPasswordInput.type === 'password' ? 'text' : 'password';
+            confirmPasswordInput.type = type;
+            
+            const icon = toggleConfirmPassword.querySelector('i');
+            icon.setAttribute('data-lucide', type === 'password' ? 'eye' : 'eye-off');
+            lucide.createIcons();
+        });
+
+        // Password strength checker
+        const strengthIndicator = document.getElementById('passwordStrength');
+        const strengthFill = document.getElementById('passwordStrengthFill');
+        const strengthText = document.getElementById('passwordStrengthText');
+
+        passwordInput.addEventListener('input', (e) => {
+            const password = e.target.value;
+            
+            if (password.length === 0) {
+                strengthIndicator.style.display = 'none';
+                return;
+            }
+
+            strengthIndicator.style.display = 'block';
+
+            let strength = 0;
+            
+            // Length
+            if (password.length >= 8) strength += 25;
+            if (password.length >= 12) strength += 25;
+            
+            // Uppercase
+            if (/[A-Z]/.test(password)) strength += 15;
+            
+            // Lowercase
+            if (/[a-z]/.test(password)) strength += 15;
+            
+            // Numbers
+            if (/[0-9]/.test(password)) strength += 10;
+            
+            // Special chars
+            if (/[^A-Za-z0-9]/.test(password)) strength += 10;
+
+            // Update bar
+            strengthFill.style.width = strength + '%';
+            
+            // Update color and text
+            if (strength < 40) {
+                strengthFill.style.background = '#ef4444';
+                strengthText.textContent = 'Faible';
+                strengthText.style.color = '#ef4444';
+            } else if (strength < 70) {
+                strengthFill.style.background = '#f59e0b';
+                strengthText.textContent = 'Moyen';
+                strengthText.style.color = '#f59e0b';
+            } else {
+                strengthFill.style.background = '#22c55e';
+                strengthText.textContent = 'Fort';
+                strengthText.style.color = '#22c55e';
+            }
+        });
+
+        // Form validation
+        const form = document.getElementById('registerForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', (e) => {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                alert('Les mots de passe ne correspondent pas');
+                return;
+            }
+
+            if (password.length < 8) {
+                e.preventDefault();
+                alert('Le mot de passe doit contenir au moins 8 caractères');
+                return;
+            }
+
+            // Disable button to prevent double submit
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i data-lucide="loader"></i><span>Création du compte...</span>';
+            lucide.createIcons();
+        });
+    </script>
+
+    <style>
+        /* Auth Container */
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .auth-card {
+            background: linear-gradient(to bottom right, var(--card), rgba(20, 20, 20, 0.8));
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1.5rem;
+            padding: 3rem 2.5rem;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Header */
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .auth-logo-icon {
+            padding: 0.75rem;
+            border-radius: 1rem;
+            background: linear-gradient(to bottom right, var(--gradient-orange), var(--gradient-purple));
+            box-shadow: 0 10px 15px -3px rgba(255, 107, 53, 0.3);
+            display: flex;
+        }
+
+        .auth-logo-icon svg {
+            width: 28px;
+            height: 28px;
+            color: white;
+        }
+
+        .auth-logo-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(to right, white, rgba(255, 255, 255, 0.7));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .auth-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-subtitle {
+            color: var(--muted-foreground);
+            font-size: 0.95rem;
+        }
+
+        /* Error Message */
+        .auth-error {
+            display: flex;
+            gap: 0.75rem;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            margin-bottom: 1.5rem;
+        }
+
+        .auth-error-icon {
+            flex-shrink: 0;
+        }
+
+        .auth-error-icon svg {
+            width: 20px;
+            height: 20px;
+            color: #ef4444;
+        }
+
+        .auth-error-content p {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin: 0.25rem 0;
+        }
+
+        /* Form */
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .auth-form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .auth-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .auth-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--foreground);
+        }
+
+        .auth-label svg {
+            width: 16px;
+            height: 16px;
+            color: var(--muted-foreground);
+        }
+
+        .auth-input-wrapper {
+            position: relative;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background-color: var(--input-background);
+            color: var(--foreground);
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .auth-input-wrapper .auth-input {
+            padding-right: 3rem;
+        }
+
+        .auth-input:focus {
+            outline: none;
+            border-color: var(--gradient-orange);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+
+        .auth-toggle-password {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .auth-toggle-password:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .auth-toggle-password svg {
+            width: 18px;
+            height: 18px;
+            color: var(--muted-foreground);
+        }
+
+        .auth-hint {
+            font-size: 0.8rem;
+            color: var(--muted-foreground);
+            margin: 0;
+        }
+
+        /* Password Strength */
+        .password-strength {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .password-strength-label {
+            font-size: 0.875rem;
+            color: var(--muted-foreground);
+        }
+
+        .password-strength-bar {
+            height: 6px;
+            background-color: rgba(42, 42, 42, 0.5);
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+
+        .password-strength-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 9999px;
+            transition: all 0.3s ease;
+        }
+
+        .password-strength-text {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        /* Submit Button */
+        .auth-submit-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.5rem;
+            border-radius: 0.75rem;
+            background: linear-gradient(to right, var(--gradient-orange), var(--gradient-purple));
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+        }
+
+        .auth-submit-btn:hover:not(:disabled) {
+            box-shadow: 0 20px 25px -5px rgba(255, 107, 53, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .auth-submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .auth-submit-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Footer */
+        .auth-footer {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .auth-footer-text {
+            color: var(--muted-foreground);
+            font-size: 0.95rem;
+        }
+
+        .auth-footer-link {
+            color: var(--gradient-orange);
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s ease;
+        }
+
+        .auth-footer-link:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .auth-card {
+                padding: 2rem 1.5rem;
+            }
+
+            .auth-form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</body>
+</html>

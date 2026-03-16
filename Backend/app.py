@@ -8,12 +8,16 @@ from Api.userRoutes import users_bp
 from flask import Flask
 from flask_cors import CORS
 from dotenv import load_dotenv
+from Persistence.DBStorage import storage
 
 load_dotenv()
 
-
 app = Flask(__name__)
 CORS(app)
+
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    storage.close()
 
 app.register_blueprint(users_bp)
 app.register_blueprint(theme_bp)

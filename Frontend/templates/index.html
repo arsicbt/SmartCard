@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartCards - Révise plus intelligemment avec l'IA</title>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <!-- Gradient background effects -->
+    <div class="gradient-bg">
+        <div class="gradient-circle gradient-top-right"></div>
+        <div class="gradient-circle gradient-bottom-left"></div>
+        <div class="gradient-circle gradient-center"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav-header" id="navbar">
+        <div class="nav-content">
+            <div class="nav-logo">
+                <div class="logo-icon">
+                    <i data-lucide="brain"></i>
+                </div>
+                <span class="logo-text">SmartCard</span>
+            </div>
+            
+            <div class="nav-links">
+                <a href="#features" class="nav-link">Fonctionnalités</a>
+                <a href="#about" class="nav-link">À propos</a>
+                <a href="#team" class="nav-link">Équipe</a>
+                <a href="{{ url_for('login') }}" class="nav-cta">
+                    Lancer l'app
+                    <i data-lucide="arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Mobile menu button -->
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i data-lucide="menu"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-content">
+            <button class="mobile-menu-close" id="mobileMenuClose">
+                <i data-lucide="x"></i>
+            </button>
+            <a href="#features" class="mobile-nav-link">Fonctionnalités</a>
+            <a href="#about" class="mobile-nav-link">À propos</a>
+            <a href="#team" class="mobile-nav-link">Équipe</a>
+            <a href="{{ url_for('login') }}" class="mobile-nav-cta">
+                Lancer l'app
+                <i data-lucide="arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <!-- Colonne GAUCHE : Texte -->
+        <div class="hero-text-column">
+            <!-- Floating cards animation -->
+            <div class="floating-cards">
+                <div class="floating-card card-1">
+                    <i data-lucide="sparkles"></i>
+                </div>
+                <div class="floating-card card-2">
+                    <i data-lucide="zap"></i>
+                </div>
+                <div class="floating-card card-3">
+                    <i data-lucide="star"></i>
+                </div>
+            </div>
+
+            <div class="hero-badge">
+                <i data-lucide="trophy"></i>
+                <span>Projet Portfolio Holberton School</span>
+            </div>
+
+            <h1 class="hero-title">
+                Révise plus
+                <span class="gradient-text">intelligemment</span>
+                avec l'IA
+            </h1>
+
+            <p class="hero-description">
+                SmartCard est une application web full-stack qui génère automatiquement des flashcards
+                et des quiz à partir de documents PDF, grâce à l'IA.
+                Télécharge ton cours, choisis ton mode d'apprentissage, et c'est parti !
+            </p>
+
+            <div class="hero-actions">
+                <a href="{{ url_for('login') }}" class="hero-btn hero-btn-primary">
+                    <i data-lucide="rocket"></i>
+                    Commence maintenant
+                </a>
+                <a href="#features" class="hero-btn hero-btn-secondary">
+                    <i data-lucide="play-circle"></i>
+                    Voir la démo
+                </a>
+            </div>
+        </div>
+
+        <!-- Colonne DROITE : Dashboard Screenshot -->
+        <div class="hero-image-column">
+            <div class="hero-image-wrapper">
+                <div class="screenshot-card">
+                    <div class="screenshot-header">
+                        <div class="screenshot-dots">
+                            <span class="dot dot-red"></span>
+                            <span class="dot dot-yellow"></span>
+                            <span class="dot dot-green"></span>
+                        </div>
+                        <div class="screenshot-title">SmartCard Dashboard</div>
+                    </div>
+
+                    <img 
+                        src="{{ url_for('static', filename='images/image-home.png') }}"
+                        class="dashboard-image"
+                        alt="Dashboard SmartCard"
+                    >
+                </div>
+
+                <div class="hero-image-glow"></div>
+            </div>
+        </div>
+
+        <!-- Scroll indicator -->
+        <div class="scroll-indicator">
+            <i data-lucide="chevron-down"></i>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section" id="features">
+        <div class="section-container">
+            <div class="section-header">
+                <div class="section-badge">
+                    <i data-lucide="sparkles"></i>
+                    <span>Fonctionnalités</span>
+                </div>
+                <h2 class="section-title">
+                    5 minutes devant toi ? 
+                    <span class="gradient-text">Lance ta première session</span>
+                </h2>
+                <p class="section-description">
+                    Prends tes notes papier en photo et transformes-les instantanément en cartes de révision numériques.
+                </p>
+            </div>
+
+            <div class="features-grid">
+                <!-- Feature 1: Flashcards -->
+                <div class="feature-card">
+                    <div class="feature-media">
+                        <div class="feature-screenshot">
+                            <img 
+                                src="{{ url_for('static', filename='images/carte.png') }}"
+                                class="feature-image"
+                                alt="Flashcards SmartCard"
+                            >
+                        </div>
+                    </div>
+                    <div class="feature-content">
+                        <div class="feature-icon gradient-orange">
+                            <i data-lucide="book-open"></i>
+                        </div>
+                        <h3 class="feature-title">Flashcards Intelligentes</h3>
+                        <p class="feature-description">
+                            Crée et révise des flashcards interactives avec des animations fluides. 
+                            Organisées par catégorie et niveau de difficulté pour un apprentissage ciblé.
+                        </p>
+                        <ul class="feature-list">
+                            <li>
+                                <i data-lucide="check"></i>
+                                <span>Animation 3D de retournement</span>
+                            </li>
+                            <li>
+                                <i data-lucide="check"></i>
+                                <span>Système de marquage Correct/Révision</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Feature 2: Quiz -->
+                <div class="feature-card">
+                    <div class="feature-media">
+                        <div class="feature-screenshot">
+                            <img 
+                                src="{{ url_for('static', filename='images/quizz.png') }}"
+                                class="feature-image"
+                                alt="Quiz SmartCard"
+                            >
+                        </div>
+                    </div>
+                    <div class="feature-content">
+                        <div class="feature-icon gradient-blue">
+                            <i data-lucide="target"></i>
+                        </div>
+                        <h3 class="feature-title">Quiz Interactifs</h3>
+                        <p class="feature-description">
+                            Ne te contente pas de relire.
+                            Teste tes connaissances avec des quiz à choix multiples !
+                        </p>
+                        <ul class="feature-list">
+                            <li>
+                                <i data-lucide="check"></i>
+                                <span>Questions à choix multiples</span>
+                            </li>
+                            <li>
+                                <i data-lucide="check"></i>
+                                <span>Questions aléatoires : 
+                                    Pour éviter le par cœur et privilégier la compréhension.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Feature 3: Dashboard -->
+                <div class="feature-card">
+                    <div class="feature-media">
+                        <div class="feature-screenshot">
+                            <img 
+                                src="{{ url_for('static', filename='images/graph.png') }}"
+                                class="feature-image"
+                                alt="Dashboard SmartCard"
+                            >
+                        </div>
+                    </div>
+                    <div class="feature-content">
+                        <div class="feature-icon gradient-purple">
+                            <i data-lucide="trending-up"></i>
+                        </div>
+                        <h3 class="feature-title">Tableau de Bord Analytique</h3>
+                        <p class="feature-description">
+                            Suis ta progression avec des graphiques détaillés et des statistiques en temps réel. 
+                            Visualise ton évolution jour après jour.
+                        </p>
+                        <ul class="feature-list">
+                            <li>
+                                <i data-lucide="check"></i>
+                                <span>Graphiques de progression hebdomadaire</span>
+                            </li>
+                            <li>
+                                <i data-lucide="check"></i>
+                                <span>Statistiques détaillées</span>
+                            </li>
+                            <li>
+                                <i data-lucide="check"></i>
+                                <span>Suivi de streak quotidien</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about-section" id="about">
+        <div class="section-container">
+            <div class="about-content">
+                <div class="about-story">
+                    <div class="section-badge">
+                        <i data-lucide="heart"></i>
+                        <span>L'Histoire du projet</span>
+                    </div>
+                    <h2 class="section-title">
+                        L'inspiration derrière
+                        <span class="gradient-text">SmartCards</span>
+                    </h2>
+                    
+                    <div class="story-text">
+                        <p>
+                            En tant que grande utilisatrice de <strong>NotebookLM</strong>, j'ai d'abord été impressionnée 
+                            par les possibilités de l'IA pour l'apprentissage. Mais rapidement, une <strong>frustration</strong> 
+                            est apparue : parfois 78 flashcards générées d'un coup, des temps d'attente assez longs, 
+                            et surtout <strong>aucun contrôle</strong> sur le nombre de cartes ni de <strong>suivi de progression</strong>.
+                        </p>
+                        <p>
+                            créer un outil qui <strong>aide</strong> 
+                            à apprendre, sans submerger l'utilisateur. Un outil <strong>rapide</strong> (1 seconde pour 10 questions), 
+                            <strong>contrôlé</strong> (nombre de questions calibré), et <strong>motivant</strong> (dashboard, 
+                            progression...)
+                        </p>
+                        <p>
+                            Ayant moi-même été <strong>soutenue et accompagnée</strong> durant mon parcours, je voulais 
+                            créer quelque chose qui aide les autres à réviser plus efficacement. Pour moi, 
+                            <strong>l'apprentissage et l'IA sont des leviers d'émancipation puissants</strong>.
+                        </p>
+                    </div>
+
+                    <div class="project-info">
+                        <div class="info-card">
+                            <i data-lucide="calendar"></i>
+                            <div>
+                                <div class="info-label">Durée du projet</div>
+                                <div class="info-value">8 semaines</div>
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <i data-lucide="code"></i>
+                            <div>
+                                <div class="info-label">Technologies</div>
+                                <div class="info-value">Python, Flask (Backend), HTML/CSS, Jinja, Javascript (Frontend), Groq (API externe)</div>
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <i data-lucide="github"></i>
+                            <div>
+                                <div class="info-label">Open Source</div>
+                                <div class="info-value">
+                                    <a href="https://github.com/arsicbt/SmartCard" target="_blank" class="info-link">
+                                        Voir le repo
+                                        <i data-lucide="arrow-up-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Team Section -->
+    <section class="team-section" id="team">
+        <div class="section-container">
+            <div class="section-header">
+                <div class="section-badge">
+                    <i data-lucide="users"></i>
+                    <span>La développeuse</span>
+                </div>
+                <h2 class="section-title">
+                    Rencontre <strong>Arsinoé</strong> la créatrice de
+                    <span class="gradient-text">SmartCards</span>
+                </h2>
+                <p class="section-description">
+                    Développeuse passionnée, j'ai concu cet outil pour simplifier le quotidien des étudiants.
+                </p>
+            </div>
+
+                <!-- Team Member -->
+                <div class="team-card">
+                    <div class="team-avatar">
+                        <img 
+                            src="{{ url_for('static', filename='images/team.png') }}"
+                            class="feature-image"
+                            alt="Quiz SmartCard"
+                        >
+                    </div>
+                    <h3 class="team-name">Arsinoé Chobert</h3>
+                    <p class="team-role">Développeuse Full-Stack</p>
+                    <p class="team-bio">
+                        J'ai conçu SmartCard de A à Z : de l'architecture de la base de données à l'interface utilisateur,
+                        en passant par l'intégration de l'IA.
+                        Un projet mené from scratch pour offrir une expérience de révision fluide et sans compromis. 
+                    </p>
+                    <div class="team-socials">
+                        <a href="https://www.linkedin.com/in/arsinoé-chobert" target="_blank" class="social-link">
+                            <i data-lucide="linkedin"></i>
+                        </a>
+                        <a href="https://github.com/arsicbt" target="_blank" class="social-link">
+                            <i data-lucide="github"></i>
+                        </a>
+                    </div>
+                </div>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-container">
+            <div class="cta-content">
+                <h2 class="cta-title">
+                    Prêt à transformer ton 
+                    <span class="gradient-text">apprentissage</span> ?
+                </h2>
+                <p class="cta-description">
+                    Viens gagner du temps sur tes révisions !
+                </p>
+                <a href="{{ url_for('login') }}" class="cta-button">
+                    <i data-lucide="rocket"></i>
+                    Commence maintenant
+                    <i data-lucide="arrow-right"></i>
+                </a>
+            </div>
+            <div class="cta-decoration">
+                <div class="decoration-circle circle-1"></div>
+                <div class="decoration-circle circle-2"></div>
+                <div class="decoration-circle circle-3"></div>
+            </div>
+        </div>
+    </section>
+
+    {% include 'components/footer.html' %}
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>

@@ -100,38 +100,26 @@ class SimilarityService:
 
     @staticmethod
     def calculate_text_similarity(text1: str, text2: str) -> float:
-        """Calcule la similarité entre deux textes.
+        """Calcule la similarité entre deux textes via Jaccard sur les mots."""
+        # Normaliser et tokeniser directement (pas seulement top_n keywords)
+        def tokenize(text):
+            text = text.lower()
+            # Supprimer ponctuation
+            text = ''.join(c if c.isalnum() or c.isspace() else ' ' for c in text)
+            words = set(text.split())
+            
+            return words - SimilarityService.STOP_WORDS
 
-        Utilise le coefficient de Jaccard sur les mots-clés
+        set1 = tokenize(text1)
+        set2 = tokenize(text2)
 
-        Args:
-            text1: Premier texte
-            text2: Deuxième texte
-
-        Returns:
-            Score de similarité entre 0.0 et 1.0
-
-        Formula:
-            Jaccard = |A ∩ B| / |A ∪ B|
-        """
-        # Extraire les mots_clés
-        keywords1 = set(SimilarityService.extract_keywords(text1, top_n=30))
-        keywords2 = set(SimilarityService.extract_keywords(text2, top_n=30))
-
-        if not keywords1 or not keywords2:
+        if not set1 or not set2:
             return 0.0
 
-        # Intersection et union
-        intersection = keywords1 & keywords2
-        union = keywords1 | keywords2
+        intersection = set1 & set2
+        union = set1 | set2
 
-        # Coefficient de Jaccard
-        if len(union) == 0:
-            return 0.0
-
-        similarity = len(intersection) / len(union)
-
-        return similarity
+        return len(intersection) / len(union)
 
     @staticmethod
     def calculate_keyword_overlap(
