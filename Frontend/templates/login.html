@@ -7,7 +7,7 @@
 <div class="auth-container">
     <div class="auth-card">
         <div class="auth-logo">
-            <div class="logo-icon">
+            <div href="/register" class="logo-icon">
                 <i data-lucide="brain"></i>
             </div>
             <h1 class="auth-brand">SmartCards</h1>
@@ -50,11 +50,11 @@
 {% block extra_css %}
 <style>
     .auth-container {
-        min-height: 100vh;
+        min-height: calc(100vh - 80px); 
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 2rem;
+        padding: 2rem 1rem; 
     }
     
     .auth-card {
@@ -62,10 +62,11 @@
         backdrop-filter: blur(20px);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 24px;
-        padding: 3rem;
-        max-width: 450px;
+        padding: 2rem; 
+        max-width: 400px; 
         width: 100%;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        margin: auto; 
     }
     
     .auth-logo {
@@ -203,6 +204,11 @@
         margin-top: .4rem;
         opacity: 1;
     }
+
+    .menu-toggle, .burger-btn { 
+            display: none !important;
+    }
+
 </style>
 {% endblock %}
 

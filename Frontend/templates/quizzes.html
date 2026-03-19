@@ -259,9 +259,9 @@
             event.preventDefault();
             event.stopPropagation();
             
-            if (!confirm('Êtes-vous sûr de vouloir supprimer ce quiz ?')) {
-                return;
-            }
+            // if (!confirm('Êtes-vous sûr de vouloir supprimer ce quiz ?')) {
+            //     return;
+            // }
             
             try {
                 const response = await fetch(`/api/sessions/${quizId}`, {

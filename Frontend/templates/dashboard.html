@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 {% import 'macros/stats.html' as stats_macros %}
 
@@ -14,7 +15,6 @@
             icon='book-open',
             value=stats.cards_generated,
             label='Cartes générées',
-            badge='+18 aujourd\'hui',
             progress_width=stats.cards_progress,
             color='orange'
         ) }}
@@ -23,7 +23,6 @@
             icon='award',
             value=stats.quizzes_created,
             label='Quizz créés',
-            badge='+5 cette semaine',
             progress_width=stats.quiz_progress,
             color='blue'
         ) }}
@@ -32,7 +31,7 @@
             icon='check-circle-2',
             value=stats.correct_answers,
             label='Réponses correctes',
-            badge=stats.accuracy ~ '% de taux',
+            badge=stats.accuracy ~ '% de taux de réussite',
             progress_width=stats.accuracy,
             color='purple'
         ) }}
@@ -51,7 +50,6 @@
             icon='check-circle',
             value=stats.cards_mastered,
             label='Cartes maîtrisées',
-            change='+12%',
             progress_width=65,
             color='orange'
         ) }}
@@ -60,7 +58,6 @@
             icon='clock',
             value=stats.study_time,
             label='Temps d\'apprentissage',
-            change='+8%',
             progress_width=75,
             color='blue'
         ) }}
@@ -69,7 +66,6 @@
             icon='trending-up',
             value=stats.accuracy ~ '%',
             label='Taux de réussite',
-            change='+5%',
             progress_width=stats.accuracy,
             color='purple'
         ) }}
@@ -78,8 +74,8 @@
             icon='flame',
             value=stats.streak,
             label='Série actuelle',
-            change='Jours',
-            progress_width=95,
+            change='jour' ~ ('s' if stats.streak > 1 else '') ~ ' consécutif' ~ ('s' if stats.streak > 1 else ''),
+            progress_width=[[stats.streak * 14, 100] | min],
             color='orange'
         ) }}
     </div>
@@ -92,7 +88,7 @@
     const ctx = document.getElementById('progressChart');
     if (ctx) {
         const chartData = {{ chart_data | tojson | safe }};
-        
+
         new Chart(ctx, {
             type: 'line',
             data: {

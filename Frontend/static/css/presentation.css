@@ -552,6 +552,200 @@ h1, h2, h3, h4 {
     background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.1), transparent);
 }
 
+/* ===================================================
+   SLIDE 5 — ARCHITECTURE (SPACING FIXÉ)
+   ================================================== */
+
+.arch3 {
+    display: grid;
+    grid-template-columns: 1fr 140px 1fr 120px 1fr;
+    align-items: center;
+    gap: 0;
+    width: 100%;
+}
+
+/* ── Tier boxes ── */
+.a3-box {
+    border-radius: 1rem;
+    background: linear-gradient(to bottom right, rgba(20,20,20,0.85), rgba(20,20,20,0.5));
+    border: 2px solid;
+    padding: 1rem 1rem 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+.a3-box.fe { border-color: rgba(255,107,53,0.5); }
+.a3-box.be { border-color: rgba(74,144,226,0.5); }
+.a3-box.db { border-color: rgba(155,89,182,0.5); }
+
+.a3-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.2rem;
+}
+.a3-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.a3-icon svg { width: 17px; height: 17px; color: white; }
+.a3-icon.fe { background: linear-gradient(135deg, var(--gradient-orange), var(--neon-orange)); }
+.a3-icon.be { background: linear-gradient(135deg, var(--gradient-blue), var(--neon-blue)); }
+.a3-icon.db { background: linear-gradient(135deg, var(--gradient-purple), var(--neon-purple)); }
+
+.a3-title { font-size: 0.82rem; font-weight: 700; line-height: 1.2; }
+.a3-sub   { font-size: 0.65rem; color: var(--muted-foreground); }
+
+.a3-pills {
+    display: flex; flex-wrap: wrap; gap: 0.25rem;
+}
+.a3-pill {
+    font-size: 0.62rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    color: var(--muted-foreground);
+}
+
+/* ── Arrow column (SPACING AUGMENTÉ) ── */
+.a3-arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    position: relative;
+    padding: 0 0.5rem; /* Padding horizontal pour éviter le collage */
+}
+
+/* horizontal line */
+.a3-hline {
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gradient-orange), var(--gradient-purple));
+    position: relative;
+}
+
+/* vertical connector for the badges */
+.a3-badges {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem; /* Augmenté de 0.3rem à 0.5rem */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    pointer-events: none;
+}
+
+.a3-conn-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    position: relative;
+}
+
+/* the two arrow labels above/below the line */
+.a3-badge-top,
+.a3-badge-bot {
+    font-size: 0.52rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    padding: 0.22rem 0.55rem; /* Padding augmenté pour plus d'espace */
+    border-radius: 5px; /* Légèrement arrondi */
+    white-space: normal;
+    line-height: 1.2;
+    text-align: center;
+    backdrop-filter: blur(8px); /* Flou d'arrière-plan pour meilleure lisibilité */
+}
+
+.a3-badge-top {
+    background: rgba(255,107,53,0.15); /* Opacité augmentée */
+    color: var(--gradient-orange);
+    border: 1px solid rgba(255,107,53,0.3); /* Border plus visible */
+    margin-bottom: 6px; /* Augmenté de 3px à 6px */
+    padding: 0.22rem 0.55rem;
+}
+.a3-badge-bot {
+    background: rgba(74,144,226,0.15); /* Opacité augmentée */
+    color: var(--gradient-blue);
+    border: 1px solid rgba(74,144,226,0.3); /* Border plus visible */
+    margin-top: 6px; /* Augmenté de 3px à 6px */
+}
+
+.a3-arrowhead {
+    font-size: 0.85rem; /* Légèrement plus grand */
+    color: var(--gradient-orange);
+    line-height: 1;
+}
+
+/* ── Security row ── */
+.a3-security {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    gap: 0.8rem;
+    margin-top: 1rem; /* Augmenté de 0.75rem */
+    flex-wrap: wrap;
+}
+.a3-sec-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* Augmenté de 0.4rem */
+    padding: 0.4rem 1rem; /* Padding augmenté */
+    border-radius: 7px; /* Plus arrondi */
+    font-size: 0.7rem; /* Légèrement plus grand */
+    font-weight: 600;
+    background: rgba(251,191,36,0.1); /* Opacité augmentée */
+    border: 1px solid rgba(251,191,36,0.25); /* Border plus visible */
+    color: #fbbf24;
+}
+.a3-sec-badge svg { width: 14px; height: 14px; color: #fbbf24; }
+
+/* ── External services row ── */
+.a3-ext-row {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    gap: 1rem; /* Augmenté de 0.7rem */
+    margin-top: 0.8rem; /* Augmenté de 0.55rem */
+}
+.a3-ext-card {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem; /* Augmenté de 0.5rem */
+    padding: 0.5rem 1.1rem; /* Padding augmenté */
+    border-radius: 9px; /* Plus arrondi */
+    border: 1px dashed rgba(255,107,53,0.35); /* Border plus visible */
+    background: rgba(255,107,53,0.06); /* Opacité augmentée */
+    font-size: 0.7rem; /* Légèrement plus grand */
+    color: var(--muted-foreground);
+}
+.a3-ext-card svg { width: 15px; height: 15px; color: var(--gradient-orange); flex-shrink: 0; }
+.a3-ext-label { font-size: 0.65rem; color: var(--gradient-orange); font-weight: 700; margin-right: 0.3rem; }
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+    .arch3 {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .a3-arrow {
+        transform: rotate(90deg);
+        padding: 0 0.5rem;
+    }
+
+    .a3-badge-top,
+    .a3-badge-bot {
+        transform: rotate(-90deg);
+    }
+}
 /* ===== Slide 6: Architecture ===== */
 .architecture-diagram {
     max-width: 600px;

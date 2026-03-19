@@ -209,33 +209,15 @@
 
 <body>
 
-<div class="logout-modal hidden" id="logoutModal">
-    <div class="logout-modal-content">
-
-        <div class="logout-modal-header">
-            <div class="logout-modal-icon-wrap">
-                <i data-lucide="log-out" class="logout-modal-icon"></i>
-            </div>
-            <h3>Confirmer la déconnexion</h3>
+<div id="confirm-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h2 id="modal-title">Déconnexion</h2>
+        <p id="modal-message">Êtes-vous sûr de vouloir faire cela ?</p>
+        
+        <div class="modal-buttons">
+            <button onclick="closeModal()">Annuler</button>
+            <button id="modal-confirm-btn" class="btn-danger">Confirmer</button>
         </div>
-
-        <div class="logout-modal-divider"></div>
-
-        <p class="logout-modal-text">
-            Êtes-vous sûr de vouloir vous déconnecter ?<br>
-            Votre session sera terminée.
-        </p>
-
-        <div class="logout-modal-actions">
-            <button class="logout-modal-btn logout-modal-btn-cancel" id="cancelLogoutBtn">
-                Annuler
-            </button>
-            <button class="logout-modal-btn logout-modal-btn-confirm" id="confirmLogoutBtn">
-                <i data-lucide="log-out" class="btn-icon"></i>
-                Se déconnecter
-            </button>
-        </div>
-
     </div>
 </div>
 

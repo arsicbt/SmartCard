@@ -957,10 +957,10 @@ h1, h2, h3, h4 { font-weight: bold; }
                     <div class="code-panel">
                         <div class="code-panel-header">
                             <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
-                            <div class="code-filename">similarity.py</div>
+                            <div class="code-filename">similarityServices.py</div>
                             <div class="code-lang">Python</div>
                         </div>
-                        <div class="code-pre"><span style="color:#8b949e"># Détecte si un PDF ressemble à une session existante</span>
+                        <div class="code-pre"><span style="color:#8b949e"># Detects whether a PDF looks like an existing session</span>
 <span style="color:#ff7b72">@staticmethod</span>
 <span style="color:#ff7b72">def</span> <span style="color:#d2a8ff">calculate_text_similarity</span>(
     text1: <span style="color:#79c0ff">str</span>, text2: <span style="color:#79c0ff">str</span>
@@ -988,30 +988,30 @@ h1, h2, h3, h4 { font-weight: bold; }
   <span style="color:#ff7b72">return</span> <span style="color:#79c0ff">len</span>(intersection) / <span style="color:#79c0ff">len</span>(union)</div>
                         <div class="code-note">
                             <i data-lucide="info"></i>
-                            Appelée à la création d'une session pour éviter de re-générer des questions existantes.
+                            Called for the creation of a session to avoid re-generating existing questions.
                         </div>
                     </div>
 
                     <!-- Jaccard -->
                     <div class="jaccard-panel">
                         <div class="formula-card">
-                            <div class="formula-title">Coefficient de Jaccard</div>
+                            <div class="formula-title">Jaccard coeficient</div>
                             <div class="formula-display">J(A,B) = |A ∩ B| / |A ∪ B|</div>
                             <div class="formula-vars">
-                                <div class="fvar"><span class="sym">A</span><span class="def">Mots du texte 1</span></div>
-                                <div class="fvar"><span class="sym">B</span><span class="def">Mots du texte 2</span></div>
-                                <div class="fvar"><span class="sym">∩</span><span class="def">Mots en commun</span></div>
-                                <div class="fvar"><span class="sym">∪</span><span class="def">Tous les mots uniques</span></div>
+                                <div class="fvar"><span class="sym">A</span><span class="def">Text words 1</span></div>
+                                <div class="fvar"><span class="sym">B</span><span class="def">Text words 2</span></div>
+                                <div class="fvar"><span class="sym">∩</span><span class="def">Words in common</span></div>
+                                <div class="fvar"><span class="sym">∪</span><span class="def">All unique words</span></div>
                             </div>
                         </div>
 
                         <div class="jaccard-usage">
-                            <div class="usage-title">Pourquoi cet algorithme ?</div>
-                            <div class="usage-item"><i data-lucide="check-circle"></i>Détecte si un nouveau PDF couvre un sujet déjà en base</div>
-                            <div class="usage-item"><i data-lucide="check-circle"></i>Si score &gt; seuil → réutilise les questions existantes</div>
-                            <div class="usage-item"><i data-lucide="check-circle"></i>Réduit les appels LLM inutiles → coût &amp; latence</div>
+                            <div class="usage-title">Why this algorithm?</div>
+                            <div class="usage-item"><i data-lucide="check-circle"></i>Detects if a new PDF covers a topic already in the database</div>
+                            <div class="usage-item"><i data-lucide="check-circle"></i>If score &gt; threshold → reuses existing questions</div>
+                            <div class="usage-item"><i data-lucide="check-circle"></i>Reduces unnecessary LLM calls → cost &amp; latency</div>
                             <div class="score-bar-row">
-                                <span>Similarité</span>
+                                <span>Similarity</span>
                                 <div class="score-bar-bg"><div class="score-bar-fill" style="width:72%"></div></div>
                                 <span class="score-val">0.72</span>
                             </div>
@@ -1029,9 +1029,9 @@ h1, h2, h3, h4 { font-weight: bold; }
     ══════════════════════ -->
     <section class="slide" data-slide="7">
         <div class="slide-content">
-            <h2 class="slide-title"><i data-lucide="calendar"></i> Timeline — Méthode Agile</h2>
+            <h2 class="slide-title"><i data-lucide="calendar"></i> Timeline — Agile methodology</h2>
             <div class="content-section">
-                <p class="lead-text">5 sprints, livraison itérative, re-priorisation continue</p>
+                <p class="lead-text">5 sprints, iterative delivery, the redefinition of priorities continues</p>
                 <div class="timeline-h">
                     <div class="sprint-col s0">
                         <div class="sprint-dot">S0</div>
@@ -1039,8 +1039,8 @@ h1, h2, h3, h4 { font-weight: bold; }
                             <h3>Brainstorming</h3>
                             <div class="sprint-label">Planning</div>
                             <ul>
-                                <li>Idéation & concept</li>
-                                <li>Diagrammes archi.</li>
+                                <li>Concept & Design</li>
+                                <li>Architecture Diagram</li>
                                 <li>Mockups</li>
                                 <li>Backlog Agile</li>
                             </ul>
@@ -1052,10 +1052,10 @@ h1, h2, h3, h4 { font-weight: bold; }
                             <h3>Backend Pt.1</h3>
                             <div class="sprint-label">Backend</div>
                             <ul>
-                                <li>Schéma BDD</li>
-                                <li>Routes Flask</li>
+                                <li>Database schema</li>
+                                <li>Flask Routes</li>
                                 <li>Authentification</li>
-                                <li>Upload PDF</li>
+                                <li>PDF upload </li>
                             </ul>
                         </div>
                     </div>
@@ -1063,12 +1063,12 @@ h1, h2, h3, h4 { font-weight: bold; }
                         <div class="sprint-dot">S2</div>
                         <div class="sprint-card">
                             <h3>Backend Pt.2</h3>
-                            <div class="sprint-label">AI ⚡</div>
+                            <div class="sprint-label">AI</div>
                             <ul>
-                                <li>Intégration LLM</li>
-                                <li>Extraction PDF</li>
-                                <li>Algo Jaccard</li>
-                                <li>Logique sessions</li>
+                                <li>LLM Integration</li>
+                                <li>PDF Extraction</li>
+                                <li>Jaccard algorithm</li>
+                                <li>Sessions logical</li>
                             </ul>
                         </div>
                     </div>
@@ -1078,7 +1078,7 @@ h1, h2, h3, h4 { font-weight: bold; }
                             <h3>Frontend</h3>
                             <div class="sprint-label">UI/UX</div>
                             <ul>
-                                <li>Design système</li>
+                                <li>System design</li>
                                 <li>UI Flashcards</li>
                                 <li>UI Quiz</li>
                                 <li>Dashboard</li>
@@ -1091,9 +1091,9 @@ h1, h2, h3, h4 { font-weight: bold; }
                             <h3>Tests</h3>
                             <div class="sprint-label">QA</div>
                             <ul>
-                                <li>Corrections bugs</li>
+                                <li>Bugs corrections</li>
                                 <li>Performance</li>
-                                <li>Tests utilisateurs</li>
+                                <li>Users tests</li>
                                 <li>Finitions</li>
                             </ul>
                         </div>
@@ -1114,17 +1114,17 @@ h1, h2, h3, h4 { font-weight: bold; }
                 <div class="challenge-layout">
                     <div class="challenge-main">
                         <div class="challenge-icon"><i data-lucide="cpu"></i></div>
-                        <h3>Intégrer l'IA dans l'application (Sprint 2)</h3>
-                        <p>J'avais sous-estimé la complexité des appels LLM, de l'extraction PDF et du prompt engineering. Cela m'a contraint à supprimer une feature principale pour livrer le MVP à temps.</p>
-                        <p style="margin-top:0.5rem;color:var(--gradient-orange);font-weight:600;">Leçon clé : prioriser ruthlessly — un MVP ciblé se livre, un projet trop ambitieux non.</p>
+                        <h3>Integrate AI into the application (Sprint 2)</h3>
+                        <p>I had underestimated the complexity of LLM calls, PDF extraction, and prompt engineering. This forced me to remove a key feature in order to deliver the MVP on time.</p>
+                        <p style="margin-top:0.5rem;color:var(--gradient-orange);font-weight:600;">Key takeaway: Prioritize ruthlessly—a focused MVP delivers results, while an overly ambitious project does not.</p>
                     </div>
                     <div class="skills-col">
-                        <h4>Compétences acquises</h4>
-                        <div class="skill-row"><i data-lucide="plug" style="color:var(--gradient-orange)"></i><span class="sk-name">Intégration d'une IA via API call</span><span class="skill-badge sk-hard">Hard</span></div>
-                        <div class="skill-row"><i data-lucide="file-text" style="color:var(--gradient-blue)"></i><span class="sk-name">Traitement de données (PDF, NLP)</span><span class="skill-badge sk-hard">Hard</span></div>
-                        <div class="skill-row"><i data-lucide="git-branch" style="color:var(--gradient-purple)"></i><span class="sk-name">Méthode Agile en conditions réelles</span><span class="skill-badge sk-soft">Soft</span></div>
-                        <div class="skill-row"><i data-lucide="target" style="color:var(--gradient-pink)"></i><span class="sk-name">Priorisation sous contrainte de temps</span><span class="skill-badge sk-soft">Soft</span></div>
-                        <div class="skill-row"><i data-lucide="heart" style="color:#f06292"></i><span class="sk-name">Gestion des émotions & organisation</span><span class="skill-badge sk-soft">Soft</span></div>
+                        <h4>Skills acquired</h4>
+                        <div class="skill-row"><i data-lucide="plug" style="color:var(--gradient-orange)"></i><span class="sk-name">Integrate AI into application via API</span><span class="skill-badge sk-hard">Hard</span></div>
+                        <div class="skill-row"><i data-lucide="file-text" style="color:var(--gradient-blue)"></i><span class="sk-name">Data Processing (PDF, NLP)</span><span class="skill-badge sk-hard">Hard</span></div>
+                        <div class="skill-row"><i data-lucide="git-branch" style="color:var(--gradient-purple)"></i><span class="sk-name">Agile Methodology in Real-World Conditions</span><span class="skill-badge sk-soft">Soft</span></div>
+                        <div class="skill-row"><i data-lucide="target" style="color:var(--gradient-pink)"></i><span class="sk-name">Prioritization under time constraints</span><span class="skill-badge sk-soft">Soft</span></div>
+                        <div class="skill-row"><i data-lucide="heart" style="color:#f06292"></i><span class="sk-name">Emotional Management & Organization</span><span class="skill-badge sk-soft">Soft</span></div>
                     </div>
                 </div>
             </div>
@@ -1139,37 +1139,37 @@ h1, h2, h3, h4 { font-weight: bold; }
         <div class="slide-content">
             <h2 class="slide-title"><i data-lucide="rocket"></i> Future Features</h2>
             <div class="content-section">
-                <p class="lead-text">SmartCards v2 — ce qui vient après le MVP</p>
+                <p class="lead-text">SmartCards v2 — what comes after the MVP</p>
                 <div class="features-grid">
                     <div class="feature-card">
                         <div class="feature-icon gradient-orange"><i data-lucide="sliders"></i></div>
                         <h3>Custom number of questions</h3>
-                        <p>Laisser l'utilisateur choisir exactement combien de questions générer par session.</p>
+                        <p>Let the user choose exactly how many questions to generate per session.</p>
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon gradient-blue"><i data-lucide="palette"></i></div>
                         <h3>Frontend improvements</h3>
-                        <p>Refonte UI/UX basée sur les retours utilisateurs — navigation, mobile, animations.</p>
+                        <p>UI/UX redesign based on user feedback.</p>
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon gradient-purple"><i data-lucide="bar-chart-2"></i></div>
                         <h3>Improved dashboard analytics</h3>
-                        <p>Insights détaillés : tendances de scores, heatmap des sujets faibles, taux de complétion.</p>
+                        <p>Detailed insights: score trends, heatmap of weak topics, completion rates.</p>
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon gradient-pink"><i data-lucide="trending-up"></i></div>
                         <h3>Learning progress tracking</h3>
-                        <p>Visualiser les courbes de mémorisation sur le long terme et les streaks de révision.</p>
+                        <p>View long-term retention curves and review streaks.</p>
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon gradient-green"><i data-lucide="play"></i></div>
                         <h3>Resume sessions</h3>
-                        <p>Reprendre un quiz ou des flashcards exactement là où on s'est arrêté — persistance cross-device.</p>
+                        <p>Pick up a quiz or flashcards exactly where you left off.</p>
                     </div>
                     <div class="feature-card" style="border-color:rgba(255,107,53,0.15);">
                         <div class="feature-icon" style="background:linear-gradient(to bottom right,#e67e22,#d35400);box-shadow:0 10px 30px rgba(230,126,34,0.3);"><i data-lucide="file-plus"></i></div>
                         <h3>Multi-format import</h3>
-                        <p>Supporter DOCX, slides et texte brut en plus du PDF pour élargir la compatibilité.</p>
+                        <p>Support DOCX, slides, and plain text in addition to PDF to improve compatibility.</p>
                     </div>
                 </div>
             </div>
@@ -1196,13 +1196,9 @@ h1, h2, h3, h4 { font-weight: bold; }
                 </div>
 
                 <div class="links-section">
-                    <a href="https://github.com/yourusername/smartcards" class="link-card" target="_blank">
+                    <a href="https://github.com/arsicbt/smartcards" class="link-card" target="_blank">
                         <i data-lucide="github"></i>
-                        <div><h4>GitHub Repository</h4><p>github.com/yourusername/smartcards</p></div>
-                    </a>
-                    <a href="https://yourportfolio.com" class="link-card" target="_blank">
-                        <i data-lucide="globe"></i>
-                        <div><h4>Portfolio</h4><p>yourportfolio.com</p></div>
+                        <div><h4>GitHub Repository</h4><p>github.com/arsicbt/smartcards</p></div>
                     </a>
                 </div>
             </div>
