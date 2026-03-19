@@ -159,6 +159,17 @@ button {
     -webkit-text-fill-color: transparent;
 }
 
+.logo-link {
+    text-decoration: none; 
+    color: inherit;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.logo-link:hover {
+    opacity: 0.8; 
+}
+
 .burger-btn {
     padding: 0.625rem;
     border-radius: 0.75rem;
@@ -1712,7 +1723,8 @@ button {
     color: rgba(255, 255, 255, 0.4);
     font-size: 0.9rem;
     margin: 0;
-    text-align: center
+    text-align: center;
+    width: 100%;
 }
 
 /* Responsive */

@@ -32,14 +32,17 @@ class AuthService:
         # 1. VALIDATION
         is_valid, error = InputValidator.validate_email(email)
         if not is_valid:
+            print("email")
             return False, None, error
 
         is_valid, error = InputValidator.validate_password(password)
         if not is_valid:
+            print("password")
             return False, None, error
 
         name = InputValidator.sanitize_string(name, max_length=100)
         if not name:
+            ("name")
             return False, None, "Nom requis"
 
         # 2. VÉRIFICATION UNICITÉ

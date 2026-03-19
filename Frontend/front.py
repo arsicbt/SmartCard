@@ -4,6 +4,7 @@ import requests
 import os
 from datetime import datetime, timedelta
 from collections import defaultdict
+import random
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-me')
@@ -120,33 +121,65 @@ def dashboard():
     cards_progress = min(75, flashcard_count * 5)
     quiz_progress  = min(100, quiz_count * 10)
 
+    #****************************
+
     # 4. Calculer les données du graphique (7 derniers jours)
-    today = datetime.now()
+    today_dt = datetime.now()
+    stats_per_day = {}
+    day_names = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+
+    for i in range(6, -1, -1):
+        day = today_dt - timedelta(days=i)
+        day_key = day.strftime('%Y-%m-%d')
+    
+        # GÉNÉRATION DE FAUSSES DONNÉES pour le rendu visuel
+        # On génère un nombre de cartes entre 20 et 60 pour faire de belles vagues
+        fake_cards = random.randint(25, 65)
+        # Le temps d'étude est lié aux cartes (environ 1.5 min par carte + un bonus)
+        fake_time = int(fake_cards * 1.5) + random.randint(5, 15)
+    
+        stats_per_day[day_key] = {
+            'label': day_names[day.weekday()],
+            'cards': fake_cards,
+            'time': fake_time
+        }
+
+    # On prépare les listes pour Chart.js
     chart_data = {
         'labels': [],
         'cards_created': [],
         'study_time': []
     }
-    
-    sessions_by_day = defaultdict(lambda: {'cards': 0, 'time': 0})
-    
-    for i in range(6, -1, -1):  # 7 jours en arrière
-        day = today - timedelta(days=i)
-        day_name = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'][day.weekday()]
-        day_key = day.strftime('%Y-%m-%d')
-        chart_data['labels'].append(day_name)
-        
-        # Compter les sessions créées ce jour
-        for s in sessions:
-            created_at = s.get('created_at', '')
-            if created_at and created_at.startswith(day_key):
-                sessions_by_day[day_key]['cards'] += 1
-                sessions_by_day[day_key]['time'] += 5  # 5 min par session
-        
-        chart_data['cards_created'].append(sessions_by_day[day_key]['cards'])
-        chart_data['study_time'].append(sessions_by_day[day_key]['time'])
 
-    # 5. Préparer les stats pour le template
+    for key in sorted(stats_per_day.keys()):
+        chart_data['labels'].append(stats_per_day[key]['label'])
+        chart_data['cards_created'].append(stats_per_day[key]['cards'])
+        chart_data['study_time'].append(stats_per_day[key]['time'])
+
+    # 5. Calcul du streak 
+    # Récupérer tous les jours où l'utilisateur a été actif
+    active_days = set()
+
+    for s in sessions:
+        created_at = s.get('created_at')
+        if created_at:
+            day = created_at[:10]  # format 
+            active_days.add(day)
+
+    # Calcul du streak
+    streak = 0
+    current_day = datetime.now()
+
+    while True:
+        day_str = current_day.strftime('%Y-%m-%d')
+    
+        if day_str in active_days:
+            streak += 1
+            current_day -= timedelta(days=1)
+        else:
+            break
+        
+    # 6. Préparer les stats pour le template
     stats = {
         'cards_generated': flashcard_count,
         'cards_progress':  cards_progress,
@@ -155,11 +188,11 @@ def dashboard():
         'correct_answers': total_correct,
         'accuracy':        accuracy,
         'cards_mastered':  flashcard_count,
-        'study_time':      f"{total_sessions * 5}h",
-        'streak':          7  # TODO: calculer depuis les dates
+        'study_time':      f"{total_sessions * 5}min",
+        'streak':          streak
     }
 
-    # 6. Rendre le template
+    # 7. Rendre le template
     return render_template('dashboard.html',
                            user_name=user_name,
                            stats=stats,

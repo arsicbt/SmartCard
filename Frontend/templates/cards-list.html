@@ -264,9 +264,9 @@
             event.preventDefault();
             event.stopPropagation();
             
-            if (!confirm('Êtes-vous sûr de vouloir supprimer cette session de cartes ?')) {
-                return;
-            }
+            // if (!confirm('Êtes-vous sûr de vouloir supprimer cette session de cartes ?')) {
+            //     return;
+            // }
             
             try {
                 const response = await fetch(`/api/sessions/${cardId}`, {
