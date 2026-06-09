@@ -18,12 +18,25 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Configuration Groq
-GROQ_API_KEY = os.getenv('GROQ_API_KEY')
-if not GROQ_API_KEY:
-    raise ValueError("Groq à besoin de sa clé dans les var d'environement")
+# Configuration Groq (initialisation paresseuse)
+_groq_client = None
 
-groq_client = Groq(api_key=GROQ_API_KEY)
+
+def get_groq_client():
+    """Retourne le client Groq, en l'initialisant à la demande.
+
+    Échoue explicitement si la clé API n'est pas configurée, mais
+    seulement lorsqu'une fonctionnalité Groq est réellement utilisée.
+    """
+    global _groq_client
+    if _groq_client is None:
+        api_key = os.getenv('GROQ_API_KEY')
+        if not api_key:
+            raise ValueError(
+                "Groq à besoin de sa clé dans les var d'environement"
+            )
+        _groq_client = Groq(api_key=api_key)
+    return _groq_client
 
 
 class PDFAnalysisService:
@@ -128,7 +141,7 @@ Important:
 - Return ONLY the JSON, no other text"""
 
         try:
-            response = groq_client.chat.completions.create(
+            response = get_groq_client().chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=[
                     {
@@ -273,7 +286,7 @@ Requirements:
 - Return ONLY the JSON, no other text"""
 
         try:
-            response = groq_client.chat.completions.create(
+            response = get_groq_client().chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=[
                     {

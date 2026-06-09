@@ -12,7 +12,7 @@ app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-me')
 
 # URL de l'API backend
-API_URL = 'http://localhost:5000/api'
+API_URL = os.getenv('BACKEND_URL', 'http://localhost:8000') + '/api'
 
 
 # **********************************************
@@ -449,7 +449,7 @@ def proxy_delete_session(session_id):
 
     try:
         response = requests.delete(
-            f'http://localhost:5000/api/sessions/{session_id}',
+            f'{API_URL}/sessions/{session_id}',
             headers={
                 'Authorization': f'Bearer {token}',
                 'Content-Type': 'application/json'
@@ -474,7 +474,7 @@ def auth_login():
     """Proxy vers l'API de login"""
     try:
         response = requests.post(
-            'http://localhost:5000/api/auth/login',
+            f'{API_URL}/auth/login',
             json=request.json,
             timeout=5
         )
@@ -637,7 +637,7 @@ def proxy_update_session(session_id):
 
     try:
         response = requests.put(
-            f'http://localhost:5000/api/sessions/{session_id}',
+            f'{API_URL}/sessions/{session_id}',
             json=request.json,
             headers={
                 'Authorization': f'Bearer {token}',
@@ -664,4 +664,4 @@ def presentation():
 # Lancement de l'application
 # **********************************************
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=3000, debug=False)
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=False)
