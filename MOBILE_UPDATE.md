@@ -329,6 +329,27 @@ function handleTypeKey(e, type) {
 
 ---
 
+## 6. Page d'accueil (landing) — maquette masquée sur mobile
+
+### `Frontend/static/css/landing.css`
+
+La maquette décorative « SmartCard Dashboard » du hero (`.hero-image-column`) apparaissait sous le texte sur mobile comme un grand bloc sombre peu esthétique qui décalait le reste du contenu.
+
+**Ajout** (dans le `@media (max-width: 768px)` existant) :
+```css
+@media (max-width: 768px) {
+    /* Masquer la maquette "screen" de l'app sur mobile :
+       décorative, elle alourdit la page et décale le contenu. */
+    .hero-image-column {
+        display: none;
+    }
+    ...
+}
+```
+*Élément purement illustratif : son masquage sur mobile n'enlève aucune fonctionnalité et recentre le contenu textuel sur toute la largeur.*
+
+---
+
 ## Principe de non-régression
 
 - Aucune règle desktop existante n'a été supprimée ni remplacée.
