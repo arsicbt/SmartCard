@@ -1,0 +1,12 @@
+Je travaille sur SmartCard, une application Flask (backend API + frontend Jinja2/HTML/CSS/JS) déjà fonctionnelle sur desktop. Je dois la rendre pleinement responsive pour mobile dans le cadre d'une certification RNCP "Développeur web et web mobile", qui exige explicitement l'adaptation de l'interface aux équipements mobiles, le respect du concept "mobile first", et la vérification de l'accessibilité (RGAA).
+Ne réécris pas l'architecture existante. Le projet utilise déjà Flask, Jinja2, des templates dans Frontend/templates/, du CSS dans Frontend/static/css/style.css, et du JS vanilla dans Frontend/static/js/. Travaille en complément de ce qui existe, pas en remplacement.
+Ce que j'attends concrètement :
+
+Navigation mobile : transformer la sidebar fixe actuelle en menu hamburger/drawer sur les écrans étroits (< 768px), avec une fermeture au clic en dehors et une animation simple.
+Layout responsive sur toutes les pages clés : dashboard (grille de stats qui passe en colonne unique), flashcards (carte qui garde un ratio lisible sans déborder), quiz (boutons de réponse en pleine largeur, texte qui ne tronque pas).
+Zones tactiles : tous les boutons et zones cliquables doivent respecter une taille minimale de 44x44px (recommandation d'accessibilité tactile), notamment les boutons "Got it!" / "Need Review" et les options de quiz.
+Formulaire d'upload PDF : adapter la zone de glisser-déposer pour qu'elle reste utilisable au doigt sur mobile (bouton de sélection de fichier clairement visible, pas seulement une zone de drop).
+Accessibilité RGAA minimale : vérifier les contrastes de couleurs sur fond sombre, ajouter les attributs aria-label manquants sur les boutons icônes, garantir une navigation au clavier cohérente (focus visible).
+Ne pas casser le mode desktop existant : utilise des media queries CSS (@media (max-width: 768px) et @media (max-width: 480px)) en complément des styles actuels, pas en les remplaçant.
+
+Documentation demandée : à la fin de tes modifications, génère un fichier MOBILE_UPDATE.md à la racine du projet qui liste, fichier par fichier, les changements apportés (quel fichier, quelle section, pourquoi), avec des extraits avant/après pour les changements les plus significatifs. Je dois pouvoir réutiliser ce fichier comme preuve de travail dans un dossier de certification professionnelle.
