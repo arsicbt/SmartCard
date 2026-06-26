@@ -1720,7 +1720,7 @@ button {
 }
 
 .footer-copyright {
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.62);
     font-size: 0.9rem;
     margin: 0;
     text-align: center;
@@ -1790,4 +1790,120 @@ button {
 
 .flashcard-end-btn:hover {
     box-shadow: 0 20px 25px -5px rgba(255, 107, 53, 0.3);
+}
+
+/* ============================================================
+   MOBILE-FIRST & ACCESSIBILITÉ (RGAA) — AJOUTS RESPONSIVE
+   Ces règles complètent les styles desktop sans les remplacer.
+   ============================================================ */
+
+/* --- Focus clavier visible (RGAA 10.7) --- */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible,
+.menu-item:focus-visible,
+.quiz-option:focus-visible,
+.flashcard:focus-visible {
+    outline: 3px solid #ff8c5a;
+    outline-offset: 2px;
+    border-radius: 8px;
+}
+/* éviter le double-contour au clic souris quand le focus n'est pas clavier */
+a:focus:not(:focus-visible),
+button:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* --- Zones tactiles minimales 44x44px (RGAA / WCAG 2.5.5) --- */
+.burger-btn,
+.menu-close-btn,
+.menu-item,
+.menu-logout,
+.flashcard-action-btn,
+.flashcard-nav-btn,
+.quiz-option,
+.quiz-next-btn,
+.quiz-restart-btn,
+.flashcard-end-btn,
+.modal-btn {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+/* --- Tablette / mobile : <= 768px --- */
+@media (max-width: 768px) {
+    .main-content {
+        padding: 1.5rem 1rem;
+    }
+
+    /* Quiz : empiler statut + bouton, bouton pleine largeur */
+    .quiz-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    .quiz-next-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    .quiz-question-text {
+        font-size: 1.25rem;
+        line-height: 1.4;
+    }
+
+    /* Options de quiz : pleine largeur, texte non tronqué */
+    .quiz-option {
+        width: 100%;
+        white-space: normal;
+        word-break: break-word;
+        text-align: left;
+    }
+}
+
+/* --- Mobile : <= 480px --- */
+@media (max-width: 480px) {
+    .header-content {
+        padding: 0.875rem 1rem;
+    }
+
+    /* Flashcard : ratio lisible, pas de débordement */
+    .flashcard-wrapper {
+        height: 360px;
+    }
+    .flashcard-front,
+    .flashcard-back {
+        padding: 1.5rem;
+    }
+    .flashcard-question {
+        font-size: 1.4rem;
+        line-height: 1.35;
+    }
+    .flashcard-answer {
+        font-size: 1.05rem;
+        line-height: 1.5;
+    }
+
+    /* Actions flashcard empilées et pleine largeur (cibles tactiles) */
+    .flashcard-actions {
+        flex-direction: column;
+    }
+    .flashcard-action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Stats flashcard : 2 colonnes au lieu de 3 pour la lisibilité */
+    .flashcard-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .quiz-question-text {
+        font-size: 1.15rem;
+    }
+    .quiz-score-value {
+        font-size: 2.5rem;
+    }
 }

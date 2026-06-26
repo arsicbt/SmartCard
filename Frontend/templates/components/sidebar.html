@@ -5,25 +5,26 @@
 <div class="menu-sidebar" id="menuSidebar">
     <div class="menu-header">
         <h3 class="menu-title">MENU</h3>
-        <button class="menu-close-btn" id="menuCloseBtn">
-            <i data-lucide="x"></i>
+        <button class="menu-close-btn" id="menuCloseBtn" aria-label="Fermer le menu de navigation">
+            <i data-lucide="x" aria-hidden="true"></i>
         </button>
     </div>
 
-    <nav class="menu-nav">
+    <nav class="menu-nav" aria-label="Navigation principale">
         <button class="menu-item {{ 'active' if active_view == 'dashboard' else '' }}" onclick="window.location.href='/dashboard'">
-            <i data-lucide="trending-up"></i>
+            <i data-lucide="trending-up" aria-hidden="true"></i>
             Dashboard
+        </button>
         <button class="menu-item {{ 'active' if active_view == 'session' else '' }}" onclick="window.location.href='/session'">
-            <i data-lucide="play-circle"></i>
+            <i data-lucide="play-circle" aria-hidden="true"></i>
                 Apprentissage
         </button>
         <button class="menu-item {{ 'active' if active_view == 'cards' else '' }}" onclick="window.location.href='/cards-list'">
-            <i data-lucide="book-open"></i>
+            <i data-lucide="book-open" aria-hidden="true"></i>
             Mes cartes
         </button>
         <button class="menu-item {{ 'active' if active_view == 'quiz' else '' }}" onclick="window.location.href='/quizzes-list'">
-            <i data-lucide="target"></i>
+            <i data-lucide="target" aria-hidden="true"></i>
             Mes quizz
         </button>
     </nav>
