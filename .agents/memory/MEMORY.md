@@ -1,0 +1,1 @@
+- [SmartCard architecture](smartcard-architecture.md) — dual-Flask app (Backend API + Frontend), port wiring and Groq/DB setup for Replit.
