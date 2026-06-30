@@ -259,3 +259,51 @@ L'ordre d'affichage des réponses doit être déterministe et conforme à l'inte
 La mise à jour des statistiques de questions (`times_used` / `times_correct`) via `QuizzService.submit_quiz` a été branchée à la route `POST /api/sessions/<id>/submit` lors de la **Tâche 5.3** (voir entrée correspondante). Aucune action supplémentaire requise pour la Tâche 2.4.
 
 ---
+
+## [Tâche 3.1] Enrichissement de la sérialisation via les relations ORM
+
+**Fichier(s) modifié(s) :**
+- `Backend/Models/questionModel.py`
+- `Backend/Models/themeModel.py`
+
+**Avant :**
+- `BaseModel.to_dict()` sérialisait uniquement les colonnes de la table, **à plat** : `question.to_dict()` ne contenait pas ses `answers`, `theme.to_dict()` ne contenait pas ses `questions`.
+- Les relations SQLAlchemy (`Question.answers`, `Theme.questions`) existaient mais n'étaient **pas exploitées** à la sérialisation. Le frontend (`front.py`, pages quiz/cards) reconstruisait donc chaque question via deux appels séparés (`GET /questions/<id>` puis `GET /answers/question/<id>`) — schéma N+1 sur deux endpoints.
+
+**Après :**
+- `Question.to_dict(include_private=False, include_relations=True)` surcharge `BaseModel.to_dict` et ajoute la clé `answers` : réponses **actives** (`deleted_at IS NULL`) triées par `order_position`.
+- `Theme.to_dict(include_private=False, include_relations=True)` ajoute la clé `questions` : questions **actives**, sérialisées **à plat** (`include_relations=False`, sans imbriquer leurs réponses).
+- Le paramètre `include_relations` permet l'opt-out (utilisé par `Theme` pour éviter une imbrication profonde thème → questions → réponses).
+
+**Justification :**
+Les relations ORM étaient définies mais inertes. Les utiliser à la sérialisation est l'objet de la tâche, et évite la reconstruction manuelle N+1 côté frontend. Le filtrage des `deleted_at` reproduit volontairement le comportement de `DBStorage` (`get`/`all`/`filter_by` excluent les soft-deleted), car une relation SQLAlchemy charge sinon **toutes** les lignes, supprimées comprises — incohérence évitée. CP5/CP6.
+
+**Impact :**
+- Ajout **additif** de clés (`answers`, `questions`) : aucun champ existant retiré ni renommé → le frontend actuel n'est pas cassé (il écrase de toute façon `question['answers']` avec son propre appel ; cet appel séparé devient simplement redondant et pourra être supprimé ultérieurement — **non modifié ici** car hors périmètre frontend).
+- `GET /api/questions/` et `GET /api/themes/<id>` renvoient désormais les relations imbriquées. `is_correct` apparaît dans les réponses imbriquées, exactement comme l'endpoint `GET /api/answers/question/<id>` existant — pas de nouvelle exposition.
+- Vérifié en conditions réelles (BDD courante) : `question.to_dict()` → 4 réponses triées `[0,1,2,3]` ; `theme.to_dict()` → 10 questions à plat (sans `answers`).
+
+---
+
+## [Tâche 3.2] Durcissement des relations ORM — stratégie de chargement `lazy='selectin'`
+
+**Fichier(s) modifié(s) :**
+- `Backend/Models/questionModel.py`
+- `Backend/Models/themeModel.py`
+
+**Avant :**
+- `Question.answers` et `Theme.questions` utilisaient la stratégie de chargement par défaut (`lazy='select'`), déclenchant une requête SQL distincte par parent lors de l'accès à la relation.
+- Combiné à la sérialisation imbriquée (Tâche 3.1), cela aurait reproduit un N+1 SQL (ex. `GET /api/questions/` chargeant les réponses d'une question à la fois).
+
+**Après :**
+- `lazy='selectin'` ajouté sur `Question.answers` et `Theme.questions` : les enfants sont chargés en **une seule requête groupée** (`IN (...)`) pour l'ensemble des parents.
+- Les autres relations (`User.themes`, `User.sessions`, `Theme.user`, `Theme.sessions`, `Question.theme`, `Answer.question`, `Session.user`, `Session.theme`) ont été **revues** et conservées en `lazy='select'` : elles ne sont pas sérialisées en masse et leur chargement à la demande reste approprié.
+
+**Justification :**
+Aligner la stratégie de chargement sur le nouvel usage (sérialisation imbriquée) pour éviter le N+1 SQL. `selectin` est appliqué **uniquement** aux relations effectivement sérialisées en liste, sans sur-optimiser le reste. CP5/CP6.
+
+**Impact :**
+- Les `back_populates` et `cascade='all, delete-orphan'` existants sont **inchangés** (audit : tous les appariements de relations sont corrects, aucun manquant).
+- Démarrage backend vérifié sans erreur de mapper SQLAlchemy après modification.
+
+---
