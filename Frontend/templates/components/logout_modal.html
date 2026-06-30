@@ -229,27 +229,36 @@
     const cancelLogoutBtn  = document.getElementById("cancelLogoutBtn");
     const confirmLogoutBtn = document.getElementById("confirmLogoutBtn");
 
-    logoutBtn.addEventListener("click", () => {
-        logoutModal.classList.remove("hidden");
-    });
+    // Le bouton de déconnexion (logoutBtn) vit dans la sidebar/header, qui n'est
+    // pas rendue sur les pages publiques (login, register). On protège donc tous
+    // les accès pour éviter un "Cannot read properties of null".
+    if (logoutModal && logoutBtn) {
+        logoutBtn.addEventListener("click", () => {
+            logoutModal.classList.remove("hidden");
+        });
 
-    cancelLogoutBtn.addEventListener("click", () => {
-        logoutModal.classList.add("hidden");
-    });
+        if (cancelLogoutBtn) {
+            cancelLogoutBtn.addEventListener("click", () => {
+                logoutModal.classList.add("hidden");
+            });
+        }
 
-    // Fermer en cliquant sur l'overlay
-    logoutModal.addEventListener("click", (e) => {
-        if (e.target === logoutModal) logoutModal.classList.add("hidden");
-    });
+        // Fermer en cliquant sur l'overlay
+        logoutModal.addEventListener("click", (e) => {
+            if (e.target === logoutModal) logoutModal.classList.add("hidden");
+        });
 
-    // Fermer avec Échap
-    document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") logoutModal.classList.add("hidden");
-    });
+        // Fermer avec Échap
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") logoutModal.classList.add("hidden");
+        });
 
-    confirmLogoutBtn.addEventListener("click", () => {
-        window.location.href = "/logout";
-    });
+        if (confirmLogoutBtn) {
+            confirmLogoutBtn.addEventListener("click", () => {
+                window.location.href = "/logout";
+            });
+        }
+    }
 </script>
 
 </body>
