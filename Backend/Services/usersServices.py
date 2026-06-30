@@ -146,7 +146,7 @@ class UserService:
             return None, "Utilisateur non trouvé"
 
         # Champs modifiables
-        updatable_fields = ['first_name', 'last_name', 'name', 'is_verified']
+        updatable_fields = ['first_name', 'last_name', 'name']
 
         # Champs protégés
         protected_fields = ['id', 'email', 'password', 'created_at', 'updated_at', 'deleted_at']
