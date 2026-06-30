@@ -66,7 +66,7 @@ class UserService:
             return None, error
 
         # Vérifier unicité email
-        existing_users = self.storage.filter_by('User', email=email)
+        existing_users = self.storage.filter_by(User, email=email)
         if existing_users:
             return None, "Un utilisateur avec cet email existe déjà"
 
@@ -88,7 +88,7 @@ class UserService:
         Returns:
             User ou None
         """
-        user = self.storage.get('User', user_id)
+        user = self.storage.get(User, user_id)
         if user and not user.is_deleted():
             return user
         return None
@@ -102,7 +102,7 @@ class UserService:
         Returns:
             User ou None
         """
-        users = self.storage.filter_by('User', email=email.lower().strip())
+        users = self.storage.filter_by(User, email=email.lower().strip())
         if users and not users[0].is_deleted():
             return users[0]
         return None
@@ -116,7 +116,7 @@ class UserService:
         Returns:
             Liste d'utilisateurs
         """
-        users_dict = self.storage.all('User')
+        users_dict = self.storage.all(User)
         users = list(users_dict.values())
 
         if not include_deleted:
@@ -223,7 +223,7 @@ class UserService:
         Returns:
             Tuple (success, message d'erreur)
         """
-        user = self.storage.get('User', user_id)
+        user = self.storage.get(User, user_id)
         if not user:
             return False, "Utilisateur non trouvé"
 

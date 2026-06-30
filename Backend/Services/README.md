@@ -10,14 +10,18 @@ La couche Services contient toute la logique métier de SmartCard, en particulie
 
 ```
 Services/
-├── coreServices.py        → CRUD de base abstrait (parent des autres services)
-├── cardsServices.py       → Service dédié aux flashcards
-├── authServices.py        → Logique d'authentification
-├── usersServices.py       → Gestion des utilisateurs
-├── questionServices.py    → Gestion des questions
+├── usersServices.py       → Gestion des utilisateurs (UserService)
+├── questionServices.py    → Gestion des quiz/flashcards (QuizzService)
 ├── pdfAnalysisService.py  → Pipeline PDF → IA → Questions
 └── similarityService.py   → Calcul de similarité texte (TF-IDF / Jaccard)
 ```
+
+> **Note (audit de consolidation) :** `coreServices.py`, `cardsServices.py` et
+> `authServices.py` ont été supprimés. Les deux premiers étaient des wrappers CRUD
+> cassés et redondants avec le pattern Repository de `Persistence/DBStorage.py`.
+> `authServices.py` était un doublon cassé de l'authentification : celle-ci est
+> assurée par `Api/authRoutes.py` (émission des tokens via `Utils/tokenSecurity.py`,
+> `generate_tokens()`) et `UserService.authenticate()`.
 
 ---
 

@@ -10,7 +10,9 @@ Gère :
 from Models.questionModel import Question
 from Models.answerModel import Answer
 from Models.sessionModel import Session
+from Models.themeModel import Theme
 from Models.tablesSchema import QuestionType, Difficulty, SessionType
+from Services.similarityService import SimilarityService
 from typing import Optional, List, Dict, Tuple
 import random
 
@@ -50,7 +52,7 @@ class QuizzService:
             Tuple (Question créée, message d'erreur)
         """
         # Vérifier que le thème existe
-        theme = self.storage.get('Theme', theme_id)
+        theme = self.storage.get(Theme, theme_id)
         if not theme:
             return None, "Thème non trouvé"
 
@@ -100,7 +102,7 @@ class QuizzService:
             Tuple (Answer créée, message d'erreur)
         """
         # Vérifier que la question existe
-        question = self.storage.get('Question', question_id)
+        question = self.storage.get(Question, question_id)
         if not question:
             return None, "Question non trouvée"
 
@@ -138,12 +140,12 @@ class QuizzService:
             Tuple (Session créée, Liste des questions, message d'erreur)
         """
         # Vérifier que le thème existe
-        theme = self.storage.get('Theme', theme_id)
+        theme = self.storage.get(Theme, theme_id)
         if not theme:
             return None, [], "Thème non trouvé"
 
         # Récupérer les questions du thème (type QUIZ uniquement)
-        all_questions = self.storage.filter_by('Question', theme_id=theme_id)
+        all_questions = self.storage.filter_by(Question, theme_id=theme_id)
         quiz_questions = [q for q in all_questions if q.type == QuestionType.QUIZ and not q.is_deleted()]
 
         if len(quiz_questions) < questions_count:
@@ -188,12 +190,12 @@ class QuizzService:
             Tuple (Session créée, Liste des flashcards, message d'erreur)
         """
         # Vérifier que le thème existe
-        theme = self.storage.get('Theme', theme_id)
+        theme = self.storage.get(Theme, theme_id)
         if not theme:
             return None, [], "Thème non trouvé"
 
         # Récupérer les flashcards du thème
-        all_questions = self.storage.filter_by('Question', theme_id=theme_id)
+        all_questions = self.storage.filter_by(Question, theme_id=theme_id)
         flashcards = [q for q in all_questions if q.type == QuestionType.FLASHCARD and not q.is_deleted()]
 
         if len(flashcards) < cards_count:
@@ -222,6 +224,105 @@ class QuizzService:
         return session, selected_cards, None
 
     # ********************************************************
+    # MATCHING (logique migrée depuis Api/sessionRoutes.py)
+    # ********************************************************
+    def find_matching_theme_for_user(
+        self,
+        user_id: str,
+        pdf_keywords: List[str],
+        threshold: float = 0.4
+    ) -> Optional[Dict]:
+        """Recherche un thème existant de l'utilisateur correspondant aux mots-clés.
+
+        Centralise la logique de matching de thème auparavant écrite en dur dans
+        la route `create_session_with_pdf` (Api/sessionRoutes.py).
+
+        Args:
+            user_id: ID de l'utilisateur propriétaire des thèmes
+            pdf_keywords: Mots-clés extraits du PDF par l'IA
+            threshold: Seuil minimum de correspondance (0.4 = 40%)
+
+        Returns:
+            Dict {'theme': {...}, 'match_score': float} ou None si aucun thème
+            ne dépasse le seuil.
+        """
+        import json
+
+        user_themes = self.storage.filter_by(Theme, user_id=user_id)
+        themes_dict = [
+            {
+                'id': t.id,
+                'name': t.name,
+                'keywords': json.loads(t.keywords) if isinstance(t.keywords, str) else (t.keywords or []),
+                'description': t.description
+            }
+            for t in user_themes
+        ]
+
+        return SimilarityService.find_matching_theme(
+            pdf_keywords,
+            themes_dict,
+            threshold=threshold
+        )
+
+    def match_generated_to_existing_questions(
+        self,
+        generated_questions: List[Dict],
+        theme_id: str,
+        threshold: float = 0.4
+    ) -> Tuple[List[str], List[Dict]]:
+        """Compare les questions générées par l'IA aux questions existantes du thème.
+
+        Centralise la logique de matching de questions auparavant écrite en dur
+        dans la route `create_session_with_pdf` (Api/sessionRoutes.py).
+
+        Args:
+            generated_questions: Questions générées par l'IA (dict avec clé 'question')
+            theme_id: ID du thème dont on compare les questions existantes
+            threshold: Seuil minimum de similarité (0.4 = 40%)
+
+        Returns:
+            Tuple (matched_ids, unmatched_generated) :
+            - matched_ids : IDs des questions existantes ré-utilisables
+            - unmatched_generated : questions générées sans correspondance (à créer)
+        """
+        existing_questions = self.storage.filter_by(Question, theme_id=theme_id)
+        questions_dict = [
+            {
+                'id': q.id,
+                'question_text': q.question_text,
+                'type': q.type.value,
+                'difficulty': q.difficulty.value
+            }
+            for q in existing_questions
+        ]
+
+        matched_ids = set()
+        for generated_q in generated_questions:
+            generated_text = generated_q.get('question', '')
+            for existing_q in questions_dict:
+                similarity = SimilarityService.calculate_text_similarity(
+                    generated_text,
+                    existing_q['question_text']
+                )
+                if similarity >= threshold:
+                    matched_ids.add(existing_q['id'])
+                    break  # une question générée = un match max
+
+        unmatched_generated = [
+            q for q in generated_questions
+            if not any(
+                SimilarityService.calculate_text_similarity(
+                    q.get('question', ''),
+                    existing_q['question_text']
+                ) >= threshold
+                for existing_q in questions_dict
+            )
+        ]
+
+        return list(matched_ids), unmatched_generated
+
+    # ********************************************************
     # SOUMISSION QUIZ
     # ********************************************************
     def submit_quiz(
@@ -239,7 +340,7 @@ class QuizzService:
             Tuple (Session mise à jour, Résultats détaillés, message d'erreur)
         """
         # Récupérer la session
-        session = self.storage.get('Session', session_id)
+        session = self.storage.get(Session, session_id)
         if not session:
             return None, None, "Session non trouvée"
 
@@ -255,12 +356,12 @@ class QuizzService:
         results = []
 
         for question_id in session.questions_ids:
-            question = self.storage.get('Question', question_id)
+            question = self.storage.get(Question, question_id)
             if not question:
                 continue
 
             # Récupérer les réponses de la question
-            question_answers = self.storage.filter_by('Answer', question_id=question_id)
+            question_answers = self.storage.filter_by(Answer, question_id=question_id)
             correct_answer = next((a for a in question_answers if a.is_correct), None)
 
             # Vérifier si l'utilisateur a répondu correctement
@@ -304,7 +405,7 @@ class QuizzService:
             Dictionnaire de statistiques
         """
         # Récupérer toutes les sessions de l'utilisateur
-        all_sessions = self.storage.filter_by('Session', user_id=user_id)
+        all_sessions = self.storage.filter_by(Session, user_id=user_id)
         completed_sessions = [s for s in all_sessions if s.is_completed()]
 
         quiz_sessions = [s for s in completed_sessions if s.type == SessionType.QUIZ]
