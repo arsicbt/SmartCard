@@ -69,7 +69,13 @@ python init_db.py --reset
 python init_db.py
 ```
 
-> **POINT DE BLOCAGE À VALIDER — opération destructive.**
-> `--reset` exécute `Base.metadata.drop_all()` : **toutes les données existantes sont perdues** (utilisateurs, thèmes, questions, réponses, sessions). En développement sur la base SQLite locale, c'est acceptable. S'il existe une base contenant des données à conserver (ex. environnement déployé), il faut une vraie migration (sauvegarde + recréation + réimport, ou mise en place d'Alembic). **Je ne lance pas `--reset` automatiquement et j'attends votre décision sur ce point.**
+> **POINT DE BLOCAGE — opération destructive (TRANCHÉ).**
+> `--reset` exécute `Base.metadata.drop_all()` : **toutes les données existantes sont perdues** (utilisateurs, thèmes, questions, réponses, sessions). S'il existe une base contenant des données à conserver (ex. environnement déployé), il faut une vraie migration (sauvegarde + recréation + réimport, ou mise en place d'Alembic).
+
+**Décision validée par l'utilisateur (app non déployée) :** la base SQLite locale a été recréée. Schéma vérifié après recréation — la table `users` contient désormais :
+```
+first_name, last_name, email, password, name, is_admin, last_login_at, id, created_at, updated_at, deleted_at
+```
+Les colonnes `is_verified` et `verification_token` ont bien disparu. Les 5 tables (`users`, `themes`, `questions`, `answers`, `sessions`) sont recréées et le Backend redémarre sans erreur.
 
 ---
