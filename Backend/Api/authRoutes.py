@@ -38,6 +38,10 @@ def login():
     if not PasswordManager.verify_password(password, user.password):
         return jsonify({'error': 'Identifiants invalides'}), 401
 
+    # Enregistrer la date de dernière connexion (last_login_at)
+    user.update_last_login()
+    storage.save()
+
     # Générer access + refresh token
     access_token, refresh_token = token_manager.generate_tokens(
         user_id=user.id,

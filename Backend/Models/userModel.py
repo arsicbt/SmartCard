@@ -135,9 +135,14 @@ class User(BaseModel):
         return PasswordManager.verify_password(password, self.password)
 
     def update_last_login(self) -> None:
-        """Met à jour la date de dernière connexion."""
+        """Met à jour la date de dernière connexion.
+
+        La colonne `last_login_at` est de type String : on stocke donc une
+        chaîne ISO 8601 (et non un objet datetime) pour une sérialisation
+        cohérente via `to_dict()` et éviter toute coercion implicite du driver.
+        """
         from datetime import datetime
-        self.last_login_at = datetime.utcnow()
+        self.last_login_at = datetime.utcnow().isoformat()
         self.update_timestamp()
 
     # ********************************************************

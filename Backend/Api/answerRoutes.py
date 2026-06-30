@@ -36,7 +36,10 @@ def get_question_answers(question_id):
     if not question:
         abort(404, description="Question not found")
 
+    # Tri par order_position : la colonne existe pour garantir l'ordre
+    # d'affichage des réponses (notamment pour les QUIZ).
     answers = storage.filter_by(Answer, question_id=question_id)
+    answers = sorted(answers, key=lambda a: (a.order_position if a.order_position is not None else 0))
     return jsonify([a.to_dict() for a in answers]), 200
 
 

@@ -186,3 +186,76 @@ Réparation d'un service cassé + suppression de la duplication de logique méti
 - **À valider fonctionnellement par l'utilisateur :** le pipeline complet `create-with-pdf` dépend d'un upload PDF réel + de l'API Groq, non testable automatiquement ici. La logique de matching ayant été déplacée à l'identique, aucun changement de comportement n'est attendu.
 
 ---
+
+## [Tâche 2.1] Enregistrement de la dernière connexion (`last_login_at`)
+
+**Fichier(s) modifié(s) :**
+- `Backend/Models/userModel.py`
+- `Backend/Api/authRoutes.py`
+
+**Avant :**
+- Le modèle `User` exposait la méthode `update_last_login()` et la colonne `last_login_at`, mais **aucune route ne l'appelait** : `last_login_at` restait donc `NULL` à vie après l'inscription.
+- `update_last_login()` affectait `datetime.utcnow()` (objet `datetime`) à `last_login_at`, alors que la colonne est de type `String` — incohérence de type reposant sur une coercion implicite du driver SQLite.
+
+**Après :**
+- `userModel.py` : `update_last_login()` stocke désormais une chaîne ISO 8601 (`datetime.utcnow().isoformat()`), cohérente avec le type `String` de la colonne et avec la sérialisation `to_dict()`.
+- `authRoutes.py` (`login`) : après vérification réussie du mot de passe, la route appelle `user.update_last_login()` puis `storage.save()`.
+
+**Justification :**
+Activation d'une fonctionnalité métier existante mais non branchée + suppression d'une incohérence de type latente. CP5/CP6.
+
+**Impact :**
+- Smoke test validé : à l'inscription `last_login_at = None` ; après `POST /api/auth/login`, la réponse renvoie `last_login_at = "2026-06-30T..."` (chaîne ISO). Utilisateur de test supprimé (hard delete) après vérification.
+- Aucune migration de schéma nécessaire (le type de colonne `String` est inchangé).
+- **Alternative signalée (non appliquée — destructive) :** aligner `last_login_at` sur le type `DateTime` (comme `created_at`/`updated_at`) serait plus homogène mais impose une recréation de table (pas d'Alembic). Conservé en `String` pour rester non destructif.
+
+---
+
+## [Tâche 2.2] Persistance de l'explication (`explanation`) des questions générées par l'IA
+
+**Fichier(s) modifié(s) :**
+- `Backend/Api/sessionRoutes.py`
+
+**Avant :**
+- L'IA (Groq) génère bien un champ `explanation` pour chaque question de QUIZ (cf. `Services/pdfAnalysisService.py`, prompt : `"explanation": "Brief explanation of why the correct answer is correct"`).
+- Or `_create_questions_from_generated()` construisait l'objet `Question(...)` **sans** transmettre `explanation` → l'explication générée était systématiquement **perdue**, alors que la colonne `Question.explanation` existe et que `Api/questionRoutes.py` la persiste déjà lors d'une création manuelle.
+
+**Après :**
+- Ajout de `explanation=q_data.get('explanation')` à la construction de `Question` dans `_create_questions_from_generated()`.
+
+**Justification :**
+Correction d'une perte de donnée : la colonne et la donnée source existaient, seul le branchement manquait. Cohérence avec `questionRoutes.create_question` qui persiste déjà ce champ. CP5/CP6.
+
+**Impact :**
+- Les questions de QUIZ créées via le pipeline PDF conservent désormais leur explication.
+- `q_data.get('explanation')` (et non `[...]`) : si l'IA n'en fournit pas, la valeur reste `None` (colonne `nullable=True`) — aucun risque de `KeyError`.
+- **À valider fonctionnellement par l'utilisateur :** dépend d'un upload PDF réel + API Groq.
+
+---
+
+## [Tâche 2.3] Tri des réponses par `order_position` à la sérialisation
+
+**Fichier(s) modifié(s) :**
+- `Backend/Api/answerRoutes.py`
+
+**Avant :**
+- `GET /api/answers/question/<question_id>` renvoyait `storage.filter_by(Answer, question_id=...)` **sans tri**, donc dans un ordre non garanti par la base.
+- La colonne `Answer.order_position` existe pourtant explicitement « pour l'ordre d'affichage (pour les quiz) » (docstring du modèle) et est renseignée à la création (`order_position=ans_idx`).
+
+**Après :**
+- La liste des réponses est triée par `order_position` avant sérialisation (`sorted(..., key=lambda a: a.order_position or 0)`), garde incluse contre une valeur `None`.
+
+**Justification :**
+L'ordre d'affichage des réponses doit être déterministe et conforme à l'intention du modèle. Sans tri, l'ordre dépendait du moteur de base. CP5/CP6.
+
+**Impact :**
+- L'endpoint renvoie désormais les réponses dans l'ordre `order_position` croissant.
+- Aucune autre route ne sérialisait les réponses (vérifié) : changement localisé, sans effet de bord.
+
+---
+
+## [Tâche 2.4] Activation de la soumission de quiz — *déjà couverte par la Tâche 5.3*
+
+La mise à jour des statistiques de questions (`times_used` / `times_correct`) via `QuizzService.submit_quiz` a été branchée à la route `POST /api/sessions/<id>/submit` lors de la **Tâche 5.3** (voir entrée correspondante). Aucune action supplémentaire requise pour la Tâche 2.4.
+
+---

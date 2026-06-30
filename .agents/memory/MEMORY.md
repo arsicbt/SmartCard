@@ -1,1 +1,2 @@
 - [SmartCard architecture](smartcard-architecture.md) — dual-Flask app (Backend API + Frontend), port wiring and Groq/DB setup for Replit.
+- [Frontend template cache](frontend-template-cache.md) — Frontend/templates edits need a "Start application" workflow restart to show (no Jinja auto-reload).

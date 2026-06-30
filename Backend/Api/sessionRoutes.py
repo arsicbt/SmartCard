@@ -543,6 +543,7 @@ def _create_questions_from_generated(
                 type=QuestionType[session_type],
                 question_text=q_data['question'],
                 difficulty=Difficulty[q_data.get('difficulty', 'MEDIUM').upper()],
+                explanation=q_data.get('explanation'),
             )
 
             storage.new(question)
