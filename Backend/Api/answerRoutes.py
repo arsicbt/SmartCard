@@ -87,7 +87,7 @@ def delete_answer(answer_id):
     if not answer:
         abort(404, description="Answer not found")
 
-    storage.delete(answer)
-    storage.save()
+    with storage.transaction():
+        storage.delete(answer)
 
     return jsonify({}), 200

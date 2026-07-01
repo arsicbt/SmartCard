@@ -227,8 +227,8 @@ class UserService:
         if not user:
             return False, "Utilisateur non trouvé"
 
-        self.storage.delete(user, hard_delete=hard_delete)
-        self.storage.save()
+        with self.storage.transaction():
+            self.storage.delete(user, hard_delete=hard_delete)
 
         return True, None
 

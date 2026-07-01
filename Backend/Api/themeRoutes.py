@@ -105,6 +105,6 @@ def delete_theme(theme_id):
     if not theme:
         abort(404)
 
-    storage.delete(theme)
-    storage.save()
+    with storage.transaction():
+        storage.delete(theme)
     return jsonify({}), 200

@@ -307,3 +307,41 @@ Aligner la stratégie de chargement sur le nouvel usage (sérialisation imbriqu�
 - Démarrage backend vérifié sans erreur de mapper SQLAlchemy après modification.
 
 ---
+
+## [Tâche 4] Soft-delete en cascade, atomique (via `storage.transaction()`)
+
+**Fichier(s) modifié(s) :**
+- `Backend/Persistence/DBStorage.py`
+- `Backend/Api/questionRoutes.py`
+- `Backend/Api/answerRoutes.py`
+- `Backend/Api/sessionRoutes.py`
+- `Backend/Api/themeRoutes.py`
+- `Backend/Services/usersServices.py`
+
+**Avant :**
+- `storage.delete(obj)` en mode soft delete (défaut) ne posait `deleted_at` que sur **l'objet ciblé**.
+- La cascade définie sur les ForeignKey (`ondelete='CASCADE'`) ne s'applique qu'au **hard delete** (niveau BDD). Conséquence : soft-supprimer un `User`, un `Theme` ou une `Question` laissait ses enfants (`themes`/`questions`/`answers`/`sessions`) **actifs et orphelins** — toujours renvoyés par `get`/`all`/`filter_by`.
+- Les routes DELETE faisaient `storage.delete(obj)` puis `storage.save()` (pas d'enveloppe transactionnelle explicite).
+
+**Après :**
+- `DBStorage.delete()` (mode soft) marque désormais **l'objet ET ses descendants actifs** via un nouvel helper `_collect_soft_delete_targets()`. Arbre de cascade :
+  - `User` → `themes` → `questions` → `answers`
+  - `User` → `sessions`
+  - `Theme` → `questions` → `answers`
+  - `Question` → `answers`
+- Les **sessions ne sont pas supprimées** lors de la suppression d'un thème (`Session.theme_id` est `ON DELETE SET NULL` : la session survit, conformément au périmètre validé).
+- Seuls les descendants **actifs** (`deleted_at IS NULL`) sont marqués, pour ne pas écraser l'horodatage d'objets déjà supprimés (les relations SQLAlchemy chargeant aussi les soft-deleted).
+- Les 5 points de suppression (`questionRoutes`, `answerRoutes`, `sessionRoutes`, `themeRoutes`, `usersServices.delete_user`) utilisent désormais `with storage.transaction():` → la cascade est **atomique** (tout est validé, ou tout est annulé en cas d'erreur).
+- Le hard delete reste inchangé (cascade assurée par la BDD).
+
+**Justification :**
+Cohérence du soft delete : un parent supprimé ne doit pas laisser d'enfants actifs orphelins. L'atomicité via `storage.transaction()` garantit qu'une cascade partielle ne peut pas laisser la base dans un état incohérent. CP5/CP6/CP7.
+
+**Impact :**
+- Supprimer (soft) un utilisateur/thème/question propage désormais la suppression à toute sa descendance, en une seule transaction.
+- Les routes DELETE renvoient toujours le même JSON ; elles n'accèdent pas à l'objet après suppression (vérifié) → la fermeture de session par `transaction()` est sans effet de bord.
+- **Testé** (données réelles + jeu d'essai jetable) :
+  - Collecte sur un thème réel → 1 thème + 10 questions + 40 réponses, **sessions exclues**.
+  - Cascade complète depuis un `User` jetable → User + Theme + Question + 2 réponses + Session tous soft-deleted (`deleted_at` posé, exclus des requêtes actives), puis nettoyés par hard delete.
+
+---

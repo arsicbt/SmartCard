@@ -153,8 +153,8 @@ def delete_session(session_id):
     if session_obj.user_id != current_user.id and not current_user.is_admin:
         abort(403, description="Vous n'êtes pas autorisé à supprimer cette session")
 
-    storage.delete(session_obj)
-    storage.save()
+    with storage.transaction():
+        storage.delete(session_obj)
 
     return jsonify({"message": "Session deleted"}), 200
 
