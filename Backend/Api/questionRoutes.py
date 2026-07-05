@@ -101,7 +101,7 @@ def delete_question(question_id):
     if not question:
         abort(404)
 
-    storage.delete(question)
-    storage.save()
+    with storage.transaction():
+        storage.delete(question)
 
     return jsonify({"message": "Question deleted"}), 200

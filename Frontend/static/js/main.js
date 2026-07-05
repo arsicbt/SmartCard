@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         function openMenu() {
             menuOverlay.classList.add('active');
             menuSidebar.classList.add('active');
+            burgerBtn.setAttribute('aria-expanded', 'true');
             const menuIcon = burgerBtn.querySelector('.menu-icon');
             const closeIcon = burgerBtn.querySelector('.close-icon');
             if (menuIcon) menuIcon.classList.add('hidden');
@@ -32,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
         function closeMenu() {
             menuOverlay.classList.remove('active');
             menuSidebar.classList.remove('active');
+            burgerBtn.setAttribute('aria-expanded', 'false');
             const menuIcon = burgerBtn.querySelector('.menu-icon');
             const closeIcon = burgerBtn.querySelector('.close-icon');
             if (menuIcon) menuIcon.classList.remove('hidden');

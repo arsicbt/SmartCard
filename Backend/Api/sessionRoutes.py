@@ -10,7 +10,7 @@ from Models.answerModel import Answer
 from Utils.authVerification import auth_required, admin_required
 from Persistence.DBStorage import storage
 from Services.pdfAnalysisService import PDFAnalysisService
-from Services.similarityService import SimilarityService
+from Services.questionServices import QuizzService
 
 session_bp = Blueprint("sessions", __name__, url_prefix="/api/sessions")
 
@@ -153,8 +153,8 @@ def delete_session(session_id):
     if session_obj.user_id != current_user.id and not current_user.is_admin:
         abort(403, description="Vous n'êtes pas autorisé à supprimer cette session")
 
-    storage.delete(session_obj)
-    storage.save()
+    with storage.transaction():
+        storage.delete(session_obj)
 
     return jsonify({"message": "Session deleted"}), 200
 
@@ -282,30 +282,14 @@ def create_session_with_pdf():
         # ********************************************************
         print("[DEBUG] 3. RECHERCHE THÈME EXISTANT")
 
-        # Récupérer tous les thèmes de l'utilisateur
-        user_themes = storage.filter_by(Theme, user_id=user_id)
-        print(f"[DEBUG]   - Thèmes utilisateur: {len(user_themes)}")
-
-        # Convertir en dict pour le service de similarité
-        themes_dict = [
-            {
-                'id': t.id,
-                'name': t.name,
-                'keywords': json.loads(t.keywords) if isinstance(t.keywords, str) else (t.keywords or []),
-                'description': t.description
-            }
-            for t in user_themes
-        ]
-        print(f"[DEBUG]   - themes_dict créé: {len(themes_dict)} thèmes")
-
-        # Chercher un thème correspondant (>= 40 %)
+        # Recherche d'un thème existant correspondant
+        # (logique de matching migrée dans QuizzService)
+        quizz_service = QuizzService(storage)
         print(f"[DEBUG]   - Recherche similarité avec keywords: {theme_data.get('keywords', [])[:3]}...")
 
-        matching_theme = None
-        
-        matching_theme = SimilarityService.find_matching_theme(
+        matching_theme = quizz_service.find_matching_theme_for_user(
+            user_id,
             theme_data['keywords'],
-            themes_dict,
             threshold=0.4
         )
 
@@ -337,60 +321,27 @@ def create_session_with_pdf():
             # ********************************************************
             print("\n[DEBUG] 4. RÉCUPÉRATION QUESTIONS EXISTANTES")
 
-            existing_questions = storage.filter_by(Question, theme_id=theme_id)
-            print(f"[DEBUG]   - Questions existantes: {len(existing_questions)}")
-
-            # Convertir en dictionnaire
-            questions_dict = [
-                {
-                    'id': q.id,
-                    'question_text': q.question_text,
-                    'type': q.type.value,
-                    'difficulty': q.difficulty.value
-                }
-                for q in existing_questions
-            ]
-
-            # Comparer les questions générées par Groq aux questions existantes en DB
+            # Comparaison questions générées vs existantes
+            # (logique de matching migrée dans QuizzService)
             print("[DEBUG]   - Recherche questions similaires...")
 
-            matching_ids = set()
-            for generated_q in generated_questions:
-                generated_text = generated_q.get('question', '')
-                for existing_q in questions_dict:
-                    similarity = SimilarityService.calculate_text_similarity(
-                        generated_text,
-                        existing_q['question_text']
-                    )
-                    if similarity >= 0.4:
-                        matching_ids.add(existing_q['id'])
-                        break  # une question générée = un match max
+            matched_ids, unmatched_generated = quizz_service.match_generated_to_existing_questions(
+                generated_questions,
+                theme_id,
+                threshold=0.4
+            )
 
-            print(f"[DEBUG]   - Questions similaires trouvées: {len(matching_ids)}")
+            print(f"[DEBUG]   - Questions similaires trouvées: {len(matched_ids)}")
 
             # Limiter au nombre demandé
-            questions_ids = list(matching_ids)[:questions_count]
+            questions_ids = matched_ids[:questions_count]
             print(f"[DEBUG]   - Questions retenues: {len(questions_ids)}")
-            print(f"[DEBUG]   - IDs récupérés: {len(questions_ids)}")
 
             if len(questions_ids) < questions_count:
                 print("[DEBUG]   ⚠️  Pas assez de questions, génération complément...")
 
-                # Filtrer les questions générées non matchées pour éviter les doublons
                 remaining_count = questions_count - len(questions_ids)
                 print(f"[DEBUG]   - Questions à créer: {remaining_count}")
-
-                # Ne créer que les questions qui n'ont pas matché
-                unmatched_generated = [
-                    q for q in generated_questions
-                    if not any(
-                        SimilarityService.calculate_text_similarity(
-                            q.get('question', ''),
-                            existing_q['question_text']
-                        ) >= 0.4
-                        for existing_q in questions_dict
-                    )
-                ]
 
                 new_question_ids = _create_questions_from_generated(
                     unmatched_generated[:remaining_count],
@@ -512,6 +463,50 @@ def create_session_with_pdf():
         abort(500, description=f"Error creating session: {str(e)}")
 
 
+# ************************************************
+# POST - SOUMETTRE UN QUIZ
+# ************************************************
+@session_bp.route('/<session_id>/submit', methods=['POST'])
+@auth_required
+def submit_quiz(session_id):
+    """Soumet les réponses d'un quiz et calcule le score.
+
+    Délègue la logique métier à QuizzService.submit_quiz, ce qui termine la
+    session (complete_session) et incrémente les statistiques des questions
+    (times_used / times_correct).
+
+    Body JSON attendu :
+        {"answers": {"<question_id>": "<answer_id>", ...}}
+    """
+    if not request.is_json:
+        abort(400, description="Not a JSON")
+
+    data = request.json
+    answers = data.get('answers')
+    if not isinstance(answers, dict):
+        abort(400, description="answers must be an object {question_id: answer_id}")
+
+    # Vérifier que la session existe et appartient à l'utilisateur (ou admin)
+    session_obj = storage.get(Session, session_id)
+    if not session_obj:
+        abort(404, description="Session not found")
+
+    current_user = request.current_user
+    if session_obj.user_id != current_user.id and not current_user.is_admin:
+        abort(403, description="Vous n'êtes pas autorisé à soumettre cette session")
+
+    quizz_service = QuizzService(storage)
+    session, results, error = quizz_service.submit_quiz(session_id, answers)
+
+    if error:
+        abort(400, description=error)
+
+    return jsonify({
+        "session": session.to_dict(),
+        "results": results
+    }), 200
+
+
 def _create_questions_from_generated(
     generated_questions: list,
     theme_id: str,
@@ -548,6 +543,7 @@ def _create_questions_from_generated(
                 type=QuestionType[session_type],
                 question_text=q_data['question'],
                 difficulty=Difficulty[q_data.get('difficulty', 'MEDIUM').upper()],
+                explanation=q_data.get('explanation'),
             )
 
             storage.new(question)

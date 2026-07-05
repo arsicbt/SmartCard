@@ -10,7 +10,7 @@ Hérite de BaseModel et ajoute :
 from sqlalchemy import Column, String, Text, JSON, Integer, ForeignKey, Index, UniqueConstraint
 from sqlalchemy.orm import relationship
 from Models.baseModel import BaseModel
-from typing import List
+from typing import List, Dict, Any
 
 
 class Theme(BaseModel):
@@ -50,7 +50,12 @@ class Theme(BaseModel):
     # RELATIONS SQLALCHEMY
     # ********************************************************
     user = relationship('User', back_populates='themes')
-    questions = relationship('Question', back_populates='theme', cascade='all, delete-orphan')
+    questions = relationship(
+        'Question',
+        back_populates='theme',
+        cascade='all, delete-orphan',
+        lazy='selectin'
+    )
     sessions = relationship('Session', back_populates='theme')
 
     # ********************************************************
@@ -130,6 +135,41 @@ class Theme(BaseModel):
         """Incrémente le compteur d'utilisation."""
         self.times_used += 1
         self.update_timestamp()
+
+    # ********************************************************
+    # SÉRIALISATION
+    # ********************************************************
+    def to_dict(self, include_private: bool = False,
+                include_relations: bool = True) -> Dict[str, Any]:
+        """Sérialise le thème en dictionnaire.
+
+        Surcharge BaseModel.to_dict pour exposer la relation `questions`
+        directement dans le JSON renvoyé.
+
+        Args:
+            include_private: Inclure les champs privés
+            include_relations: Inclure la liste des questions (clé 'questions')
+
+        Returns:
+            Dictionnaire du thème. Si include_relations est True, contient
+            la clé 'questions' avec les questions ACTIVES (deleted_at IS NULL).
+
+        Note:
+            Les questions sont sérialisées à plat (include_relations=False),
+            sans imbriquer leurs réponses, pour éviter des payloads trop
+            volumineux. Les questions soft-deleted sont exclues pour rester
+            cohérent avec le comportement de DBStorage.
+        """
+        data = super().to_dict(include_private=include_private)
+
+        if include_relations:
+            active_questions = [q for q in self.questions if q.deleted_at is None]
+            data['questions'] = [
+                q.to_dict(include_private=include_private, include_relations=False)
+                for q in active_questions
+            ]
+
+        return data
 
     # ********************************************************
     # REPRÉSENTATION

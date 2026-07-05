@@ -1,14 +1,21 @@
-"""Users paths."""
+"""Users paths.
+
+Les routes valident la requête HTTP puis délèguent la logique métier au
+service `UserService` (Services/usersServices.py). Aucune logique métier
+complexe ne doit subsister directement dans ce fichier.
+"""
 
 from flask import Blueprint, jsonify, request, abort
-from Utils.passwordSecurity import PasswordManager
-from Utils.inputSecurity import InputValidator
 from Persistence.DBStorage import storage
 from Models.userModel import User
+from Services.usersServices import UserService
 from Utils.authVerification import auth_required, admin_required
 
 
 users_bp = Blueprint("users", __name__, url_prefix="/api/users")
+
+# Service métier (logique pure, sans dépendance HTTP)
+user_service = UserService(storage)
 
 
 # ************************************************
@@ -17,10 +24,9 @@ users_bp = Blueprint("users", __name__, url_prefix="/api/users")
 @users_bp.route('/', methods=['GET'])
 @admin_required
 def get_users():
-    """Recupere tous les utilisateur."""
-    users = storage.all(User)
-    # Serialization
-    return jsonify([user.to_dict() for user in users.values()])
+    """Récupère tous les utilisateurs (réservé aux admins)."""
+    users = user_service.get_all_users()
+    return jsonify([user.to_dict() for user in users])
 
 
 # ************************************************
@@ -29,8 +35,8 @@ def get_users():
 @users_bp.route('/<user_id>', methods=['GET'])
 @admin_required
 def get_user_by_id(user_id):
-    """Recupere l'utilisateur via son id."""
-    user = storage.get(User, user_id)
+    """Récupère l'utilisateur via son id (réservé aux admins)."""
+    user = user_service.get_user_by_id(user_id)
 
     if not user:
         abort(404)
@@ -47,43 +53,26 @@ def create_user():
     if not request.json:
         abort(400, description="Not a JSON")
 
-    if 'email' not in request.json:
-        abort(400, description="Missing email")
-
-    if 'password' not in request.json:
-        abort(400, description="Missing password")
-
     data = request.json
 
-    is_valid, error = InputValidator.validate_email(data['email'])
-    if not is_valid:
+    # Validation simple de présence des champs obligatoires (reste dans la route)
+    required = ['first_name', 'last_name', 'email', 'password']
+    for field in required:
+        if field not in data:
+            abort(400, description=f"Missing {field}")
+
+    user, error = user_service.create_user(
+        first_name=data['first_name'],
+        last_name=data['last_name'],
+        email=data['email'],
+        password=data['password'],
+        name=data.get('name')
+    )
+
+    if error:
         abort(400, description=error)
 
-    is_valid, error = InputValidator.validate_password(data['password'])
-    if not is_valid:
-        abort(400, description=error)
-
-    if storage.filter_by(User, email=data['email']):
-        abort(400, description="Email already exists")
-
-    hashed = PasswordManager.hash_password(data['password'])
-
-    try:
-        user = User(
-            first_name=data['first_name'],
-            last_name=data['last_name'],
-            email=data['email'],
-            password=hashed,
-            name=data['name']
-        )
-
-        storage.new(user)
-        storage.save()
-
-        return jsonify(user.to_dict()), 201
-
-    except Exception as e:
-        abort(400, description=str(e))
+    return jsonify(user.to_dict()), 201
 
 
 # ************************************************
@@ -93,23 +82,13 @@ def create_user():
 @auth_required
 def update_user(user_id):
     """Met à jour les données d'un utilisateur."""
-    user = storage.get(User, user_id)
-    if not user:
-        abort(404)
-
     if not request.json:
         abort(400, description="Not a JSON")
 
-    data = request.json
+    user, error = user_service.update_user(user_id, request.json)
 
-    ignored_keys = ['id', 'created_at', 'updated_at', 'deleted_at', 'password_hash']
-
-    for k, v in data.items():
-        if k not in ignored_keys and hasattr(user, k):
-            setattr(user, k, v)
-
-    user.update_timestamp()
-    storage.save()
+    if error:
+        abort(404, description=error)
 
     return jsonify(user.to_dict())
 
@@ -120,13 +99,10 @@ def update_user(user_id):
 @users_bp.route('/<user_id>', methods=['DELETE'])
 @admin_required
 def delete_user(user_id):
-    """Supprime (soft delete) l'utilisateur."""
-    user = storage.get(User, user_id)
+    """Supprime (soft delete) l'utilisateur (réservé aux admins)."""
+    success, error = user_service.delete_user(user_id)
 
-    if not user:
-        abort(404)
+    if not success:
+        abort(404, description=error)
 
-    storage.delete(user)
-    storage.save()
-
-    return jsonify({}, 200)
+    return jsonify({"message": "User deleted"}), 200

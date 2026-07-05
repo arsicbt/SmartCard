@@ -430,10 +430,57 @@
             to   { opacity: 1; transform: translateY(0); }
         }
 
+        /* ── Bouton parcourir (visible sur mobile) ── */
+        .upload-browse-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            margin-top: 1.25rem;
+            min-height: 44px;
+            padding: .75rem 1.5rem;
+            border-radius: .75rem;
+            background: linear-gradient(to right, var(--gradient-orange), var(--gradient-purple));
+            color: #fff;
+            font-size: .9rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s;
+        }
+        .upload-browse-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 24px -8px rgba(255,107,53,.45);
+        }
+        .upload-browse-btn svg { width: 16px; height: 16px; }
+
+        /* ── Accessibilité : focus clavier visible (RGAA 10.7) ── */
+        a:focus-visible,
+        button:focus-visible,
+        .type-card:focus-visible,
+        .upload-zone:focus-visible {
+            outline: 3px solid #ff8c5a;
+            outline-offset: 2px;
+            border-radius: 10px;
+        }
+        a:focus:not(:focus-visible),
+        button:focus:not(:focus-visible) { outline: none; }
+
+        /* ── Cibles tactiles 44x44 minimum ── */
+        .back-btn { min-height: 44px; min-width: 44px; }
+        .file-remove { min-height: 44px; min-width: 44px; }
+
         /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .page-wrapper { padding: 2rem 1rem 3rem; }
+            .upload-zone { padding: 2rem 1.25rem; }
+        }
         @media (max-width: 480px) {
             .type-grid { grid-template-columns: 1fr; }
             .page-title { font-size: 1.75rem; }
+            .page-subtitle br { display: none; }
+            .page-title br { display: none; }
+            .upload-browse-btn { width: 100%; }
         }
     </style>
 </head>
@@ -448,8 +495,8 @@
     <!-- Header -->
     <header class="app-header">
         <div class="header-content">
-            <a href="/dashboard" class="back-btn" title="Retour">
-                <i data-lucide="arrow-left"></i>
+            <a href="/dashboard" class="back-btn" title="Retour" aria-label="Retour au tableau de bord">
+                <i data-lucide="arrow-left" aria-hidden="true"></i>
             </a>
             <div class="logo-section">
                 <div class="logo-icon">
@@ -479,14 +526,18 @@
             Étape 1 — Mode d'apprentissage
         </div>
 
-        <div class="type-grid" id="typeGrid">
-            <div class="type-card quiz" data-type="quiz" onclick="selectType('quiz')">
+        <div class="type-grid" id="typeGrid" role="group" aria-label="Mode d'apprentissage">
+            <div class="type-card quiz" data-type="quiz" role="button" tabindex="0"
+                 aria-pressed="false" aria-label="Mode Quizz"
+                 onclick="selectType('quiz')" onkeydown="handleTypeKey(event, 'quiz')">
                 <div class="type-check"><i data-lucide="check"></i></div>
                 <div class="type-icon"><i data-lucide="target"></i></div>
                 <div class="type-name">Quizz</div>
                 <div class="type-desc">Questions à choix multiples générées depuis votre document.</div>
             </div>
-            <div class="type-card cards" data-type="cards" onclick="selectType('cards')">
+            <div class="type-card cards" data-type="cards" role="button" tabindex="0"
+                 aria-pressed="false" aria-label="Mode Cartes Mémo"
+                 onclick="selectType('cards')" onkeydown="handleTypeKey(event, 'cards')">
                 <div class="type-check"><i data-lucide="check"></i></div>
                 <div class="type-icon"><i data-lucide="book-open"></i></div>
                 <div class="type-name">Cartes Mémo</div>
@@ -510,8 +561,14 @@
                     <i data-lucide="file-up"></i>
                 </div>
                 <div class="upload-title">Glissez votre PDF ici</div>
-                <div class="upload-subtitle">ou cliquez pour parcourir vos fichiers</div>
-                <span class="upload-hint">PDF uniquement · Max 20 Mo</span>
+                <div class="upload-subtitle">ou utilisez le bouton ci-dessous</div>
+                <button type="button" class="upload-browse-btn"
+                        onclick="event.stopPropagation(); document.getElementById('pdfInput').click()"
+                        aria-label="Choisir un fichier PDF depuis votre appareil">
+                    <i data-lucide="folder-open" aria-hidden="true"></i>
+                    Choisir un fichier
+                </button>
+                <div><span class="upload-hint">PDF uniquement · Max 20 Mo</span></div>
             </div>
 
             <div class="file-preview" id="filePreview">
@@ -520,8 +577,8 @@
                     <div class="file-name" id="fileName">—</div>
                     <div class="file-size" id="fileSize">—</div>
                 </div>
-                <button class="file-remove" onclick="removeFile(event)" title="Supprimer">
-                    <i data-lucide="x"></i>
+                <button class="file-remove" onclick="removeFile(event)" title="Supprimer" aria-label="Supprimer le fichier sélectionné">
+                    <i data-lucide="x" aria-hidden="true"></i>
                 </button>
             </div>
 
@@ -549,10 +606,23 @@
         // ── Type selection ──
         function selectType(type) {
             selectedType = type;
-            document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
-            document.querySelector(`.type-card.${type}`).classList.add('selected');
+            document.querySelectorAll('.type-card').forEach(c => {
+                c.classList.remove('selected');
+                c.setAttribute('aria-pressed', 'false');
+            });
+            const card = document.querySelector(`.type-card.${type}`);
+            card.classList.add('selected');
+            card.setAttribute('aria-pressed', 'true');
             checkReady();
             lucide.createIcons();
+        }
+
+        // ── Sélection au clavier (Entrée / Espace) ──
+        function handleTypeKey(e, type) {
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault();
+                selectType(type);
+            }
         }
 
         // ── File helpers ──

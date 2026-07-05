@@ -1,0 +1,151 @@
+# PROMPT REPLIT — SmartCards : nettoyage et branchement des composants morts
+
+## Contexte
+Tu connais déjà le projet SmartCards (Flask + SQLAlchemy + Groq API). Un audit du code a identifié des champs de modèles, des relations ORM et des fichiers Services qui sont déclarés mais jamais réellement exploités par l'application. Cette session a pour but de corriger ça avec une exigence stricte : **chaque changement doit être documenté**, car ce travail nourrit directement le dossier de certification RNCP DWWM (critères CP5, CP6, CP7).
+
+## Règle absolue
+**N'invente rien et ne suppose rien.** Si un point n'est pas clair dans ce prompt ou dans le code existant, arrête-toi et pose la question avant de coder. Ne touche à aucun fichier ou logique non mentionné ci-dessous sans le signaler d'abord.
+
+---
+
+## TÂCHE 1 — Suppression de champs morts
+
+**Supprimer du modèle `User` (`Models/userModel.py`) :**
+- `verification_token`
+- `is_verified`
+
+Aucun flux de vérification d'email n'existe dans l'application (pas d'envoi de mail, pas de route de confirmation). Ces deux champs ne sont jamais lus, et `is_verified` n'est jamais mis à jour après sa valeur par défaut.
+
+**À faire :**
+1. Supprimer les colonnes dans `Models/userModel.py`
+2. Supprimer toute référence à ces champs (docstrings, `updatable_fields`, sérialisation `to_dict()`, etc.) dans tout le Backend
+3. Créer une migration (si Alembic est en place) ou documenter clairement la modification du schéma si la base est recréée via `init_db.py`
+4. Vérifier qu'aucune route ou test ne dépend de ces champs avant suppression
+
+---
+
+## TÂCHE 2 — Brancher les champs sous-exploités (les rendre réellement fonctionnels)
+
+### 2.1 `User.last_login_at`
+- Appeler `user.update_last_login()` (méthode déjà existante dans `userModel.py`) dans la route de connexion réelle (`Api/authRoutes.py`, endpoint `/api/auth/login`), juste après validation du mot de passe et avant la génération des tokens.
+
+### 2.2 `Question.explanation`
+- Le service `PDFAnalysisService` (`Services/pdfAnalysisService.py`) demande déjà à Groq de générer une explication par question, mais la fonction qui persiste les questions générées (`_create_questions_from_generated` dans `Api/sessionRoutes.py`) ne sauvegarde pas ce champ.
+- Corriger pour que `explanation` soit bien renseigné à la création de chaque `Question`.
+
+### 2.3 `Answer.order_position`
+- Ce champ est écrit à la création mais jamais utilisé pour trier l'affichage.
+- Corriger la sérialisation des réponses (là où les `Answer` d'une `Question` sont renvoyées au frontend) pour qu'elles soient triées par `order_position` avant d'être envoyées.
+
+### 2.4 `Question.times_used` / `Question.times_correct` / `Question.get_success_rate()`
+- Ces champs/méthodes ne sont incrémentés/exploités que par `QuizzService.submit_quiz()` dans `Services/questionServices.py`, lui-même jamais appelé par aucune route actuellement.
+- **Ce point dépend de la Tâche 3** (consolidation des Services) — voir plus bas. Une fois `QuizzService` branché à une route réelle, ces champs doivent être incrémentés correctement à chaque soumission de quiz.
+
+---
+
+## TÂCHE 3 — Relations ORM : garder, mais les utiliser réellement
+
+**Ne pas supprimer** les relations SQLAlchemy déclarées (`User.themes`, `User.sessions`, `Theme.questions`, `Theme.sessions`, `Question.answers`). Elles sont nécessaires pour la Tâche 4 (cascading soft-delete) et pour simplifier les accès aux données dans plusieurs endroits du code.
+
+**À faire :**
+1. Repérer les endroits où le code fait `storage.filter_by(Theme, user_id=user.id)` ou équivalent **alors que l'objet parent (`user`) est déjà chargé en mémoire** dans le même bloc de code.
+2. Remplacer ces requêtes redondantes par une navigation directe via la relation ORM (ex. `user.themes`) quand c'est plus simple et que ça évite une requête SQL inutile.
+3. Ne pas remplacer les appels à `storage.filter_by(...)` qui sont la seule façon d'accéder à la donnée (objet parent non chargé) — ne change que ce qui est réellement redondant.
+
+---
+
+## TÂCHE 4 — Cascading soft-delete (combler le trou RGPD)
+
+**Problème identifié :** le `ondelete='CASCADE'` au niveau base de données ne se déclenche que sur un `DELETE` SQL réel. Or l'application pratique le soft delete (`deleted_at` rempli au lieu d'une suppression physique). Résultat : aujourd'hui, soft-supprimer un utilisateur **ne supprime pas en cascade** ses thèmes ni ses sessions associées. C'est un manquement potentiel au droit à l'effacement RGPD.
+
+**À faire :**
+1. Modifier `BaseModel.soft_delete()` ou la méthode de suppression d'utilisateur (`User.soft_delete()` si elle existe, sinon la créer en surcharge) pour qu'elle :
+   - Itère sur `user.themes` et appelle `soft_delete()` sur chaque thème
+   - Pour chaque thème, itère sur `theme.questions` et appelle `soft_delete()` sur chaque question
+   - Pour chaque question, itère sur `question.answers` et appelle `soft_delete()` sur chaque réponse
+   - Itère sur `user.sessions` et appelle `soft_delete()` sur chaque session
+2. S'assurer que cette cascade se fait dans une seule transaction (`storage.transaction()` si ce context manager existe déjà — vérifier dans `Persistence/DBStorage.py`) pour garantir l'atomicité : soit tout est soft-supprimé, soit rien ne l'est en cas d'erreur.
+3. Documenter explicitement que ce cascading est applicatif (pas géré par la base de données), et pourquoi.
+
+---
+
+## TÂCHE 5 — Consolidation des Services
+
+**Situation actuelle (vérifiée dans le code) :**
+- `usersServices.py` (`UserService`) — sain dans sa logique, mais jamais importé par aucune route
+- `authServices.py` — appelle `TokenManager.create_access_token()`, méthode qui n'existe pas (la vraie API dans `Utils/tokenSecurity.py` est `generate_tokens()`). Cassé.
+- `questionServices.py` (`QuizzService`) — sain dans sa logique, jamais importé, et fait doublon partiel avec la logique déjà écrite directement dans `Api/sessionRoutes.py` (notamment la création de session avec PDF)
+- `coreServices.py` — wrapper CRUD générique cassé (`super().update()` n'existe pas sur `BaseModel`), et redondant avec ce que fait déjà `Persistence/DBStorage.py`
+- `cardsServices.py` — hérite de `coreServices.py`, donc cassé par transitivité
+
+**Décision actée — à appliquer telle quelle :**
+
+### 5.1 Supprimer
+- `Services/coreServices.py`
+- `Services/cardsServices.py`
+
+Ces deux fichiers sont redondants avec le pattern Repository déjà en place dans `DBStorage`. Les supprimer purement, en vérifiant qu'aucun import résiduel ne subsiste ailleurs.
+
+### 5.2 Garder et brancher : `usersServices.py`
+- Réparer ce qui doit l'être (vérifier toutes les méthodes contre l'API réelle de `DBStorage` et des modèles)
+- Importer et utiliser ce service dans les routes utilisateur (`Api/userRoutes.py`) pour les opérations de lecture/mise à jour/suppression de profil, **à la place** de la logique actuellement écrite en dur dans les routes, si elle y est dupliquée
+- Le but : la route valide la requête HTTP et délègue au service ; le service contient la logique métier
+
+### 5.3 Garder et brancher : `questionServices.py` (`QuizzService`)
+- Réparer ce qui doit l'être
+- **Important** : `Api/sessionRoutes.py` contient déjà une bonne partie de cette logique (création de session, matching de thème par similarité) en plus complet que ce qui existe dans `QuizzService`. Ne pas dupliquer ni régresser :
+  - Si `sessionRoutes.py` fait déjà mieux une chose (ex. le matching de thème avec `SimilarityService`), **migrer cette logique dans `QuizzService`** plutôt que de garder deux implémentations différentes, puis appeler `QuizzService` depuis la route.
+  - Brancher spécifiquement `submit_quiz()` (actuellement non appelé nulle part) sur une route réelle de soumission de quiz, pour que `times_used`/`times_correct` (Tâche 2.4) soient enfin incrémentés.
+
+### 5.4 Fusionner `authServices.py`
+- Ne pas le garder comme fichier séparé cassé. Fusionner sa logique utile dans `Utils/tokenSecurity.py` et/ou `usersServices.py` selon ce qui est le plus cohérent (authentification = vérification d'identité + émission de tokens, donc probablement à cheval sur les deux).
+- Corriger l'appel à `TokenManager.create_access_token()` (inexistant) en utilisant la vraie méthode `generate_tokens()`.
+- Une fois fusionné, supprimer `Services/authServices.py`.
+
+### 5.5 Architecture cible après consolidation
+```
+Api/ (routes)       → valide la requête HTTP, appelle le Service, retourne la réponse HTTP
+Services/            → usersServices.py, questionServices.py — logique métier uniquement
+Models/               → entités SQLAlchemy
+Persistence/         → DBStorage (accès générique aux données)
+Utils/                → sécurité transversale (JWT, bcrypt, validation)
+```
+Aucune route ne doit contenir de logique métier complexe directement après ce refactor (tolérance : validation simple des paramètres d'entrée peut rester dans la route).
+
+---
+
+## EXIGENCE DE DOCUMENTATION (non négociable)
+
+Pour **chaque** modification, produire un fichier `CHANGELOG_AUDIT.md` à la racine du projet (le créer s'il n'existe pas), structuré ainsi pour chaque changement :
+
+```markdown
+## [Tâche X.Y] Titre court du changement
+
+**Fichier(s) modifié(s) :** chemin/vers/fichier.py
+
+**Avant :** (description ou extrait de l'état précédent)
+
+**Après :** (description ou extrait du nouvel état)
+
+**Justification :** pourquoi ce changement (lien avec l'audit initial)
+
+**Impact :** ce que ça change pour l'app en fonctionnement (ex. "désormais last_login_at est mis à jour à chaque connexion")
+```
+
+En plus de ce changelog global :
+1. **Chaque fonction/méthode nouvellement créée ou significativement modifiée** doit avoir une docstring claire (rôle, paramètres, retour, exceptions levées).
+2. Si une migration de schéma est nécessaire (suppression de colonnes), documenter la procédure exacte pour l'appliquer (commande Alembic, ou étapes pour recréer la base via `init_db.py` si pas de système de migration).
+3. À la fin de la session, fournir un résumé récapitulatif avec :
+   - Liste des fichiers supprimés
+   - Liste des fichiers créés
+   - Liste des fichiers modifiés (avec nombre de lignes changées si possible)
+   - Tout point de blocage ou question restée sans réponse, à me remonter explicitement plutôt que résolue par une supposition
+
+## Ordre d'exécution recommandé
+1. Tâche 1 (suppression — simplifie la base avant tout le reste)
+2. Tâche 5 (consolidation des Services — fournit la structure cible)
+3. Tâche 2 (branchement des champs, dont 2.4 qui dépend de 5.3)
+4. Tâche 3 (relations ORM)
+5. Tâche 4 (cascading soft-delete, dépend des relations de la Tâche 3)
+
+À chaque étape terminée, fais une pause et résume ce qui a été fait avant de passer à la suivante, pour que je puisse valider avant que tu continues.

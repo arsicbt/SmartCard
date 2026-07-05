@@ -129,25 +129,81 @@ class DBStorage:
         self.__session.rollback()
 
     def delete(self, obj: Base = None, hard_delete: bool = False):
-        """Supprime un objet (soft delete par défaut)
+        """Supprime un objet.
+
+        - hard_delete=True  : suppression réelle ; la cascade est assurée au
+          niveau base de données par les ForeignKey (ondelete='CASCADE').
+        - hard_delete=False : soft delete EN CASCADE ; l'objet ET ses
+          descendants actifs sont marqués (deleted_at). La cascade BDD ne
+          s'appliquant qu'au hard delete, la propagation est faite ici pour
+          éviter des enregistrements enfants orphelins.
 
         Args:
             obj: Objet à supprimer
             hard_delete: True = suppression réelle, False = soft delete
 
-        SÉCURITÉ : Soft delete conserve les données pour audit
+        SÉCURITÉ : Soft delete conserve les données pour audit.
+        À utiliser dans un bloc `with storage.transaction():` pour garantir
+        l'atomicité de la cascade.
         """
         if obj is None:
             return
 
         if hard_delete:
-            # Suppression réelle
+            # Suppression réelle : cascade gérée par la BDD (ondelete=CASCADE)
             self.__session.delete(obj)
         else:
-            # Soft delete
-            if hasattr(obj, 'deleted_at'):
-                obj.deleted_at = datetime.utcnow()
-                self.__session.add(obj)
+            # Soft delete en cascade : objet + descendants actifs
+            now = datetime.utcnow()
+            for target in self._collect_soft_delete_targets(obj):
+                target.deleted_at = now
+                self.__session.add(target)
+
+    def _collect_soft_delete_targets(self, obj: Base) -> List[Base]:
+        """Collecte un objet et ses descendants ACTIFS pour le soft delete.
+
+        Arbre de cascade :
+            - User     -> themes -> questions -> answers
+            - User     -> sessions
+            - Theme    -> questions -> answers
+            - Question -> answers
+
+        Les sessions ne sont PAS supprimées lors de la suppression d'un thème
+        (FK Session.theme_id en ON DELETE SET NULL : la session survit).
+
+        Seuls les descendants actifs (deleted_at IS NULL) sont inclus, afin de
+        ne pas écraser l'horodatage d'objets déjà supprimés. Le filtrage est
+        nécessaire car une relation SQLAlchemy charge aussi les soft-deleted.
+
+        Args:
+            obj: Objet racine à supprimer.
+
+        Returns:
+            Liste [obj, ...descendants actifs] à marquer comme supprimés.
+        """
+        if obj is None or not hasattr(obj, 'deleted_at'):
+            return []
+
+        targets: List[Base] = [obj]
+        class_name = obj.__class__.__name__
+
+        if class_name == 'User':
+            for theme in obj.themes:
+                if theme.deleted_at is None:
+                    targets.extend(self._collect_soft_delete_targets(theme))
+            for session in obj.sessions:
+                if session.deleted_at is None:
+                    targets.append(session)
+        elif class_name == 'Theme':
+            for question in obj.questions:
+                if question.deleted_at is None:
+                    targets.extend(self._collect_soft_delete_targets(question))
+        elif class_name == 'Question':
+            for answer in obj.answers:
+                if answer.deleted_at is None:
+                    targets.append(answer)
+
+        return targets
 
     def reload(self):
         """Recharge la session depuis la base de données."""

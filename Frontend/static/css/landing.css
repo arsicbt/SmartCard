@@ -1638,6 +1638,12 @@ body {
         padding: 6rem 1rem 2rem;
     }
 
+    /* Masquer la maquette "screen" de l'app sur mobile :
+       décorative, elle alourdit la page et décale le contenu. */
+    .hero-image-column {
+        display: none;
+    }
+
     .hero-stats {
         gap: 1.5rem;
     }

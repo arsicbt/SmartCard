@@ -9,6 +9,7 @@ from flask import Flask
 from flask_cors import CORS
 from dotenv import load_dotenv
 from Persistence.DBStorage import storage
+import os
 
 load_dotenv()
 
@@ -26,5 +27,8 @@ app.register_blueprint(answer_bp)
 app.register_blueprint(session_bp)
 app.register_blueprint(auth_bp)
 
+# Crée les tables si elles n'existent pas encore (idempotent)
+storage.reload()
+
 if __name__ == "__main__":
-    app.run(debug=False)
+    app.run(host='127.0.0.1', port=int(os.getenv('BACKEND_PORT', 8000)), debug=False)

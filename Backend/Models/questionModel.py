@@ -11,6 +11,7 @@ from sqlalchemy import Column, String, Text, Integer, ForeignKey, Enum as SQLEnu
 from sqlalchemy.orm import relationship
 from Models.baseModel import BaseModel
 from Models.tablesSchema import QuestionType, Difficulty
+from typing import Dict, Any
 
 
 class Question(BaseModel):
@@ -55,7 +56,12 @@ class Question(BaseModel):
     # ********************************************************
 
     theme = relationship('Theme', back_populates='questions')
-    answers = relationship('Answer', back_populates='question', cascade='all, delete-orphan')
+    answers = relationship(
+        'Answer',
+        back_populates='question',
+        cascade='all, delete-orphan',
+        lazy='selectin'
+    )
 
     # ********************************************************
     # INDEX
@@ -107,6 +113,44 @@ class Question(BaseModel):
         if is_correct:
             self.times_correct += 1
         self.update_timestamp()
+
+    # ********************************************************
+    # SÉRIALISATION
+    # ********************************************************
+
+    def to_dict(self, include_private: bool = False,
+                include_relations: bool = True) -> Dict[str, Any]:
+        """Sérialise la question en dictionnaire.
+
+        Surcharge BaseModel.to_dict pour exposer la relation `answers`
+        directement dans le JSON renvoyé, au lieu d'un appel séparé.
+
+        Args:
+            include_private: Inclure les champs privés
+            include_relations: Inclure la liste des réponses (clé 'answers')
+
+        Returns:
+            Dictionnaire de la question. Si include_relations est True,
+            contient la clé 'answers' avec les réponses ACTIVES
+            (deleted_at IS NULL) triées par order_position.
+
+        Note:
+            Les réponses soft-deleted sont exclues pour rester cohérent
+            avec le comportement de DBStorage (filter_by/get/all), car la
+            relation SQLAlchemy charge sinon toutes les lignes.
+        """
+        data = super().to_dict(include_private=include_private)
+
+        if include_relations:
+            active_answers = [a for a in self.answers if a.deleted_at is None]
+            active_answers.sort(
+                key=lambda a: a.order_position if a.order_position is not None else 0
+            )
+            data['answers'] = [
+                a.to_dict(include_private=include_private) for a in active_answers
+            ]
+
+        return data
 
     # ********************************************************
     # REPRÉSENTATION
