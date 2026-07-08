@@ -9,11 +9,11 @@ class Config:
     """Configuration centralisée de l'application."""
 
     # SÉCURITÉ : JAMAIS de valeurs en dur en production
-    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-CHANGE-IN-PROD')
-    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'jwt-secret-CHANGE-IN-PROD')
-
+    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-NOT-FOR-PROD')
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'dev-jwt-NOT-FOR-PROD')
+    
     # Database
-    DB_TYPE = os.getenv('DB_TYPE', 'file')  # 'file' ou 'db'
+    DB_TYPE = os.getenv('DB_TYPE', 'file') 
     DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///smartcard.db')
 
     # Security

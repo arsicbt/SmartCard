@@ -47,6 +47,11 @@ class DBStorage:
         """Initialise la connexion à la base de données."""
         database_url = os.getenv('DATABASE_URL', 'sqlite:///smartcard.db')
 
+        # Render (et Heroku) fournissent l'URL au format 'postgres://',
+        # mais SQLAlchemy 2.0 exige le préfixe 'postgresql://'
+        if database_url.startswith('postgres://'):
+            database_url = database_url.replace('postgres://', 'postgresql://', 1)
+
         # Configuration selon le type de DB
         if database_url.startswith('sqlite'):
             # SQLite : check_same_thread=False pour Flask
@@ -55,6 +60,7 @@ class DBStorage:
                 echo=False,  # True en dev pour voir les requêtes SQL
                 connect_args={'check_same_thread': False}
             )
+
         else:
             # PostgreSQL/MySQL
             self.__engine = create_engine(
