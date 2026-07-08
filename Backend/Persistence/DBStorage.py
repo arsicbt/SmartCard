@@ -9,6 +9,7 @@ SÉCURITÉ :
 """
 
 from sqlalchemy import create_engine
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker, scoped_session
 from contextlib import contextmanager
 from typing import Optional, List, Dict, Type, Any
@@ -60,7 +61,6 @@ class DBStorage:
                 echo=False,  # True en dev pour voir les requêtes SQL
                 connect_args={'check_same_thread': False}
             )
-
         else:
             # PostgreSQL/MySQL
             self.__engine = create_engine(
@@ -213,7 +213,16 @@ class DBStorage:
 
     def reload(self):
         """Recharge la session depuis la base de données."""
-        Base.metadata.create_all(self.__engine)
+        try:
+            Base.metadata.create_all(self.__engine)
+        except IntegrityError as e:
+            # Race condition possible si plusieurs workers/instances tentent
+            # de créer le schéma (types ENUM notamment) au même moment.
+            # Si le schéma existe déjà, ce n'est pas une erreur bloquante.
+            if 'already exists' in str(e).lower() or 'duplicate key' in str(e).lower():
+                pass
+            else:
+                raise
         self.__session = scoped_session(
             sessionmaker(bind=self.__engine, expire_on_commit=False)
         )
