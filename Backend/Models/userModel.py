@@ -33,6 +33,7 @@ class User(BaseModel):
     """
 
     __tablename__ = 'users'
+    __table_args__ = {'extend_existing': True}
 
     # ********************************************************
     # COLONNES SPÉCIFIQUES

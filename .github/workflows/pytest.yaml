@@ -1,0 +1,32 @@
+name: Python CI (Pytest & Security)
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 🛠️ Récupérer le code du dépôt
+      uses: actions/checkout@v4
+
+    - name: 🐍 Configurer l'environnement Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+        cache: 'pip' # Automatise le cache pour accélérer les futurs builds
+
+    - name: 📦 Installer les dépendances du projet
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f Backend/requirements.txt ]; then pip install -r Backend/requirements.txt; fi
+        # Force l'installation des outils de test s'ils ne sont pas dans le requirements
+        pip install pytest pytest-flask anyio pytest-mock
+
+    - name: 🧪 Exécuter la suite de tests avec Pytest
+      run: |
+        pytest -v
