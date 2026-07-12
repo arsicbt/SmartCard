@@ -20,12 +20,10 @@ services:
         generateValue: true
       - key: JWT_SECRET_KEY
         generateValue: true
-      # À renseigner manuellement dans le dashboard Render (clé Groq)
       - key: GROQ_API_KEY
         sync: false
-      # À mettre à jour après le premier déploiement du frontend
       - key: ALLOWED_ORIGINS
-        value: "http://localhost:3000"
+        value: "https://smartcard-frontend.onrender.com"
 
   - type: web
     name: smartcard-frontend
@@ -36,6 +34,5 @@ services:
     envVars:
       - key: SECRET_KEY
         generateValue: true
-      # À mettre à jour après le premier déploiement du backend
       - key: BACKEND_URL
-        value: "http://localhost:8000"
+        value: "https://smartcard-backend.onrender.com"
