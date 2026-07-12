@@ -6,7 +6,6 @@ import requests
 import os
 from datetime import datetime, timedelta
 from collections import defaultdict
-import random
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-me')
@@ -127,7 +126,8 @@ def dashboard():
     # TEMPORAIRE POUR DEMODAY
     # ***************************
 
-    # 4. Calculer les données du graphique (7 derniers jours)
+    # 4. Calculer les données du graphique (7 derniers jours) à partir des
+    # vraies sessions de l'utilisateur (récupérées à l'étape 2)
     today_dt = datetime.now()
     stats_per_day = {}
     day_names = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
@@ -136,17 +136,25 @@ def dashboard():
         day = today_dt - timedelta(days=i)
         day_key = day.strftime('%Y-%m-%d')
 
-        # GÉNÉRATION DE FAUSSES DONNÉES pour le rendu visuel (Demoday)
-        # On génère un nombre de cartes entre 20 et 60 pour faire de belles vagues
-        fake_cards = random.randint(25, 65)
-        # Le temps d'étude est lié aux cartes (environ 1.5 min par carte + un bonus)
-        fake_time = int(fake_cards * 1.5) + random.randint(5, 15)
-
         stats_per_day[day_key] = {
             'label': day_names[day.weekday()],
-            'cards': fake_cards,
-            'time': fake_time
+            'cards': 0,
+            'time': 0
         }
+
+    # On agrège les sessions réelles par jour de création
+    for s in sessions:
+        created_at = s.get('created_at')
+        if not created_at:
+            continue
+
+        day_key = created_at[:10]
+        if day_key not in stats_per_day:
+            continue  # session hors des 7 derniers jours
+
+        stats_per_day[day_key]['cards'] += 1
+        # Même estimation que la stat globale (ligne ~195) : 5 min / session
+        stats_per_day[day_key]['time'] += 5
 
     # On prépare les listes pour Chart.js
     chart_data = {
