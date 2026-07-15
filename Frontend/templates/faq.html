@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}FAQ - SmartCards{% endblock %}
+
+{% block content %}
+<div class="legal-container">
+    <div class="legal-card">
+        <h1 class="legal-title">Questions fréquentes</h1>
+
+        <div class="faq-list">
+            <details class="faq-item" open>
+                <summary>Comment créer des cartes mémo ?</summary>
+                <p>Importez un PDF depuis votre espace, et SmartCards génère
+                automatiquement des cartes de révision à partir de son contenu.</p>
+            </details>
+
+            <details class="faq-item">
+                <summary>Mon PDF est-il conservé après l'import ?</summary>
+                <p>Non. Le fichier est analysé pour en extraire le contenu, puis
+                supprimé immédiatement. Seules les cartes et questions générées sont
+                sauvegardées. Voir la <a href="/privacy">politique de confidentialité</a>
+                pour plus de détails.</p>
+            </details>
+
+            <details class="faq-item">
+                <summary>Quelle est la différence entre un quiz et une session de cartes ?</summary>
+                <p>Les cartes mémo (flashcards) vous permettent de réviser à votre
+                rythme, question puis réponse. Le quiz vous note automatiquement sur
+                un score, pour évaluer votre niveau.</p>
+            </details>
+
+            <details class="faq-item">
+                <summary>Comment voir ma progression ?</summary>
+                <p>Le tableau de bord affiche vos statistiques (cartes générées, quiz
+                créés, taux de réussite) ainsi qu'un graphique de votre activité sur
+                les 7 derniers jours.</p>
+            </details>
+
+            <details class="faq-item">
+                <summary>J'ai un problème ou une suggestion, qui contacter ?</summary>
+                <p>Écrivez-moi directement via l'adresse email indiquée dans le pied
+                de page du site.</p>
+            </details>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .legal-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem 1rem 4rem;
+    }
+
+    .legal-card {
+        background: rgba(20, 20, 20, 0.8);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 2.5rem;
+    }
+
+    .legal-title {
+        font-size: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .faq-item {
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+        margin-bottom: 0.75rem;
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .faq-item summary {
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--foreground);
+        list-style: none;
+    }
+
+    .faq-item summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .faq-item summary::before {
+        content: '+';
+        display: inline-block;
+        width: 1.2em;
+        color: var(--primary);
+        font-weight: 700;
+    }
+
+    .faq-item[open] summary::before {
+        content: '−';
+    }
+
+    .faq-item p {
+        margin-top: 0.75rem;
+        color: var(--muted-foreground);
+        line-height: 1.7;
+    }
+</style>
+{% endblock %}

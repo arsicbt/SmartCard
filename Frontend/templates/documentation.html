@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Documentation - SmartCards{% endblock %}
+
+{% block content %}
+<div class="doc-container">
+    <div class="doc-header">
+        <h1 class="legal-title">Documentation du projet</h1>
+        <a href="{{ url_for('static', filename='documents/dossier-projet.pdf') }}"
+           class="doc-download-btn" download>
+            <i data-lucide="download"></i>
+            Télécharger le PDF
+        </a>
+    </div>
+
+    <div class="doc-viewer">
+        <iframe
+            src="{{ url_for('static', filename='documents/dossier-projet.pdf') }}"
+            title="Dossier projet SmartCards"
+        ></iframe>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .doc-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem 1rem 4rem;
+    }
+
+    .doc-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .doc-download-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        background: linear-gradient(135deg, #ff6b35 0%, #f54272 100%);
+        color: white;
+        border-radius: 0.75rem;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .doc-download-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(255, 107, 53, 0.3);
+    }
+
+    .doc-viewer {
+        background: rgba(20, 20, 20, 0.8);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        height: 85vh;
+    }
+
+    .doc-viewer iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+</style>
+{% endblock %}

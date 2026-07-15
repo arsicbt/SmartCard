@@ -33,7 +33,9 @@
         </main>
     </div>
 
+    {% if request.endpoint != 'login' %}
     {% include 'components/footer.html' %}
+    {% endif %}
 
     <!-- Logout Modal -->
     {% include 'components/logout_modal.html' %}

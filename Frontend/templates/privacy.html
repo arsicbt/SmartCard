@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Politique de confidentialité - SmartCards{% endblock %}
+
+{% block content %}
+<div class="legal-container">
+    <div class="legal-card">
+        <h1 class="legal-title">Politique de confidentialité</h1>
+        <p class="legal-updated">Dernière mise à jour : {{ current_year }}</p>
+
+        <section class="legal-section">
+            <h2>Vos données personnelles</h2>
+            <p>
+                SmartCards collecte uniquement les informations nécessaires à la création
+                de votre compte : prénom, nom et adresse email. Votre mot de passe est
+                stocké sous forme de hash (bcrypt), jamais en clair.
+            </p>
+        </section>
+
+        <section class="legal-section">
+            <h2>Vos documents PDF</h2>
+            <p>
+                Lorsque vous importez un PDF pour générer des cartes ou un quiz, le
+                fichier est analysé à la volée pour en extraire le texte, puis
+                <strong>immédiatement supprimé</strong>. Il n'est jamais enregistré ni
+                conservé sur nos serveurs. Seul le contenu que vous choisissez de garder
+                (cartes, questions, réponses) reste stocké dans votre compte.
+            </p>
+        </section>
+
+        <section class="legal-section">
+            <h2>Vos statistiques d'apprentissage</h2>
+            <p>
+                Vos sessions d'étude (quiz, flashcards, scores) sont enregistrées pour
+                vous permettre de suivre votre progression sur le tableau de bord.
+                Elles ne sont utilisées à aucune autre fin.
+            </p>
+        </section>
+
+        <section class="legal-section">
+            <h2>Suppression de compte</h2>
+            <p>
+                Vous pouvez demander la suppression de votre compte et de vos données à
+                tout moment en nous contactant à l'adresse indiquée dans le pied de page.
+            </p>
+        </section>
+
+        <section class="legal-section">
+            <h2>Contact</h2>
+            <p>
+                Pour toute question sur vos données, écrivez-nous via le lien
+                "Contactez-moi" en bas de page.
+            </p>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .legal-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem 1rem 4rem;
+    }
+
+    .legal-card {
+        background: rgba(20, 20, 20, 0.8);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 2.5rem;
+    }
+
+    .legal-title {
+        font-size: 2rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .legal-updated {
+        color: var(--muted-foreground);
+        font-size: 0.9rem;
+        margin-bottom: 2rem;
+    }
+
+    .legal-section {
+        margin-bottom: 1.75rem;
+    }
+
+    .legal-section h2 {
+        font-size: 1.15rem;
+        margin-bottom: 0.5rem;
+        color: var(--foreground);
+    }
+
+    .legal-section p {
+        color: var(--muted-foreground);
+        line-height: 1.7;
+    }
+</style>
+{% endblock %}
