@@ -6,7 +6,8 @@ databases:
 
 services:
   - type: web
-    name: smartcard-backend
+    # renommer le service pour correspondre exactement à l'URL attribuée par Render
+    name: smartcard-backend-sbpl
     runtime: docker
     dockerfilePath: ./Backend/Dockerfile
     dockerContext: .
@@ -20,12 +21,11 @@ services:
         generateValue: true
       - key: JWT_SECRET_KEY
         generateValue: true
-      # À renseigner manuellement dans le dashboard Render (clé Groq)
       - key: GROQ_API_KEY
         sync: false
-      # À mettre à jour après le premier déploiement du frontend
       - key: ALLOWED_ORIGINS
-        value: "http://localhost:3000"
+        # L'URL exacte de mon Frontend
+        value: "https://smartcard-frontend.onrender.com"
 
   - type: web
     name: smartcard-frontend
@@ -36,6 +36,6 @@ services:
     envVars:
       - key: SECRET_KEY
         generateValue: true
-      # À mettre à jour après le premier déploiement du backend
       - key: BACKEND_URL
-        value: "http://localhost:8000"
+        # L'URL exacte de mon Backend
+        value: "https://smartcard-backend-sbpl.onrender.com"
