@@ -377,7 +377,7 @@ def proxy_create_session_with_pdf():
                     # Rejouer la requête avec le nouveau token
                     response = requests.post(
                         f'{API_URL}/sessions/create-with-pdf',
-                        files=files, data=data, headers=headers, timeout=5
+                        files=files, data=data, headers=headers, timeout=180
                     )
                 else:
                     session.clear()
