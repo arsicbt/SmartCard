@@ -362,7 +362,7 @@ def proxy_create_session_with_pdf():
             files=files,
             data=data,
             headers=headers,
-            timeout=60
+            timeout=180
         )
 
         if response.status_code == 401:
