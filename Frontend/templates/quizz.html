@@ -305,7 +305,7 @@
         });
 
         // **************************************************************
-        // FONCTION: AFFICHER LES RÉSULTATS + CONFETTIS (toujours)
+        // FONCTION: AFFICHER LES RÉSULTATS + CONFETTIS (dès 70% de réussite)
         // **************************************************************
         function showResults() {
             document.getElementById('quizQuestions').classList.add('hidden');
@@ -324,7 +324,7 @@
             document.getElementById('quizIncorrectTotal').textContent   = total - score;
             document.getElementById('quizGrade').textContent            = grade;
 
-            // CONFETTIS TOUJOURS (intensité adaptée au score)
+            // CONFETTIS UNIQUEMENT À PARTIR DE 70% DE RÉUSSITE
             launchConfetti(pct);
 
             // SAUVEGARDER LE SCORE VIA L'API
@@ -335,9 +335,13 @@
         // FONCTION: LANCER LES CONFETTIS
         // **************************************************************
         function launchConfetti(pct = 50) {
-            // Durée et intensité selon le score
-            const duration    = pct >= 70 ? 4000 : 2000;
-            const particleMul = pct >= 70 ? 1 : 0.4;
+            // Pas de confettis en dessous de 70% de réussite
+            if (pct < 70) {
+                return;
+            }
+
+            const duration    = 4000;
+            const particleMul = 1;
             const animationEnd = Date.now() + duration;
             const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
 

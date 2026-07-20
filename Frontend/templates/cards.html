@@ -222,7 +222,7 @@
         }
 
         // ************************************************************
-        // FONCTION: FIN DE SESSION + CONFETTIS
+        // FONCTION: FIN DE SESSION + CONFETTIS (dès 70% de réussite)
         // ************************************************************
         function endSession() {
             // Masquer le container
@@ -252,8 +252,8 @@
                 endMessage.textContent = "Bravo d'avoir terminé ! Chaque révision te rapproche de la maîtrise !";
             }
 
-            // LANCER LES CONFETTIS
-            launchConfetti();
+            // LANCER LES CONFETTIS (uniquement à partir de 70% de réussite)
+            launchConfetti(percentage);
 
             // SAUVEGARDER LE SCORE
             saveFlashcardScore(correctCount, total);
@@ -262,7 +262,12 @@
         // ************************************************************
         // FONCTION: CONFETTIS 
         // ************************************************************
-        function launchConfetti() {
+        function launchConfetti(pct = 0) {
+            // Pas de confettis en dessous de 70% de réussite
+            if (pct < 70) {
+                return;
+            }
+
             const duration = 3000;
             const animationEnd = Date.now() + duration;
             const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
