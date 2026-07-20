@@ -25,7 +25,7 @@ def get_themes():
 # GET THEME BY ID
 # ************************************************
 @theme_bp.route("/<theme_id>", methods=["GET"])
-@admin_required
+@auth_required
 def get_theme(theme_id):
     """Retourne un thème par son identifiant."""
     theme = storage.get(Theme, theme_id)
