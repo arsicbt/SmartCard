@@ -480,10 +480,13 @@ def auth_login():
         response = requests.post(
             f'{API_URL}/auth/login',
             json=request.json,
-            timeout=5
+            timeout=15
         )
 
-        data = response.json()
+        try:
+            data = response.json()
+        except ValueError:
+            return {'error': 'Le service est indisponible, réessayez dans quelques secondes'}, 502
 
         if not data:
             flash('Votre session a expiré, veuillez vous reconnecter', 'warning')
@@ -499,6 +502,8 @@ def auth_login():
                 session['refresh_token'] = refresh_token
 
         return data, response.status_code
+    except requests.exceptions.Timeout:
+        return {'error': 'Le service met du temps à répondre, réessayez'}, 504
     except Exception as e:
         return {'error': str(e)}, 500
 
